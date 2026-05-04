@@ -169,7 +169,6 @@ function createProjectCard(project, displayIndex) {
   const detailsButton = fragment.querySelector(".details-button");
 
   fragment.querySelector(".project-number").textContent = String(displayIndex + 1).padStart(2, "0");
-  fragment.querySelector(".project-area-count").textContent = `${project.areas.length} themes`;
   title.textContent = project.title;
   advisor.textContent = `${project.advisor_name} / ${project.advisor_affiliation}`;
   pitch.textContent = "Loading project pitch...";
