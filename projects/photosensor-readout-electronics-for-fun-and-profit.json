@@ -1,0 +1,19 @@
+{
+  "id": "photosensor-readout-electronics-for-fun-and-profit",
+  "slug": "photosensor-readout-electronics-for-fun-and-profit",
+  "source_row": 3,
+  "submitted_at": "2026-04-24T14:40:41.754000",
+  "year": "2026-2027",
+  "title": "Photosensor readout electronics for fun and profit*",
+  "advisor": {
+    "name": "Mike Kordosky",
+    "affiliation": "W&M",
+    "email": "makordosky@wm.edu"
+  },
+  "coadvisors_raw": null,
+  "pitch": "If you've wondered how the analog signals that come out of sensors end up as numbers on a computer this project is for you. You'll build the so-called front-end readout for photodetectors that are sensitive to single photons with a time resolution of a few ns. Pick this project if you like electronics and instrumentation and want a challenge combining hardware and software.",
+  "background_objective_deliverables": "Photosensors with single photon and few ns resolution are widely used in high-energy and nuclear physics as well as in adjacent fields like medical physics. They are typically read out with bespoke hardware that takes delta-function like current pulses from the sensor, shapes and amplifies them (in the RC-CR sense) and then digitizes them to produce numbers. The digitizer and front end usually service multiple inputs and are controlled and read-out by a micro-controller (ex: arduino). The goal of this project is to design, construct, and characterize a readout system consisting of one or more PCBs.",
+  "thrust_area": "Bioengineering / medical devices, Instrumentation / sensors, Plasma / high-energy adjacent",
+  "lab_workspace_access": "Work will be done in our labs in the Small Hall research wing.",
+  "notes": "This project needs a team with members who liked analog electronics (PHYS 252) and were decent at it. It would also benefit from having some members who have taken instrumentation (PHYS 351) or who are planning to take it in F26. Team members will also need some programming experience (via PHYS 256 or similar) and will benefit from experience with linux/unix."
+}

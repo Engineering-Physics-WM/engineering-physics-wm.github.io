@@ -1,0 +1,19 @@
+{
+  "id": "modification-of-a-high-speed-electric-unmanned-surface-vessel-usv-race-boat-towards-full-stack-agentic-control",
+  "slug": "modification-of-a-high-speed-electric-unmanned-surface-vessel-usv-race-boat-towards-full-stack-agentic-control",
+  "source_row": 2,
+  "submitted_at": "2026-04-24T11:19:52.181000",
+  "year": "2026-2027",
+  "title": "Modification of a high-speed, electric, unmanned surface vessel (USV) race boat towards full-stack agentic control.",
+  "advisor": {
+    "name": "Jonathan Frey",
+    "affiliation": "Applied Science",
+    "email": "jfrey@wm.edu"
+  },
+  "coadvisors_raw": null,
+  "pitch": "William & Mary Racing is moving to improve the mechanical systems of the unmanned race boat to achieve higher average speeds as well as modifying the autonomous control systems and sensors to achieve full stack agentic AI control of the vessel.",
+  "background_objective_deliverables": "The team will be focused on competing in the ASNE collegiate race in April within the autonomous race division. This project will result in delivered and tested hardware and electronics as well as software and firmware developed within the stack. We are working to turn the W&M racing vessel, Pesce Volante, into an autonomous vessel akin to Kit from the tv show Knight Rider.",
+  "thrust_area": "AI-driven measurement or analysis, Robotics / autonomy / controls, Public-facing / installation / outreach, Instrumentation / sensors",
+  "lab_workspace_access": "Makerspace",
+  "notes": null
+}

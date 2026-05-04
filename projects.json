@@ -1,0 +1,99 @@
+{
+  "dataset": "Engineering Physics capstone project proposals",
+  "year": "2026-2027",
+  "generated_from": "Engineering Physics capstone project proposal 2026-2027 (Responses).xlsx",
+  "generated_at": "2026-05-04T15:49:44Z",
+  "count": 9,
+  "projects": [
+    {
+      "id": "animal-crossing-reengineering-effective-wildlife-crossing-structures-at-the-jamestown-dam",
+      "slug": "animal-crossing-reengineering-effective-wildlife-crossing-structures-at-the-jamestown-dam",
+      "title": "Animal Crossing: Reengineering Effective Wildlife Crossing Structures At The Jamestown Dam",
+      "advisor_name": "Randy Chambers",
+      "advisor_affiliation": "ENSP",
+      "thrust_area": "Instrumentation / sensors, Public-facing / installation / outreach",
+      "submitted_at": "2026-04-23T16:29:26.718000",
+      "path": "projects/animal-crossing-reengineering-effective-wildlife-crossing-structures-at-the-jamestown-dam.json"
+    },
+    {
+      "id": "modification-of-a-high-speed-electric-unmanned-surface-vessel-usv-race-boat-towards-full-stack-agentic-control",
+      "slug": "modification-of-a-high-speed-electric-unmanned-surface-vessel-usv-race-boat-towards-full-stack-agentic-control",
+      "title": "Modification of a high-speed, electric, unmanned surface vessel (USV) race boat towards full-stack agentic control.",
+      "advisor_name": "Jonathan Frey",
+      "advisor_affiliation": "Applied Science",
+      "thrust_area": "AI-driven measurement or analysis, Robotics / autonomy / controls, Public-facing / installation / outreach, Instrumentation / sensors",
+      "submitted_at": "2026-04-24T11:19:52.181000",
+      "path": "projects/modification-of-a-high-speed-electric-unmanned-surface-vessel-usv-race-boat-towards-full-stack-agentic-control.json"
+    },
+    {
+      "id": "photosensor-readout-electronics-for-fun-and-profit",
+      "slug": "photosensor-readout-electronics-for-fun-and-profit",
+      "title": "Photosensor readout electronics for fun and profit*",
+      "advisor_name": "Mike Kordosky",
+      "advisor_affiliation": "W&M",
+      "thrust_area": "Bioengineering / medical devices, Instrumentation / sensors, Plasma / high-energy adjacent",
+      "submitted_at": "2026-04-24T14:40:41.754000",
+      "path": "projects/photosensor-readout-electronics-for-fun-and-profit.json"
+    },
+    {
+      "id": "irays-computational-dual-spectrum-pupillometry-for-pre-hospital-neuro-triage",
+      "slug": "irays-computational-dual-spectrum-pupillometry-for-pre-hospital-neuro-triage",
+      "title": "iRays: Computational Dual-Spectrum Pupillometry for Pre-Hospital Neuro-Triage",
+      "advisor_name": "Ran Yang",
+      "advisor_affiliation": "Physics",
+      "thrust_area": "Instrumentation / sensors, AI-driven measurement or analysis, Bioengineering / medical devices, Computational imaging / simulation, Robotics / autonomy / controls",
+      "submitted_at": "2026-04-25T12:03:11.335000",
+      "path": "projects/irays-computational-dual-spectrum-pupillometry-for-pre-hospital-neuro-triage.json"
+    },
+    {
+      "id": "audimo-sensor-augmented-acoustic-instruments",
+      "slug": "audimo-sensor-augmented-acoustic-instruments",
+      "title": "Audimo (Sensor-Augmented Acoustic Instruments)",
+      "advisor_name": "Benjamin D. Whiting",
+      "advisor_affiliation": "William & Mary \u2014 Music",
+      "thrust_area": "Instrumentation / sensors",
+      "submitted_at": "2026-04-26T16:27:50.155000",
+      "path": "projects/audimo-sensor-augmented-acoustic-instruments.json"
+    },
+    {
+      "id": "developing-heat-load-model-and-solutions-for-smr-located-on-former-mining-site",
+      "slug": "developing-heat-load-model-and-solutions-for-smr-located-on-former-mining-site",
+      "title": "Developing heat load model and solutions for SMR located on former mining site",
+      "advisor_name": "Saskia Mordijck",
+      "advisor_affiliation": "Physics",
+      "thrust_area": "Computational imaging / simulation",
+      "submitted_at": "2026-04-27T21:47:14.847000",
+      "path": "projects/developing-heat-load-model-and-solutions-for-smr-located-on-former-mining-site.json"
+    },
+    {
+      "id": "soft-shallow-water-biomimetic-robot",
+      "slug": "soft-shallow-water-biomimetic-robot",
+      "title": "Soft Shallow Water Biomimetic Robot",
+      "advisor_name": "Jonathan Frey",
+      "advisor_affiliation": "Applied Science",
+      "thrust_area": "Public-facing / installation / outreach, Instrumentation / sensors, Robotics / autonomy / controls",
+      "submitted_at": "2026-04-28T18:02:13.721000",
+      "path": "projects/soft-shallow-water-biomimetic-robot.json"
+    },
+    {
+      "id": "corrosion-prevention-using-engineered-biofilms",
+      "slug": "corrosion-prevention-using-engineered-biofilms",
+      "title": "Corrosion Prevention Using Engineered Biofilms",
+      "advisor_name": "Margaret Saha",
+      "advisor_affiliation": "Applied Science",
+      "thrust_area": "Bioengineering / medical devices, Instrumentation / sensors, Materials",
+      "submitted_at": "2026-04-29T11:11:28.879000",
+      "path": "projects/corrosion-prevention-using-engineered-biofilms.json"
+    },
+    {
+      "id": "quantum-forge-pilot-project-with-inq-in-quantum-computing-or-quantum-sensing",
+      "slug": "quantum-forge-pilot-project-with-inq-in-quantum-computing-or-quantum-sensing",
+      "title": "Quantum Forge Pilot Project with INQ in Quantum Computing or Quantum Sensing",
+      "advisor_name": "INQ quantum industry technical lead and Quantum Forge or Q-SEnSE affiliated mentor",
+      "advisor_affiliation": "Industry / Quantum Forge",
+      "thrust_area": "Quantum science and technology, Computational imaging / simulation, Instrumentation / sensors",
+      "submitted_at": "2026-05-04T00:00:00",
+      "path": "projects/quantum-forge-pilot-project-with-inq-in-quantum-computing-or-quantum-sensing.json"
+    }
+  ]
+}

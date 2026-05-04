@@ -1,0 +1,19 @@
+{
+  "id": "corrosion-prevention-using-engineered-biofilms",
+  "slug": "corrosion-prevention-using-engineered-biofilms",
+  "source_row": 8,
+  "submitted_at": "2026-04-29T11:11:28.879000",
+  "year": "2026-2027",
+  "title": "Corrosion Prevention Using Engineered Biofilms",
+  "advisor": {
+    "name": "Margaret Saha",
+    "affiliation": "Applied Science",
+    "email": "mssaha@wm.edu"
+  },
+  "coadvisors_raw": "Doug Beringer dbberinger@wm.edu; Dennis Manos dmanos@wm.edu",
+  "pitch": "Developing novel approaches using biofilms to prevent corrosion is important because traditional anti-corrosion methods often rely on toxic chemicals that can harm the environment. Corrosion causes an estimated $2.5 trillion in damage globally each year, or about 3–4% of global GDP, making more effective solutions economically critical. Biofilms offer a more sustainable and potentially self-regenerating solution by forming protective layers on material surfaces. They can adapt to changing conditions, improving long-term durability, reducing maintenance costs, and helping mitigate the massive economic burden of corrosion and engage students in a multidisciplinary project.",
+  "background_objective_deliverables": "By the end of the year, the team expects to produce several concrete artifacts, including a characterized dataset on biofilm performance under different environmental conditions and a validated experimental setup for testing corrosion resistance. This will include the development of a flow chamber that mimics real-world water movement experienced by ships and bridges, enabling more realistic testing conditions. The team also aims to create a prototype or proof-of-concept demonstrating biofilm-based protection on a material sample. Additionally, the project should result in a publication-ready report and a live or recorded demonstration suitable for presentation at the April Showcase.",
+  "thrust_area": "Bioengineering / medical devices, Instrumentation / sensors, Materials",
+  "lab_workspace_access": "Team will work in ISC4 - in several labs and Core Labs",
+  "notes": "The bacteria producing the biofilm is BSL1 - same safety level as the bacteria in the yogurt one eats for breakfast!"
+}

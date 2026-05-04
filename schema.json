@@ -1,0 +1,25 @@
+{
+  "recommended_site_usage": {
+    "listing_page": "Load projects.json to render searchable cards or a table.",
+    "detail_page": "Fetch projects/<slug>.json for a project detail view."
+  },
+  "project_fields": {
+    "id": "Stable slug identifier",
+    "slug": "URL-safe project slug",
+    "source_row": "Original spreadsheet row number excluding header offset details",
+    "submitted_at": "ISO timestamp from the form response",
+    "year": "Academic year label",
+    "title": "Project title",
+    "advisor": {
+      "name": "Primary advisor name",
+      "affiliation": "Primary advisor affiliation",
+      "email": "Primary advisor email"
+    },
+    "coadvisors_raw": "Original co-advisor field preserved as entered",
+    "pitch": "Short student-facing project pitch",
+    "background_objective_deliverables": "Main long-form description",
+    "thrust_area": "Project thrust area from the form",
+    "lab_workspace_access": "Workspace and access notes",
+    "notes": "Miscellaneous notes"
+  }
+}

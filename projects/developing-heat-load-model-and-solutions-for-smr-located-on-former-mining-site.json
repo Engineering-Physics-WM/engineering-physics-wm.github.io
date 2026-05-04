@@ -1,0 +1,19 @@
+{
+  "id": "developing-heat-load-model-and-solutions-for-smr-located-on-former-mining-site",
+  "slug": "developing-heat-load-model-and-solutions-for-smr-located-on-former-mining-site",
+  "source_row": 6,
+  "submitted_at": "2026-04-27T21:47:14.847000",
+  "year": "2026-2027",
+  "title": "Developing heat load model and solutions for SMR located on former mining site",
+  "advisor": {
+    "name": "Saskia Mordijck",
+    "affiliation": "Physics",
+    "email": "smordijck@wm.edu"
+  },
+  "coadvisors_raw": null,
+  "pitch": "Most conflicts in the world can reduced to 3 topics: Water, Energy & data. In this project, wou will directly be able to contribute to real world challenge through assessing the ability of a former mining site to provide the cooling for small modular reactors",
+  "background_objective_deliverables": "This project will involve assessing the heat capacity of mine water in combination with an artificial open air basin for supporting Small Modular Reactors in Southwest Virginia. Students will have to develop an increasingly complex system using open source software such as TESPy [1] (a thermal engineering software package for energy systems). The students will have to develop a solution which includes multiple heat deposits, addresses environmental temperatures, realistic pumps and water flow rates for a variety of environmental conditions. In addition, advanced modeling of the mine using open source software MODFLOW [2] can address the impact of multi year operation and localized temperatures in the mine itself [3].\n\n[1] TESPy v0.9.14\n[2] MODFLOW 6: USGS Modular Hydrologic Model | U.S. Geological Survey\n[3] Renz, A., Rühaak, W., Schätzl, P. et al. Numerical Modeling of Geothermal Use of Mine Water: Challenges and Examples. Mine Water Environ 28, 2–14 (2009). https://doi.org/10.1007/s10230-008-0063-3",
+  "thrust_area": "Computational imaging / simulation",
+  "lab_workspace_access": "This work requires computers and internet access.",
+  "notes": "This project will put you in contact with major energy companies and engage with a former W&M alumnus."
+}

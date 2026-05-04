@@ -1,0 +1,19 @@
+{
+  "id": "irays-computational-dual-spectrum-pupillometry-for-pre-hospital-neuro-triage",
+  "slug": "irays-computational-dual-spectrum-pupillometry-for-pre-hospital-neuro-triage",
+  "source_row": 4,
+  "submitted_at": "2026-04-25T12:03:11.335000",
+  "year": "2026-2027",
+  "title": "iRays: Computational Dual-Spectrum Pupillometry for Pre-Hospital Neuro-Triage",
+  "advisor": {
+    "name": "Ran Yang",
+    "affiliation": "Physics",
+    "email": "rxyan2@wm.edu"
+  },
+  "coadvisors_raw": "Gunter Luepke, Applied science, gxluep@wm.edu",
+  "pitch": "You are a year away from being engineers, not students, and iRays is the rare project where the distance between a William & Mary lab bench and the back of an ambulance and emergencies is exactly as far as you carry it; most undergraduates leave school without ever feeling that line disappear. Across the year you will get hands on with computational imaging, on-device AI, PCB and firmware integration, and the discipline of designing for a user who has 90 seconds and one free hand. This is not a \"might someday be useful\" project; it is an NIH-funded industry problem with active IRB approval, a filed patent, and a fire department waiting on the device. The pupils you teach this unit to read belong to people having strokes, overdoses, and head injuries, and faster, objective answers in those minutes save lives.",
+  "background_objective_deliverables": "Acute brain emergencies (stroke, traumatic brain injury, overdose) make up a large share of 911 calls, but the only neurologic tool in most ambulances is a penlight check that is subjective, hard to document, and wrong up to 66 percent of the time. iRays replaces that penlight with a handheld dual-spectrum imager that captures the pupillary light reflex (PLR), the fastest direct bedside indicator of brain function, and runs on-device AI to extract size, latency, constriction velocity, and binocular asymmetry in seconds. The physics core is computational imaging under uncontrolled motion: timed visible and infrared illumination, contact-free geometry correction (the \"Star Ruler\" depth model), event-synchronized stimulus timing (the \"Pink Frame\" method), and segmentation models that must run real time on edge compute.\nThe capstone team will own one integration thread that turns the existing benchtop prototype into a field-testable unit. Concretely, the team will (1) build and characterize a synthetic-eye replay rig for repeatable, ground-truth bench validation; (2) integrate dual-spectrum illumination and binocular acquisition into a handheld enclosure; (3) execute a structured measurement campaign on the rig covering timing accuracy, depth correction, and PLR feature repeatability under scripted motion and more.\nYear-end deliverables: a working handheld prototype, a calibrated synthetic-eye test bench, a characterized dataset with quantitative repeatability metrics, a live April Showcase demo, and a publication-ready technical report. Strong students will be positioned to co-author a peer-reviewed paper and contribute to follow-on patent disclosures.",
+  "thrust_area": "Instrumentation / sensors, AI-driven measurement or analysis, Bioengineering / medical devices, Computational imaging / simulation, Robotics / autonomy / controls",
+  "lab_workspace_access": "Primary workspace: Dr. Yang's Point of Care Lab in William & Mary Physics (Small Hall 234) for integration, embedded build-out, and bench measurement. Optical characterization and eye safety verification will occur in Dr. Luepke's lab in Small Hall. Day-to-day human subjects activities under the iRays IRB and IDE are handled by the graduate engineer and the Hampton Fire & Rescue partner team, so the capstone scope is primarily bench based on synthetic eyes. If a project thread benefits from limited human subjects involvement, the undergraduate team will complete CITI human subjects training and be added to the IRB protocol.",
+  "notes": null
+}

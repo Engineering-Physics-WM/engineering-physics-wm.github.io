@@ -1,0 +1,19 @@
+{
+  "id": "soft-shallow-water-biomimetic-robot",
+  "slug": "soft-shallow-water-biomimetic-robot",
+  "source_row": 7,
+  "submitted_at": "2026-04-28T18:02:13.721000",
+  "year": "2026-2027",
+  "title": "Soft Shallow Water Biomimetic Robot",
+  "advisor": {
+    "name": "Jonathan Frey",
+    "affiliation": "Applied Science",
+    "email": "jfrey@wm.edu"
+  },
+  "coadvisors_raw": null,
+  "pitch": "Marine ecosystems represent a vastly complex and diverse area of study that pose accessibility challenges for direct human interaction. Such regions have traditionally been studied by underwater autonomous vehicles utilizing propeller-based locomotion. However, these are limited in their maneuverability, speed, and natural integration. Soft robotics, on the other hand, represent a viable alternative to efficiently navigate sensitive marine ecosystems with minimal disturbance. Using biomimetics as design framework, this project will work towards developing a soft remotely operated underwater vehicle in the form factor of a manta ray for use in observation of shallow water marine environments with minimal disturbance.",
+  "background_objective_deliverables": "This project will result in a remotely operated soft robotic manta ray.",
+  "thrust_area": "Public-facing / installation / outreach, Instrumentation / sensors, Robotics / autonomy / controls",
+  "lab_workspace_access": "Makerspace",
+  "notes": null
+}

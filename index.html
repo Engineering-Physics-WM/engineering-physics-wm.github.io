@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+      name="description"
+      content="Engineering Physics Capstone 2026-2027 project browser and preference ranking workspace for William & Mary."
+    >
+    <title>Engineering Physics Capstone | William & Mary</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="#projects" aria-label="Engineering Physics Capstone home">
+        <span class="brand-mark" aria-hidden="true">EP</span>
+        <span>
+          <span class="brand-title">Engineering Physics Capstone</span>
+          <span class="brand-subtitle">William & Mary Physics</span>
+        </span>
+      </a>
+      <nav class="site-nav" aria-label="Primary navigation">
+        <a href="#projects">Projects</a>
+        <a href="#ranking">Rank</a>
+        <a href="#survey">Survey Setup</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="course-strip" aria-labelledby="course-title">
+        <div>
+          <p class="eyebrow">2026-2027 cohort</p>
+          <h1 id="course-title">Yearlong Engineering Physics Capstone</h1>
+          <p class="course-copy">
+            A student-facing project browser for the Engineering Physics concentration capstone,
+            taught by Prof. Ran Yang in the William & Mary Physics Department.
+          </p>
+        </div>
+        <dl class="course-facts" aria-label="Course facts">
+          <div>
+            <dt>Projects</dt>
+            <dd id="project-count">9</dd>
+          </div>
+          <div>
+            <dt>Team Size</dt>
+            <dd>2-3</dd>
+          </div>
+          <div>
+            <dt>Format</dt>
+            <dd>Yearlong</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="workspace" id="projects" aria-labelledby="projects-title">
+        <div class="workspace-main">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Project browser</p>
+              <h2 id="projects-title">Explore the cohort projects</h2>
+            </div>
+            <p id="result-count" class="result-count" aria-live="polite"></p>
+          </div>
+
+          <div class="filters" aria-label="Project filters">
+            <label class="field search-field">
+              <span>Search</span>
+              <input id="search-input" type="search" placeholder="Project, advisor, topic">
+            </label>
+            <label class="field">
+              <span>Thrust Area</span>
+              <select id="area-filter"></select>
+            </label>
+            <label class="field">
+              <span>Affiliation</span>
+              <select id="affiliation-filter"></select>
+            </label>
+            <label class="field compact-field">
+              <span>Sort</span>
+              <select id="sort-select">
+                <option value="title">Title</option>
+                <option value="advisor">Advisor</option>
+                <option value="submitted">Submitted</option>
+              </select>
+            </label>
+          </div>
+
+          <div id="project-grid" class="project-grid" aria-live="polite"></div>
+        </div>
+
+        <aside class="workspace-side" aria-labelledby="snapshot-title">
+          <div class="snapshot-panel">
+            <div class="section-heading compact">
+              <div>
+                <p class="eyebrow">Cohort map</p>
+                <h2 id="snapshot-title">Nine paths into engineering physics</h2>
+              </div>
+            </div>
+            <img
+              class="cohort-map"
+              src="assets/cohort-map.svg"
+              alt="Map of nine capstone projects connected to sensors, autonomy, bioengineering, computing, outreach, materials, and quantum themes."
+            >
+            <div id="area-summary" class="area-summary" aria-label="Thrust area summary"></div>
+          </div>
+        </aside>
+      </section>
+
+      <section class="ranking-section" id="ranking" aria-labelledby="ranking-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Preference ranking</p>
+            <h2 id="ranking-title">Student ranking workspace</h2>
+          </div>
+          <button class="secondary-button" id="reset-ranking" type="button">Reset Order</button>
+        </div>
+
+        <div class="ranking-layout">
+          <form class="student-form" id="student-form">
+            <label class="field">
+              <span>Student Name</span>
+              <input id="student-name" type="text" autocomplete="name" placeholder="Full name">
+            </label>
+            <label class="field">
+              <span>William & Mary Email</span>
+              <input id="student-email" type="email" autocomplete="email" placeholder="username@wm.edu">
+            </label>
+            <label class="field">
+              <span>Notes for Team Matching</span>
+              <textarea id="student-notes" rows="5" placeholder="Schedule constraints, collaborators, skills, or project comments"></textarea>
+            </label>
+            <div class="button-row">
+              <button class="primary-button" id="save-draft" type="button">Save Draft</button>
+              <button class="secondary-button" id="copy-ranking" type="button">Copy Response</button>
+              <a class="secondary-button link-button" id="email-ranking" href="mailto:rxyan2@wm.edu">Email Draft</a>
+            </div>
+            <p class="status-line" id="ranking-status" aria-live="polite"></p>
+          </form>
+
+          <div class="ranking-panel" aria-label="Project ranking list">
+            <ol id="ranking-list" class="ranking-list"></ol>
+          </div>
+        </div>
+      </section>
+
+      <section class="survey-section" id="survey" aria-labelledby="survey-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Survey setup</p>
+            <h2 id="survey-title">Browsing is static; collection needs an endpoint</h2>
+          </div>
+        </div>
+        <div class="survey-options">
+          <article>
+            <h3>Works Now</h3>
+            <p>
+              The site can present all projects, support search and filtering, and let students draft a complete ranked list in the browser.
+            </p>
+          </article>
+          <article>
+            <h3>Recommended Collection</h3>
+            <p>
+              Keep Google Forms or Qualtrics as the response store, then link or embed that form from this site for authenticated submissions.
+            </p>
+          </article>
+          <article>
+            <h3>Static Plus Backend</h3>
+            <p>
+              A static host can collect rankings through Netlify Forms, Formspree, Google Sheets Apps Script, Firebase, or Supabase.
+            </p>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <dialog id="project-dialog" class="project-dialog">
+      <button class="dialog-close" id="dialog-close" type="button" aria-label="Close project details">Close</button>
+      <article id="dialog-content"></article>
+    </dialog>
+
+    <template id="project-card-template">
+      <article class="project-card">
+        <div class="card-topline">
+          <span class="project-number"></span>
+          <span class="project-area-count"></span>
+        </div>
+        <h3></h3>
+        <p class="advisor-line"></p>
+        <p class="pitch-preview"></p>
+        <div class="tag-list"></div>
+        <div class="card-actions">
+          <button class="secondary-button details-button" type="button">Details</button>
+          <button class="primary-button rank-button" type="button">Move to Top</button>
+        </div>
+      </article>
+    </template>
+
+    <script src="app.js"></script>
+  </body>
+</html>
