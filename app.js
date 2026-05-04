@@ -10,11 +10,15 @@ const state = {
   draggedId: null,
 };
 
+const page = document.body.dataset.page;
+
 const elements = {
   projectCount: document.querySelector("#project-count"),
   resultCount: document.querySelector("#result-count"),
   projectGrid: document.querySelector("#project-grid"),
-  areaSummary: document.querySelector("#area-summary"),
+  themeScheme: document.querySelector("#theme-scheme"),
+  themeNodes: [...document.querySelectorAll(".theme-node")],
+  clearTheme: document.querySelector("#clear-theme"),
   searchInput: document.querySelector("#search-input"),
   areaFilter: document.querySelector("#area-filter"),
   affiliationFilter: document.querySelector("#affiliation-filter"),
@@ -27,7 +31,7 @@ const elements = {
   resetRanking: document.querySelector("#reset-ranking"),
   saveDraft: document.querySelector("#save-draft"),
   copyRanking: document.querySelector("#copy-ranking"),
-  emailRanking: document.querySelector("#email-ranking"),
+  submitRanking: document.querySelector("#submit-ranking"),
   rankingStatus: document.querySelector("#ranking-status"),
   studentName: document.querySelector("#student-name"),
   studentEmail: document.querySelector("#student-email"),
@@ -46,46 +50,78 @@ async function init() {
     }));
     state.ranking = [...state.projects];
 
-    restoreDraft();
-    hydrateFilters();
-    renderAll();
-    bindEvents();
+    if (page === "catalog") {
+      initCatalog();
+    }
+
+    if (page === "ranking") {
+      initRanking();
+    }
   } catch (error) {
     renderLoadError(error);
   }
 }
 
-function bindEvents() {
+function initCatalog() {
+  elements.projectCount.textContent = state.projects.length;
+  bindDialog();
+  hydrateFilters();
+  renderThemeScheme();
+  applyQueryFilter();
+  renderProjectBrowser();
+
   elements.searchInput.addEventListener("input", renderProjectBrowser);
-  elements.areaFilter.addEventListener("change", renderProjectBrowser);
+  elements.areaFilter.addEventListener("change", () => {
+    syncThemeState();
+    renderProjectBrowser();
+  });
   elements.affiliationFilter.addEventListener("change", renderProjectBrowser);
   elements.sortSelect.addEventListener("change", renderProjectBrowser);
+  elements.clearTheme.addEventListener("click", () => setThemeFilter(""));
+  elements.themeNodes.forEach((node) => {
+    node.addEventListener("click", () => setThemeFilter(node.dataset.area));
+  });
+}
+
+function initRanking() {
+  restoreDraft();
+  renderRanking();
+
+  elements.resetRanking.addEventListener("click", resetRanking);
+  elements.saveDraft.addEventListener("click", saveDraft);
+  elements.copyRanking.addEventListener("click", copyRanking);
+  elements.submitRanking.addEventListener("click", submitRankingByEmail);
+  [elements.studentName, elements.studentEmail, elements.studentNotes].forEach((input) => {
+    input.addEventListener("input", () => {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(buildDraft()));
+    });
+  });
+}
+
+function bindDialog() {
   elements.dialogClose.addEventListener("click", closeDialog);
   elements.dialog.addEventListener("click", (event) => {
     if (event.target === elements.dialog) {
       closeDialog();
     }
   });
-  elements.resetRanking.addEventListener("click", resetRanking);
-  elements.saveDraft.addEventListener("click", saveDraft);
-  elements.copyRanking.addEventListener("click", copyRanking);
-  elements.emailRanking.addEventListener("click", updateEmailLink);
-}
-
-function renderAll() {
-  elements.projectCount.textContent = state.projects.length;
-  renderAreaSummary();
-  renderProjectBrowser();
-  renderRanking();
-  updateEmailLink();
 }
 
 function hydrateFilters() {
   const areaOptions = uniqueSorted(state.projects.flatMap((project) => project.areas));
   const affiliationOptions = uniqueSorted(state.projects.map((project) => project.advisor_affiliation));
 
-  fillSelect(elements.areaFilter, "All thrust areas", areaOptions);
+  fillSelect(elements.areaFilter, "All themes", areaOptions);
   fillSelect(elements.affiliationFilter, "All affiliations", affiliationOptions);
+}
+
+function applyQueryFilter() {
+  const params = new URLSearchParams(window.location.search);
+  const area = params.get("area");
+  if (area) {
+    elements.areaFilter.value = area;
+  }
+  syncThemeState();
 }
 
 function renderProjectBrowser() {
@@ -113,7 +149,7 @@ function renderProjectBrowser() {
     })
     .sort((a, b) => sortProjects(a, b, sort));
 
-  elements.resultCount.textContent = `${state.filtered.length} of ${state.projects.length} projects`;
+  elements.resultCount.textContent = `${state.filtered.length} of ${state.projects.length}`;
   elements.projectGrid.replaceChildren(...state.filtered.map(createProjectCard));
 
   if (!state.filtered.length) {
@@ -132,24 +168,18 @@ function createProjectCard(project) {
   const pitch = fragment.querySelector(".pitch-preview");
   const tagList = fragment.querySelector(".tag-list");
   const detailsButton = fragment.querySelector(".details-button");
-  const rankButton = fragment.querySelector(".rank-button");
 
   fragment.querySelector(".project-number").textContent = String(project.number).padStart(2, "0");
   fragment.querySelector(".project-area-count").textContent = `${project.areas.length} themes`;
   title.textContent = project.title;
-  advisor.textContent = `${project.advisor_name} - ${project.advisor_affiliation}`;
+  advisor.textContent = `${project.advisor_name} / ${project.advisor_affiliation}`;
   pitch.textContent = "Loading project pitch...";
 
-  project.areas.slice(0, 4).forEach((area) => {
+  project.areas.slice(0, 3).forEach((area) => {
     tagList.append(createTag(area));
   });
 
   detailsButton.addEventListener("click", () => openProject(project));
-  rankButton.addEventListener("click", () => {
-    moveProjectToTop(project.id);
-    document.querySelector("#ranking").scrollIntoView({ behavior: "smooth", block: "start" });
-  });
-
   hydrateCardPitch(project, pitch, card);
   return card;
 }
@@ -168,27 +198,27 @@ async function openProject(project) {
 
   elements.dialogContent.innerHTML = `
     <div class="dialog-body">
-      <p class="dialog-kicker">Project ${String(project.number).padStart(2, "0")}</p>
-      <h2 class="dialog-title">${escapeHtml(detail.title)}</h2>
-      <div class="tag-list">${detail.thrust_area
+      <header class="dialog-header">
+        <p class="dialog-kicker">Project ${String(project.number).padStart(2, "0")}</p>
+        <h2 class="dialog-title">${escapeHtml(detail.title)}</h2>
+        <p class="dialog-advisor">${escapeHtml(detail.advisor.name)} / ${escapeHtml(detail.advisor.affiliation)}</p>
+      </header>
+
+      <div class="dialog-tags">${detail.thrust_area
         .split(",")
         .map((area) => `<span class="tag">${escapeHtml(area.trim())}</span>`)
         .join("")}</div>
 
-      <dl class="detail-grid">
-        <div class="detail-card">
-          <dt>Advisor</dt>
-          <dd>${escapeHtml(detail.advisor.name)}<br>${escapeHtml(detail.advisor.affiliation)}</dd>
-        </div>
-        <div class="detail-card">
+      <dl class="detail-list">
+        <div>
           <dt>Email</dt>
           <dd>${advisorEmail}</dd>
         </div>
-        <div class="detail-card">
+        <div>
           <dt>Co-advisors</dt>
           <dd>${escapeHtml(detail.coadvisors_raw || "None listed")}</dd>
         </div>
-        <div class="detail-card">
+        <div>
           <dt>Workspace</dt>
           <dd>${escapeHtml(detail.lab_workspace_access || "Not specified")}</dd>
         </div>
@@ -225,24 +255,48 @@ function closeDialog() {
   }
 }
 
-function renderAreaSummary() {
+function renderThemeScheme() {
+  const counts = getAreaCounts();
+  const rows = [...counts.entries()]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .map(([area, count]) => {
+      const button = document.createElement("button");
+      button.className = "scheme-chip";
+      button.type = "button";
+      button.dataset.area = area;
+      button.innerHTML = `<span>${escapeHtml(area)}</span><strong>${count}</strong>`;
+      button.addEventListener("click", () => setThemeFilter(area));
+      return button;
+    });
+
+  elements.themeScheme.replaceChildren(...rows);
+}
+
+function setThemeFilter(area) {
+  elements.areaFilter.value = area;
+  syncThemeState();
+  renderProjectBrowser();
+  document.querySelector("#projects").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function syncThemeState() {
+  const current = elements.areaFilter.value;
+  elements.themeNodes.forEach((node) => {
+    node.classList.toggle("is-active", node.dataset.area === current);
+  });
+  document.querySelectorAll(".scheme-chip").forEach((chip) => {
+    chip.classList.toggle("is-active", chip.dataset.area === current);
+  });
+}
+
+function getAreaCounts() {
   const counts = new Map();
   state.projects.forEach((project) => {
     project.areas.forEach((area) => {
       counts.set(area, (counts.get(area) || 0) + 1);
     });
   });
-
-  const rows = [...counts.entries()]
-    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
-    .map(([area, count]) => {
-      const row = document.createElement("div");
-      row.className = "area-summary-row";
-      row.innerHTML = `<span>${escapeHtml(area)}</span><strong>${count}</strong>`;
-      return row;
-    });
-
-  elements.areaSummary.replaceChildren(...rows);
+  return counts;
 }
 
 function renderRanking() {
@@ -256,7 +310,7 @@ function renderRanking() {
       <span class="rank-number">${index + 1}</span>
       <span>
         <span class="ranking-title">${escapeHtml(project.title)}</span>
-        <span class="ranking-meta">${escapeHtml(project.advisor_name)} - ${escapeHtml(project.advisor_affiliation)}</span>
+        <span class="ranking-meta">${escapeHtml(project.advisor_name)} / ${escapeHtml(project.advisor_affiliation)}</span>
       </span>
       <span class="rank-controls">
         <button class="icon-button" type="button" data-action="up" ${index === 0 ? "disabled" : ""}>Up</button>
@@ -277,7 +331,6 @@ function renderRanking() {
   });
 
   elements.rankingList.replaceChildren(...rows);
-  updateEmailLink();
 }
 
 function moveRanking(from, to) {
@@ -286,16 +339,8 @@ function moveRanking(from, to) {
   }
   const [project] = state.ranking.splice(from, 1);
   state.ranking.splice(to, 0, project);
+  localStorage.setItem(DRAFT_KEY, JSON.stringify(buildDraft()));
   renderRanking();
-}
-
-function moveProjectToTop(projectId) {
-  const index = state.ranking.findIndex((project) => project.id === projectId);
-  if (index <= 0) {
-    return;
-  }
-  moveRanking(index, 0);
-  setStatus("Moved project to the top of the draft ranking.");
 }
 
 function resetRanking() {
@@ -316,14 +361,16 @@ async function copyRanking() {
     await navigator.clipboard.writeText(text);
     setStatus("Ranking response copied.");
   } catch (error) {
-    setStatus("Clipboard is unavailable. Select the generated email draft instead.");
+    setStatus("Clipboard is unavailable. Use Submit by Email or select the response manually.");
   }
 }
 
-function updateEmailLink() {
+function submitRankingByEmail() {
+  saveDraft();
   const subject = encodeURIComponent("Engineering Physics Capstone Project Ranking");
   const body = encodeURIComponent(buildResponseText());
-  elements.emailRanking.href = `mailto:${INSTRUCTOR_EMAIL}?subject=${subject}&body=${body}`;
+  window.location.href = `mailto:${INSTRUCTOR_EMAIL}?subject=${subject}&body=${body}`;
+  setStatus("Opening an email draft to Prof. Ran Yang. Please send the email to submit.");
 }
 
 function buildDraft() {
@@ -368,6 +415,7 @@ function buildResponseText() {
   return [
     "Engineering Physics Capstone Project Ranking",
     "Academic Year: 2026-2027",
+    "Recipient: Prof. Ran Yang <rxyan2@wm.edu>",
     "",
     `Student: ${draft.name || "[name]"}`,
     `Email: ${draft.email || "[email]"}`,
@@ -455,11 +503,14 @@ function setStatus(message) {
 }
 
 function renderLoadError(error) {
-  elements.projectGrid.innerHTML = `
-    <p class="empty-state">
-      Project data could not be loaded. Run this folder through a local static server or deploy it to a static host.
-    </p>
-  `;
+  const target = elements.projectGrid || elements.rankingList;
+  if (target) {
+    target.innerHTML = `
+      <p class="empty-state">
+        Project data could not be loaded. Run this folder through a local static server or deploy it to a static host.
+      </p>
+    `;
+  }
   console.error(error);
 }
 

@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+      name="description"
+      content="Engineering Physics Capstone 2026-2027 student project ranking page."
+    >
+    <title>Rank Projects | Engineering Physics Capstone</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body data-page="ranking">
+    <header class="site-header">
+      <a class="brand" href="index.html" aria-label="Engineering Physics Capstone home">
+        <span class="brand-mark" aria-hidden="true">EP</span>
+        <span>
+          <span class="brand-title">Engineering Physics Capstone</span>
+          <span class="brand-subtitle">William & Mary Physics</span>
+        </span>
+      </a>
+      <nav class="site-nav" aria-label="Primary navigation">
+        <a href="index.html#projects">Projects</a>
+        <a href="index.html#themes">Cohort Map</a>
+        <a class="nav-cta" href="ranking.html" aria-current="page">Rank Projects</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="ranking-hero" aria-labelledby="ranking-title">
+        <div>
+          <p class="eyebrow">Student preferences</p>
+          <h1 id="ranking-title">Rank the projects</h1>
+          <p>
+            Drag projects into your preference order, add your information, then submit the draft
+            by email to Prof. Ran Yang.
+          </p>
+        </div>
+        <aside class="submit-note" aria-label="Submission information">
+          <h2>Where does it go?</h2>
+          <p>
+            Submit opens an email draft addressed to Prof. Ran Yang at
+            <a href="mailto:rxyan2@wm.edu">rxyan2@wm.edu</a>. This static page does not store
+            rankings on a server.
+          </p>
+        </aside>
+      </section>
+
+      <section class="ranking-section" aria-label="Ranking form">
+        <form class="student-form" id="student-form">
+          <label class="field">
+            <span>Student Name</span>
+            <input id="student-name" type="text" autocomplete="name" placeholder="Full name">
+          </label>
+          <label class="field">
+            <span>William & Mary Email</span>
+            <input id="student-email" type="email" autocomplete="email" placeholder="username@wm.edu">
+          </label>
+          <label class="field">
+            <span>Notes for Team Matching</span>
+            <textarea id="student-notes" rows="5" placeholder="Schedule constraints, collaborators, skills, or project comments"></textarea>
+          </label>
+          <div class="button-row">
+            <button class="primary-button" id="submit-ranking" type="button">Submit by Email</button>
+            <button class="secondary-button" id="save-draft" type="button">Save Draft</button>
+            <button class="secondary-button" id="copy-ranking" type="button">Copy Response</button>
+            <button class="text-button" id="reset-ranking" type="button">Reset Order</button>
+          </div>
+          <p class="status-line" id="ranking-status" aria-live="polite"></p>
+        </form>
+
+        <div class="ranking-panel" aria-label="Project ranking list">
+          <ol id="ranking-list" class="ranking-list"></ol>
+        </div>
+      </section>
+
+      <section class="algorithm-note" aria-labelledby="algorithm-title">
+        <p class="eyebrow">Team assignment</p>
+        <h2 id="algorithm-title">Automatic pairing is not active yet</h2>
+        <p>
+          The current static site collects no central database, so it cannot automatically pair
+          students. Once responses are in Google Forms, Qualtrics, or a small backend, a matching
+          script can optimize teams using ranked preferences, team size, constraints, and instructor
+          overrides.
+        </p>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>

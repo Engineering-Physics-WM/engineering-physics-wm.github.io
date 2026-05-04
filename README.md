@@ -5,12 +5,11 @@ spreadsheet.
 
 ## Files
 
-- `index.html`, `styles.css`, and `app.js` make the project browser and ranking
-  workspace.
+- `index.html`, `ranking.html`, `styles.css`, and `app.js` make the project
+  browser, clickable theme map, and ranking workspace.
 - `projects.json` contains the top-level index for listings.
 - `projects/<slug>.json` contains one full record per project.
 - `schema.json` documents the field layout.
-- `assets/cohort-map.svg` is the cohort visualization used on the homepage.
 
 ## Running locally
 
@@ -26,16 +25,19 @@ Then open `http://localhost:8000/`.
 ## Suggested static site flow
 
 1. Load `projects.json` on the homepage.
-2. Render each item as a card or table row.
-3. Link each item to `/projects/<slug>.html` or a client-side route.
-4. On the detail page, fetch `projects/<slug>.json`.
+2. Render each item as a project card.
+3. Open project details in a dialog.
+4. Fetch `projects/<slug>.json` when a student opens a project.
+5. Use `ranking.html` for preference ordering and draft submission.
 
 ## Survey collection
 
 The current site is fully static. It can help students draft and export project
-rankings, but it cannot securely store submissions by itself. For collection,
-connect the ranking flow to Google Forms, Qualtrics, Google Sheets Apps Script,
-Netlify Forms, Formspree, Firebase, or Supabase.
+rankings, but it cannot securely store submissions by itself. The current
+`ranking.html` submit button opens an email draft to Prof. Ran Yang. For central
+collection and automatic matching, connect the ranking flow to Google Forms,
+Qualtrics, Google Sheets Apps Script, Netlify Forms, Formspree, Firebase, or
+Supabase.
 
 ## Notes
 
