@@ -1,18 +1,18 @@
 :root {
   --ink: #343331;
   --muted: #77716c;
-  --soft: #f2eee8;
-  --paper: #fbf8f3;
-  --paper-strong: #fffdf9;
-  --line: #ded6cc;
-  --line-strong: #c8beb3;
-  --sage: #99a58f;
-  --sage-dark: #657462;
-  --dusty-pink: #c8a1a0;
-  --soft-beige: #d8c6ad;
-  --haze-blue: #a7bbc2;
+  --soft: #efefed;
+  --paper: #f7f7f5;
+  --paper-strong: #ffffff;
+  --line: #d8d5d1;
+  --line-strong: #bfb9b4;
+  --sage: #8e9a8b;
+  --sage-dark: #5d705f;
+  --dusty-pink: #c59ca5;
+  --haze-blue: #9fb5bd;
+  --blue-grey: #b7c2c7;
   --mauve-grey: #b9afb8;
-  --warm-grey: #c9c2b8;
+  --stone-grey: #cbc7c3;
   --shadow: 0 18px 50px rgba(65, 61, 55, 0.08);
 }
 
@@ -63,8 +63,8 @@ a {
   justify-content: space-between;
   gap: 18px;
   padding: 12px max(18px, calc((100vw - 1180px) / 2));
-  border-bottom: 1px solid rgba(200, 190, 179, 0.48);
-  background: rgba(251, 248, 243, 0.9);
+  border-bottom: 1px solid rgba(191, 185, 180, 0.48);
+  background: rgba(247, 247, 245, 0.92);
   backdrop-filter: blur(18px);
 }
 
@@ -84,7 +84,7 @@ a {
   place-items: center;
   border: 1px solid rgba(101, 116, 98, 0.24);
   border-radius: 8px;
-  background: #ddd4c7;
+  background: var(--stone-grey);
   color: var(--sage-dark);
   font-weight: 850;
   letter-spacing: 0;
@@ -138,7 +138,7 @@ a {
 
 .site-nav .nav-cta {
   border: 1px solid rgba(101, 116, 98, 0.18);
-  background: rgba(255, 253, 249, 0.62);
+  background: rgba(255, 255, 255, 0.62);
   color: var(--sage-dark);
 }
 
@@ -223,7 +223,7 @@ h3 {
   padding: 12px 13px;
   border: 1px solid rgba(200, 190, 179, 0.7);
   border-radius: 8px;
-  background: rgba(255, 253, 249, 0.7);
+  background: rgba(255, 255, 255, 0.7);
 }
 
 .course-facts dt {
@@ -248,7 +248,7 @@ h3 {
 .submit-note {
   border: 1px solid rgba(200, 190, 179, 0.72);
   border-radius: 8px;
-  background: rgba(251, 248, 243, 0.82);
+  background: rgba(247, 247, 245, 0.86);
   box-shadow: var(--shadow);
 }
 
@@ -370,7 +370,7 @@ h3 {
   height: 30px;
   place-items: center;
   border-radius: 8px;
-  background: rgba(216, 198, 173, 0.45);
+  background: rgba(159, 181, 189, 0.26);
   color: var(--sage-dark);
 }
 
@@ -555,13 +555,13 @@ h3 {
 .node-compute {
   grid-column: 3 / span 2;
   grid-row: 3 / span 2;
-  background: var(--soft-beige);
+  background: var(--stone-grey);
 }
 
 .node-ai {
   grid-column: 2 / span 2;
   grid-row: 1;
-  background: #cfc8bd;
+  background: var(--blue-grey);
 }
 
 .node-outreach {
@@ -579,7 +579,7 @@ h3 {
 .node-materials {
   grid-column: 6;
   grid-row: 4;
-  background: var(--warm-grey);
+  background: #c7c4c1;
 }
 
 .theme-scheme {
