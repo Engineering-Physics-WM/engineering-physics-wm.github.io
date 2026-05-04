@@ -1,6 +1,8 @@
 const DATA_INDEX = "projects.json";
 const DRAFT_KEY = "ep-capstone-2026-ranking-draft";
 const INSTRUCTOR_EMAIL = "rxyan2@wm.edu";
+const RAN_YANG_URL = "https://yangran.org";
+const PHYSICS_URL = "https://www.wm.edu/as/physics/";
 
 const state = {
   projects: [],
@@ -13,6 +15,9 @@ const state = {
 const page = document.body.dataset.page;
 
 const elements = {
+  siteHeader: document.querySelector(".site-header"),
+  siteNav: document.querySelector("#primary-nav"),
+  navToggle: document.querySelector("#nav-toggle"),
   projectCount: document.querySelector("#project-count"),
   resultCount: document.querySelector("#result-count"),
   projectGrid: document.querySelector("#project-grid"),
@@ -38,7 +43,28 @@ const elements = {
   studentNotes: document.querySelector("#student-notes"),
 };
 
+bindSiteChrome();
 init();
+
+function bindSiteChrome() {
+  if (!elements.navToggle || !elements.siteHeader || !elements.siteNav) {
+    return;
+  }
+
+  elements.navToggle.addEventListener("click", () => {
+    const isOpen = elements.siteHeader.classList.toggle("is-nav-open");
+    elements.navToggle.setAttribute("aria-expanded", String(isOpen));
+    elements.navToggle.setAttribute("aria-label", isOpen ? "Close menu" : "Open menu");
+  });
+
+  elements.siteNav.querySelectorAll("a").forEach((link) => {
+    link.addEventListener("click", () => {
+      elements.siteHeader.classList.remove("is-nav-open");
+      elements.navToggle.setAttribute("aria-expanded", "false");
+      elements.navToggle.setAttribute("aria-label", "Open menu");
+    });
+  });
+}
 
 async function init() {
   try {
@@ -170,7 +196,7 @@ function createProjectCard(project, displayIndex) {
 
   fragment.querySelector(".project-number").textContent = String(displayIndex + 1).padStart(2, "0");
   title.textContent = project.title;
-  advisor.textContent = `${project.advisor_name} / ${project.advisor_affiliation}`;
+  advisor.innerHTML = renderNameAffiliation(project.advisor_name, project.advisor_affiliation);
   pitch.textContent = "Loading project pitch...";
 
   project.areas.slice(0, 3).forEach((area) => {
@@ -199,7 +225,7 @@ async function openProject(project, displayIndex = project.number - 1) {
       <header class="dialog-header">
         <p class="dialog-kicker">Project ${String(displayIndex + 1).padStart(2, "0")}</p>
         <h2 class="dialog-title">${escapeHtml(detail.title)}</h2>
-        <p class="dialog-advisor">${escapeHtml(detail.advisor.name)} / ${escapeHtml(detail.advisor.affiliation)}</p>
+        <p class="dialog-advisor">${renderNameAffiliation(detail.advisor.name, detail.advisor.affiliation)}</p>
       </header>
 
       <div class="dialog-tags">${detail.thrust_area
@@ -214,25 +240,25 @@ async function openProject(project, displayIndex = project.number - 1) {
         </div>
         <div>
           <dt>Co-advisors</dt>
-          <dd>${escapeHtml(detail.coadvisors_raw || "None listed")}</dd>
+          <dd>${linkifyText(detail.coadvisors_raw || "None listed")}</dd>
         </div>
         <div>
           <dt>Workspace</dt>
-          <dd>${escapeHtml(detail.lab_workspace_access || "Not specified")}</dd>
+          <dd>${linkifyText(detail.lab_workspace_access || "Not specified")}</dd>
         </div>
       </dl>
 
       <section class="dialog-section">
         <h3>Student Pitch</h3>
-        <p>${escapeHtml(detail.pitch || "No pitch provided.")}</p>
+        <p>${linkifyText(detail.pitch || "No pitch provided.")}</p>
       </section>
       <section class="dialog-section">
         <h3>Background, Objectives, Deliverables</h3>
-        <p>${escapeHtml(detail.background_objective_deliverables || "No description provided.")}</p>
+        <p>${linkifyText(detail.background_objective_deliverables || "No description provided.")}</p>
       </section>
       ${
         detail.notes
-          ? `<section class="dialog-section"><h3>Notes</h3><p>${escapeHtml(detail.notes)}</p></section>`
+          ? `<section class="dialog-section"><h3>Notes</h3><p>${linkifyText(detail.notes)}</p></section>`
           : ""
       }
     </div>
@@ -308,10 +334,10 @@ function renderRanking() {
     item.dataset.id = project.id;
 
     item.innerHTML = `
-      <span class="rank-number">${index + 1}</span>
+        <span class="rank-number">${index + 1}</span>
       <span>
         <span class="ranking-title">${escapeHtml(project.title)}</span>
-        <span class="ranking-meta">${escapeHtml(project.advisor_name)} / ${escapeHtml(project.advisor_affiliation)}</span>
+        <span class="ranking-meta">${renderNameAffiliation(project.advisor_name, project.advisor_affiliation)}</span>
       </span>
       <span class="rank-controls">
         <button class="icon-button" type="button" data-action="up" ${index === 0 ? "disabled" : ""}>Up</button>
@@ -497,6 +523,16 @@ function createTag(label) {
   tag.className = "tag";
   tag.textContent = label;
   return tag;
+}
+
+function renderNameAffiliation(name, affiliation) {
+  return `${linkifyText(name)} / ${linkifyText(affiliation)}`;
+}
+
+function linkifyText(value) {
+  return escapeHtml(value)
+    .replace(/\bRan Yang\b/g, `<a href="${RAN_YANG_URL}">Ran Yang</a>`)
+    .replace(/\bphysics\b/gi, (match) => `<a href="${PHYSICS_URL}">${match}</a>`);
 }
 
 function setStatus(message) {
