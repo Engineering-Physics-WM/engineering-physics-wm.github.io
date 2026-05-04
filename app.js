@@ -66,7 +66,6 @@ function initCatalog() {
   elements.projectCount.textContent = state.projects.length;
   bindDialog();
   hydrateFilters();
-  renderThemeScheme();
   applyQueryFilter();
   renderProjectBrowser();
 
@@ -256,6 +255,9 @@ function closeDialog() {
 }
 
 function renderThemeScheme() {
+  if (!elements.themeScheme) {
+    return;
+  }
   const counts = getAreaCounts();
   const rows = [...counts.entries()]
     .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
