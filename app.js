@@ -150,7 +150,7 @@ function renderProjectBrowser() {
     .sort((a, b) => sortProjects(a, b, sort));
 
   elements.resultCount.textContent = `${state.filtered.length} of ${state.projects.length}`;
-  elements.projectGrid.replaceChildren(...state.filtered.map(createProjectCard));
+  elements.projectGrid.replaceChildren(...state.filtered.map((project, index) => createProjectCard(project, index)));
 
   if (!state.filtered.length) {
     const empty = document.createElement("p");
@@ -160,7 +160,7 @@ function renderProjectBrowser() {
   }
 }
 
-function createProjectCard(project) {
+function createProjectCard(project, displayIndex) {
   const fragment = elements.cardTemplate.content.cloneNode(true);
   const card = fragment.querySelector(".project-card");
   const title = fragment.querySelector("h3");
@@ -169,7 +169,7 @@ function createProjectCard(project) {
   const tagList = fragment.querySelector(".tag-list");
   const detailsButton = fragment.querySelector(".details-button");
 
-  fragment.querySelector(".project-number").textContent = String(project.number).padStart(2, "0");
+  fragment.querySelector(".project-number").textContent = String(displayIndex + 1).padStart(2, "0");
   fragment.querySelector(".project-area-count").textContent = `${project.areas.length} themes`;
   title.textContent = project.title;
   advisor.textContent = `${project.advisor_name} / ${project.advisor_affiliation}`;
@@ -179,7 +179,7 @@ function createProjectCard(project) {
     tagList.append(createTag(area));
   });
 
-  detailsButton.addEventListener("click", () => openProject(project));
+  detailsButton.addEventListener("click", () => openProject(project, displayIndex));
   hydrateCardPitch(project, pitch, card);
   return card;
 }
@@ -190,7 +190,7 @@ async function hydrateCardPitch(project, pitchElement, card) {
   card.dataset.projectId = project.id;
 }
 
-async function openProject(project) {
+async function openProject(project, displayIndex = project.number - 1) {
   const detail = await getProjectDetail(project);
   const advisorEmail = detail.advisor.email
     ? `<a href="mailto:${escapeAttribute(detail.advisor.email)}">${escapeHtml(detail.advisor.email)}</a>`
@@ -199,7 +199,7 @@ async function openProject(project) {
   elements.dialogContent.innerHTML = `
     <div class="dialog-body">
       <header class="dialog-header">
-        <p class="dialog-kicker">Project ${String(project.number).padStart(2, "0")}</p>
+        <p class="dialog-kicker">Project ${String(displayIndex + 1).padStart(2, "0")}</p>
         <h2 class="dialog-title">${escapeHtml(detail.title)}</h2>
         <p class="dialog-advisor">${escapeHtml(detail.advisor.name)} / ${escapeHtml(detail.advisor.affiliation)}</p>
       </header>
