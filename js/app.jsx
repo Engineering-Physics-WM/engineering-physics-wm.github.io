@@ -7,7 +7,18 @@ const Header = ({ page, onNavigate, year, setYear, years }) => {
     <header className={"site-header" + (mobileOpen ? " is-open" : "")}>
       <button className="brand" onClick={() => onNavigate("catalog")} aria-label="Engineering Physics home">
         <Monogram size={36} />
-        <span className="brand-mono">Engineering Physics<em>Capstone</em></span>
+        <div className="brand-stack">
+          <span className="brand-mono">Engineering Physics<em>Capstone</em></span>
+          <span className="brand-links">
+            <a href="https://www.wm.edu/as/physics/engineeringphysics/" target="_blank" rel="noopener" onClick={e => e.stopPropagation()}>Engineering Physics</a>
+            <span className="brand-sep">·</span>
+            <a href="https://www.wm.edu/as/physics/" target="_blank" rel="noopener" onClick={e => e.stopPropagation()}>Physics</a>
+            <span className="brand-sep">·</span>
+            <a href="https://cdsp.wm.edu/about/" target="_blank" rel="noopener" onClick={e => e.stopPropagation()}>CDSP</a>
+            <span className="brand-sep">·</span>
+            <a href="https://www.wm.edu/" target="_blank" rel="noopener" onClick={e => e.stopPropagation()}>William &amp; Mary</a>
+          </span>
+        </div>
       </button>
 
       <button

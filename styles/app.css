@@ -48,6 +48,19 @@
   font-style: normal; color: var(--muted); font-weight: 400;
   margin-left: 4px;
 }
+.brand-stack {
+  display: flex; flex-direction: column; gap: 2px;
+}
+.brand-links {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 10px; font-family: var(--font-mono); letter-spacing: 0.04em;
+  color: var(--muted);
+}
+.brand-links a {
+  color: var(--muted); text-decoration: none;
+}
+.brand-links a:hover { color: var(--ink); }
+.brand-sep { color: var(--hairline); }
 
 .year-switcher {
   display: flex; align-items: center; gap: 6px;
@@ -433,10 +446,10 @@ section.is-emph-soft .section-heading,
   transition: color 200ms;
 }
 .project-card-areas {
-  display: flex; flex-wrap: wrap; gap: 4px;
+  display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end;
   font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.08em;
   color: var(--muted); text-transform: uppercase;
-  text-align: right; max-width: 60%;
+  max-width: 60%;
 }
 .project-card-title {
   font-family: var(--font-display);

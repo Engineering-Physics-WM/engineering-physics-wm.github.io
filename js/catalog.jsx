@@ -84,7 +84,19 @@ const ProjectDialog = ({ project, displayIdx, onClose }) => {
                 : project.advisor}
             </dd>
             <dt>Affiliation</dt><dd>{project.affiliation}</dd>
-            {project.coadvisors && <><dt>Co-advisors</dt><dd>{project.coadvisors}</dd></>}
+            {project.coadvisors && (
+              <>
+                <dt>Co-advisors</dt>
+                <dd>
+                  {project.coadvisors.map((c, i) => (
+                    <span key={i} style={{ display: "block" }}>
+                      {c.email ? <a href={"mailto:" + c.email}>{c.name}</a> : c.name}
+                      {" "}({c.affiliation})
+                    </span>
+                  ))}
+                </dd>
+              </>
+            )}
             <dt>Year</dt><dd className="mono">2026 — 2027</dd>
             <dt>Team size</dt><dd>2 – 3 students</dd>
           </dl>
