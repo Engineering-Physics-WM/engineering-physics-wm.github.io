@@ -1,20 +1,5 @@
--- Engineering Physics Capstone ranking poll
--- Run this in Supabase Dashboard -> SQL Editor before enabling the live form.
-
-create table if not exists public.ranking_submissions (
-  id uuid primary key default gen_random_uuid(),
-  created_at timestamptz not null default now(),
-  cohort_year text not null default '2026-2027',
-  student_name text not null,
-  student_email text not null,
-  notes text,
-  ranking jsonb not null,
-  receipt_code text not null,
-  constraint ranking_submissions_wm_email
-    check (student_email ~* '^[^@[:space:]]+@wm\.edu$'),
-  constraint ranking_submissions_ranking_array
-    check (jsonb_typeof(ranking) = 'array' and jsonb_array_length(ranking) = 9)
-);
+-- Add an email allowlist to the existing ranking poll database.
+-- Run this once in Supabase Dashboard -> SQL Editor.
 
 create table if not exists public.ranking_allowed_students (
   id uuid primary key default gen_random_uuid(),
@@ -29,10 +14,6 @@ create table if not exists public.ranking_allowed_students (
     unique (cohort_year, student_email_normalized)
 );
 
-create unique index if not exists ranking_one_response_per_student
-on public.ranking_submissions (cohort_year, lower(student_email));
-
-alter table public.ranking_submissions enable row level security;
 alter table public.ranking_allowed_students enable row level security;
 
 drop policy if exists "Students can submit rankings" on public.ranking_submissions;
@@ -48,16 +29,9 @@ with check (
     select 1
     from public.ranking_allowed_students allowed
     where allowed.cohort_year = ranking_submissions.cohort_year
-      and lower(allowed.student_email) = lower(ranking_submissions.student_email)
+      and allowed.student_email_normalized = lower(ranking_submissions.student_email)
   )
 );
-
-drop policy if exists "Instructor can read rankings" on public.ranking_submissions;
-create policy "Instructor can read rankings"
-on public.ranking_submissions
-for select
-to authenticated
-using ((auth.jwt() ->> 'email') in ('rxyan2@wm.edu'));
 
 drop policy if exists "Instructor can manage allowed students" on public.ranking_allowed_students;
 create policy "Instructor can manage allowed students"
@@ -67,8 +41,8 @@ to authenticated
 using ((auth.jwt() ->> 'email') in ('rxyan2@wm.edu'))
 with check ((auth.jwt() ->> 'email') in ('rxyan2@wm.edu'));
 
--- Add the 17 allowed student emails here, then run this insert block once.
--- Replace the placeholder rows before running.
+-- After running the migration above, replace these placeholder rows with the
+-- 17 allowed student emails and run the insert block.
 --
 -- insert into public.ranking_allowed_students (cohort_year, student_email, student_name)
 -- values

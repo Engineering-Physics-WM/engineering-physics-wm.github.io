@@ -53,6 +53,8 @@ cp .env.example .env.local
 
 Before turning on the live poll, run `supabase/schema.sql` in the Supabase SQL Editor. The GitHub Pages workflow reads `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` from repository variables.
 
+To limit submissions to enrolled students, run `supabase/allowlist-migration.sql`, then add their `@wm.edu` addresses to `public.ranking_allowed_students`. The insert policy rejects any email not on that cohort allowlist.
+
 ## Deployment
 
 This repo is hosted on GitHub Pages. Push to `main` to run the Vite build workflow and deploy the generated `dist/` artifact.

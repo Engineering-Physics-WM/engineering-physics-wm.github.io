@@ -146,7 +146,11 @@ const RankingPage = ({ data, onNavigate }) => {
           setStatus("A response from this email already exists for this cohort.");
           return;
         }
-        setStatus("Supabase could not save yet. Make sure the table and RLS policy are created.");
+        if (error.code === "42501") {
+          setStatus("This email is not on the allowed student list for this cohort.");
+          return;
+        }
+        setStatus("Supabase could not save yet. Check the table, allowlist, and RLS policy.");
         return;
       }
 
