@@ -84,6 +84,9 @@ const ProjectDialog = ({ project, displayIdx, onClose }) => {
                 : project.advisor}
             </dd>
             <dt>Affiliation</dt><dd>{project.affiliation}</dd>
+            {project.partner && (
+              <><dt>Industry partner</dt><dd><a href={project.partner.url} target="_blank" rel="noopener">{project.partner.name} ↗</a></dd></>
+            )}
             {project.coadvisors && (
               <>
                 <dt>Co-advisors</dt>
