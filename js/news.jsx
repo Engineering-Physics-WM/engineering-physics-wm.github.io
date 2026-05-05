@@ -107,7 +107,7 @@ const NewsPage = ({ data, currentYear, onNavigate }) => {
             <li>All students</li>
             <li>Honors students</li>
             <li>All mentors</li>
-            <li>A selected project team</li>
+            <li>A selected project team, students, or mentors</li>
           </ul>
         </aside>
       </section>

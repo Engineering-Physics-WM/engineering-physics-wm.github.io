@@ -8,6 +8,7 @@ import { sortAnnouncements } from "./news.jsx";
 
 const INSTRUCTOR_EMAIL = "rxyan2@wm.edu";
 const CUSTOM_DRAFT_ID = "custom-draft";
+const TEAM_AUDIENCES = new Set(["team", "team_students", "team_mentors"]);
 
 const normalizeEmail = (email) => (email || "").trim().toLowerCase();
 
@@ -84,6 +85,21 @@ const buildAiPrompt = ({ cohortYear, audienceLabel, project, subject, body }) =>
   `Source text or draft:\n${body}`,
   "Return only a polished subject line and email body.",
 ].join("\n\n");
+
+const RecipientList = ({ title, people }) => (
+  <section className="recipient-group">
+    <h4>{title}<span>{people.length}</span></h4>
+    {people.map((person) => (
+      <div key={person.email} className="recipient-card">
+        <span>
+          <strong>{person.name || person.email}</strong>
+          <em>{person.role}</em>
+        </span>
+        <span className="mono">{person.email}</span>
+      </div>
+    ))}
+  </section>
+);
 
 const useDistribution = (projects, responses) => React.useMemo(() => {
   const idx = Object.fromEntries(projects.map((p, i) => [p.id, i]));
@@ -320,7 +336,9 @@ const EmailDraftView = ({ data, projects, responses, students }) => {
     { id: "students", label: "All students" },
     { id: "honors_students", label: "Honors students" },
     { id: "mentors", label: "All mentors" },
-    { id: "team", label: "Selected project team" },
+    { id: "team", label: "Selected team: students + mentors" },
+    { id: "team_students", label: "Selected team students" },
+    { id: "team_mentors", label: "Selected team mentors" },
   ];
   const defaultSource = announcements[0]?.id || CUSTOM_DRAFT_ID;
   const initialDraft = draftFromAnnouncement(announcements[0], data.currentYear);
@@ -331,6 +349,7 @@ const EmailDraftView = ({ data, projects, responses, students }) => {
   const [subject, setSubject] = React.useState(initialDraft.subject);
   const [body, setBody] = React.useState(initialDraft.body);
   const [status, setStatus] = React.useState("");
+  const [recipientFilter, setRecipientFilter] = React.useState("all");
 
   const teams = React.useMemo(
     () => buildTeams({ projects, responses, students, seed: 0 }),
@@ -351,18 +370,35 @@ const EmailDraftView = ({ data, projects, responses, students }) => {
       email: student.email,
       role: "student",
     }));
+    const teamMentors = mentorsForProject(project);
 
     if (audience === "students") return uniqueRecipients(studentRecipients);
     if (audience === "honors_students") return uniqueRecipients(honorsRecipients);
     if (audience === "mentors") return uniqueRecipients(mentorRecipients);
-    if (audience === "team") return uniqueRecipients([...teamStudents, ...mentorsForProject(project)]);
+    if (audience === "team_students") return uniqueRecipients(teamStudents);
+    if (audience === "team_mentors") return uniqueRecipients(teamMentors);
+    if (audience === "team") return uniqueRecipients([...teamStudents, ...teamMentors]);
     return uniqueRecipients([...studentRecipients, ...mentorRecipients]);
   }, [audience, project, projectId, projects, students, teams]);
 
-  const studentCount = recipients.filter((person) => person.role === "student").length;
-  const mentorCount = recipients.filter((person) => person.role === "mentor").length;
+  const studentRecipients = recipients.filter((person) => person.role === "student");
+  const mentorRecipients = recipients.filter((person) => person.role === "mentor");
+  const studentCount = studentRecipients.length;
+  const mentorCount = mentorRecipients.length;
+  const isTeamAudience = TEAM_AUDIENCES.has(audience);
   const selectedAnnouncement = announcements.find((item) => item.id === sourceId);
   const mailtoUrl = buildMailtoUrl({ recipients, subject, body });
+  const visibleRecipientGroups = [
+    { id: "student", title: "Students", people: studentRecipients },
+    { id: "mentor", title: "Mentors", people: mentorRecipients },
+  ].filter((group) => (
+    recipientFilter === "all" ? group.people.length > 0 : group.id === recipientFilter
+  ));
+
+  React.useEffect(() => {
+    if (recipientFilter === "student" && studentCount === 0) setRecipientFilter("all");
+    if (recipientFilter === "mentor" && mentorCount === 0) setRecipientFilter("all");
+  }, [mentorCount, recipientFilter, studentCount]);
 
   const selectSource = (nextSourceId) => {
     setSourceId(nextSourceId);
@@ -413,7 +449,7 @@ const EmailDraftView = ({ data, projects, responses, students }) => {
             </select>
           </label>
 
-          {audience === "team" && (
+          {isTeamAudience && (
             <label className="field">
               <span className="field-label">Project team</span>
               <select value={projectId} onChange={(e) => setProjectId(e.target.value)}>
@@ -482,27 +518,46 @@ const EmailDraftView = ({ data, projects, responses, students }) => {
           </div>
         </div>
         <div className="recipient-stats">
-          <span><strong>{studentCount}</strong> students</span>
-          <span><strong>{mentorCount}</strong> mentors</span>
+          <button
+            className={"recipient-stat" + (recipientFilter === "all" ? " is-active" : "")}
+            type="button"
+            aria-pressed={recipientFilter === "all"}
+            onClick={() => setRecipientFilter("all")}
+          >
+            <strong>{recipients.length}</strong> all
+          </button>
+          <button
+            className={"recipient-stat" + (recipientFilter === "student" ? " is-active" : "")}
+            type="button"
+            aria-pressed={recipientFilter === "student"}
+            onClick={() => setRecipientFilter("student")}
+          >
+            <strong>{studentCount}</strong> students
+          </button>
+          <button
+            className={"recipient-stat" + (recipientFilter === "mentor" ? " is-active" : "")}
+            type="button"
+            aria-pressed={recipientFilter === "mentor"}
+            onClick={() => setRecipientFilter("mentor")}
+          >
+            <strong>{mentorCount}</strong> mentors
+          </button>
         </div>
-        {audience === "team" && (
+        {isTeamAudience && (
           <div className="team-email-context">
             <span className="mono">{projectLabel(project)}</span>
-            <span>{(teams.teams[projectId] || []).length || 0} matched students in the current auto preview</span>
+            <span>Preview uses the current auto match. Saved Supabase teams will populate this group after final assignment.</span>
           </div>
         )}
-        <ul className="recipient-list">
-          {recipients.map((person) => (
-            <li key={person.email}>
-              <span>
-                <strong>{person.name || person.email}</strong>
-                <em>{person.role}</em>
-              </span>
-              <span className="mono">{person.email}</span>
-            </li>
+        <div className="recipient-list">
+          {visibleRecipientGroups.map((group) => (
+            <RecipientList key={group.id} title={group.title} people={group.people} />
           ))}
-          {!recipients.length && <li className="empty">No recipients found for this selection.</li>}
-        </ul>
+          {!recipients.length && <div className="recipient-empty">No recipients found for this selection.</div>}
+          {recipients.length > 0 && visibleRecipientGroups.length === 0 && (
+            <div className="recipient-empty">No {recipientFilter === "student" ? "students" : "mentors"} in this selection.</div>
+          )}
+        </div>
       </aside>
     </div>
   );

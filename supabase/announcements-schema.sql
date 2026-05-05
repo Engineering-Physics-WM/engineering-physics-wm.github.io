@@ -36,7 +36,7 @@ create table if not exists public.announcement_email_jobs (
   sent_at timestamptz,
   error_message text,
   constraint announcement_email_jobs_audience
-    check (audience_type in ('all', 'students', 'honors_students', 'mentors', 'team')),
+    check (audience_type in ('all', 'students', 'honors_students', 'mentors', 'team', 'team_students', 'team_mentors')),
   constraint announcement_email_jobs_status
     check (status in ('queued', 'sending', 'sent', 'failed'))
 );

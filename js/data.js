@@ -225,7 +225,9 @@ const EP_DATA = {
     { id: "students", label: "All students" },
     { id: "honors_students", label: "Honors students" },
     { id: "mentors", label: "All mentors" },
-    { id: "team", label: "Selected project team" },
+    { id: "team", label: "Selected team: students + mentors" },
+    { id: "team_students", label: "Selected team students" },
+    { id: "team_mentors", label: "Selected team mentors" },
   ],
 
   archive: [

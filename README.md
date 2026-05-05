@@ -45,7 +45,7 @@ Project data lives in `data/<year>/`. See `data/schema.json` for the expected sh
 
 Public cohort updates currently live in `js/data.js` as `announcements2026`. Files for announcement links can be placed in `public/announcements/<year>/` and linked as `/announcements/<year>/filename.pdf`. Editing this file updates the public site after commit/push/deploy; it does not automatically send email.
 
-The protected dashboard has an **Email drafts** tab that can turn a news item or custom note into a `mailto:` draft for selected groups: all students + mentors, all students, Honors students, all mentors, or a selected auto-matched project team. This opens the default mail app with BCC recipients filled in; the instructor still reviews and sends the message manually.
+The protected dashboard has an **Email drafts** tab that can turn a news item or custom note into a `mailto:` draft for selected groups: all students + mentors, all students, Honors students, all mentors, selected team students + mentors, selected team students, or selected team mentors. This opens the default mail app with BCC recipients filled in; the instructor still reviews and sends the message manually.
 
 ## Supabase Polling
 
@@ -62,6 +62,8 @@ To limit submissions to enrolled students, run `supabase/allowlist-migration.sql
 The instructor dashboard is protected with Supabase email/password auth. In Supabase, create a confirmed Auth user for `rxyan2@wm.edu` with the dashboard password. The app does not expose public sign-up; only that email can pass the dashboard gate.
 
 For a Supabase-backed announcement system, run `supabase/announcements-schema.sql`. Public published announcements can be read by anyone; draft/edit/send-job access stays limited to `rxyan2@wm.edu`. The current repo only defines the announcement and email-job tables; actual email delivery still needs a Supabase Edge Function or other trusted backend with a private email-provider API key.
+
+For saved final team assignments, run `supabase/team-assignments-schema.sql`. The current dashboard team email groups use the auto-match preview as a placeholder; once final teams are saved to Supabase, those groups should read from `cohort_team_members` instead.
 
 ## Deployment
 
