@@ -10,7 +10,7 @@ const Header = ({ page, onNavigate, year, setYear, years }) => {
         <div className="brand-stack">
           <span className="brand-mono">Engineering Physics<em>Capstone</em></span>
           <span className="brand-links">
-            <a href="https://www.wm.edu/as/physics/engineeringphysics/" target="_blank" rel="noopener" onClick={e => e.stopPropagation()}>Engineering Physics</a>
+            <a href="https://www.wm.edu/as/physics/undergrad/major/typical-course-of-study-epad/" target="_blank" rel="noopener" onClick={e => e.stopPropagation()}>Engineering Physics</a>
             <span className="brand-sep">·</span>
             <a href="https://www.wm.edu/as/physics/" target="_blank" rel="noopener" onClick={e => e.stopPropagation()}>Physics</a>
             <span className="brand-sep">·</span>
@@ -84,7 +84,6 @@ const Footer = ({ onNavigate }) => (
           <h4>Faculty</h4>
           <ul>
             <li><a href="https://yangran.org" target="_blank" rel="noopener">Ran Yang ↗</a></li>
-            <li><a href="mailto:rany@wm.edu">rany@wm.edu</a></li>
             <li><a href="https://www.wm.edu/as/physics/" target="_blank" rel="noopener">Physics dept ↗</a></li>
             <li><a href="https://cdsp.wm.edu/about/" target="_blank" rel="noopener">CDSP ↗</a></li>
           </ul>
