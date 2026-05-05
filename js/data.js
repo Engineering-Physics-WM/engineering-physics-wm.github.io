@@ -115,7 +115,10 @@ window.EP_DATA = {
       slug: "quantum-forge-pilot-project-with-inq-in-quantum-computing-or-quantum-sensing",
       title: "Quantum Forge Pilot Project with IonQ in Quantum Computing or Quantum Sensing",
       advisor: "IonQ Industry Mentor", affiliation: "Industry / IonQ", advisorEmail: null,
-      partner: { name: "IonQ", url: "https://www.ionq.com" },
+      partners: [
+        { name: "IonQ", url: "https://www.ionq.com" },
+        { name: "Q-SEnSE", url: "https://www.colorado.edu/research/qsense/" },
+      ],
       coadvisors: [{ name: "W&M Physics professor (TBD)", affiliation: "Physics", email: null }],
       areas: ["Quantum science and technology", "Computational imaging / simulation", "Instrumentation / sensors"],
       pitch: "IonQ builds the world's most powerful trapped-ion quantum computers — systems where individual ytterbium atoms, suspended in an electromagnetic trap and manipulated by laser pulses, serve as qubits with some of the highest gate fidelities in the industry. This Quantum Forge capstone puts you inside that work. You would join a year-long project mentored directly by an IonQ technical lead, tackling a real problem at the intersection of hardware characterization, algorithm development, or quantum sensing — and doing it at a company that is publicly traded, shipping cloud-accessible quantum hardware today, and actively expanding what trapped-ion systems can do.",
