@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { Reveal } from "./motion.jsx";
+import { buildTeams } from "./teamMatching.js";
 
 const useDistribution = (projects, responses) => React.useMemo(() => {
   const idx = Object.fromEntries(projects.map((p, i) => [p.id, i]));
@@ -125,63 +126,23 @@ const HeatmapView = ({ projects, responses }) => {
   );
 };
 
-// ----- Auto team-making (simple weighted greedy) -----
-const buildTeams = ({ projects, responses, teamSize = 3, weightTop = 3 }) => {
-  // Assign each student to one project, balancing. Simple greedy:
-  // Round 1: try to give each student their #1 pick if seats remain.
-  // Round 2..N: descend their preference list.
-  const seats = Object.fromEntries(projects.map(p => [p.id, teamSize]));
-  const teams = Object.fromEntries(projects.map(p => [p.id, []]));
-  const assigned = {};
-  let unhappy = 0;
-
-  // Sort responses for fairness — those with top-1 oversubscribed get processed first to spread
-  const order = [...responses].sort(() => Math.random() - 0.5);
-  for (let pass = 0; pass < projects.length; pass++) {
-    for (const r of order) {
-      if (assigned[r.email]) continue;
-      const choice = r.ranking[pass];
-      if (choice && seats[choice] > 0) {
-        seats[choice]--;
-        teams[choice].push({ email: r.email, name: r.name, prefRank: pass });
-        assigned[r.email] = { project: choice, prefRank: pass };
-        if (pass > 2) unhappy++;
-      }
-    }
-  }
-  // Remaining (couldn't fit anywhere in their list — rare)
-  for (const r of responses) {
-    if (assigned[r.email]) continue;
-    const open = projects.find(p => seats[p.id] > 0);
-    if (open) { seats[open.id]--; teams[open.id].push({ email: r.email, name: r.name, prefRank: projects.length }); assigned[r.email] = { project: open.id, prefRank: projects.length }; }
-  }
-  // Compute satisfaction: avg of (1 - prefRank / projects.length), top-3 weighted
-  const sat = responses.map(r => {
-    const a = assigned[r.email];
-    if (!a) return 0;
-    return Math.max(0, 1 - a.prefRank / Math.max(1, weightTop));
-  });
-  const avg = sat.length ? sat.reduce((a, b) => a + b, 0) / sat.length : 0;
-  return { teams, assigned, satisfaction: Math.round(avg * 100), unhappyCount: unhappy };
-};
-
-const TeamsView = ({ projects, responses }) => {
-  const [teamSize, setTeamSize] = React.useState(3);
-  const [weightTop, setWeightTop] = React.useState(3);
+const TeamsView = ({ projects, responses, students }) => {
   const [seed, setSeed] = React.useState(0);
   const [teams, setTeams] = React.useState(null);
   const [draggedStudent, setDraggedStudent] = React.useState(null);
   const [dropTarget, setDropTarget] = React.useState(null);
 
   React.useEffect(() => {
-    const result = buildTeams({ projects, responses, teamSize, weightTop });
+    const result = buildTeams({ projects, responses, students, seed });
     setTeams(result);
-  }, [projects, responses, teamSize, weightTop, seed]);
+  }, [projects, responses, students, seed]);
 
   if (!teams) return null;
 
   const moveStudent = (email, fromProjectId, toProjectId) => {
     if (fromProjectId === toProjectId) return;
+    if (teams.teams[fromProjectId]?.find(s => s.email === email)?.locked) return;
+    if ((teams.teams[toProjectId] || []).length >= teams.maxTeamSize) return;
     const next = JSON.parse(JSON.stringify(teams.teams));
     const fromList = next[fromProjectId];
     const i = fromList.findIndex(s => s.email === email);
@@ -197,22 +158,14 @@ const TeamsView = ({ projects, responses }) => {
   return (
     <div>
       <div className="teams-controls">
-        <label className="field">
+        <div className="field">
           <span className="field-label">Team size</span>
-          <select value={teamSize} onChange={(e) => setTeamSize(+e.target.value)}>
-            <option value={2}>2 students</option>
-            <option value={3}>3 students</option>
-            <option value={4}>4 students</option>
-          </select>
-        </label>
-        <label className="field">
-          <span className="field-label">Top-N weighted</span>
-          <select value={weightTop} onChange={(e) => setWeightTop(+e.target.value)}>
-            <option value={2}>Top 2</option>
-            <option value={3}>Top 3</option>
-            <option value={5}>Top 5</option>
-          </select>
-        </label>
+          <div className="mono" style={{ fontSize: 13 }}>2–3 students</div>
+        </div>
+        <div className="field">
+          <span className="field-label">Preference window</span>
+          <div className="mono" style={{ fontSize: 13 }}>Top 3 first</div>
+        </div>
         <button className="btn btn-ghost" onClick={() => setSeed(s => s + 1)} data-spark>Re-roll</button>
         <div className="satisfaction">
           <div>
@@ -220,8 +173,12 @@ const TeamsView = ({ projects, responses }) => {
             <div className="big">{teams.satisfaction}%</div>
           </div>
           <div>
-            <div style={{ fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase" }}>Below top-3</div>
+            <div style={{ fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase" }}>Moved below top-3</div>
             <div className="big" style={{ color: teams.unhappyCount > 4 ? "var(--pink-ink)" : "var(--olive-ink)" }}>{teams.unhappyCount}</div>
+          </div>
+          <div>
+            <div style={{ fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase" }}>Inactive projects</div>
+            <div className="big" style={{ color: "var(--muted)" }}>{teams.inactiveProjectIds.length}</div>
           </div>
         </div>
       </div>
@@ -247,17 +204,20 @@ const TeamsView = ({ projects, responses }) => {
                   setDraggedStudent(null);
                 }}
               >
-                {roster.length === 0 && <li className="team-empty">Open · drop a student here</li>}
+                {roster.length === 0 && <li className="team-empty">Inactive · no team this pass</li>}
                 {roster.map(s => (
                   <li
                     key={s.email}
-                    draggable
-                    className={draggedStudent?.email === s.email ? "dragging" : ""}
-                    onDragStart={() => setDraggedStudent({ email: s.email, fromProject: p.id })}
+                    draggable={!s.locked}
+                    className={(draggedStudent?.email === s.email ? "dragging" : "") + (s.locked ? " is-locked" : "")}
+                    onDragStart={() => !s.locked && setDraggedStudent({ email: s.email, fromProject: p.id })}
                     onDragEnd={() => setDraggedStudent(null)}
+                    title={s.locked ? "Honors-approved project; locked for matching" : "Drag for manual override"}
                   >
                     <span>{s.name}</span>
-                    <span className="pref-marker">#{s.prefRank + 1}</span>
+                    <span className="pref-marker">
+                      {s.locked ? `Honors P${String(s.honorsProject?.number).padStart(2, "0")}` : `#${s.prefRank + 1}`}
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -337,7 +297,7 @@ const DashboardPage = ({ data, onNavigate }) => {
       {tab === "distribution" && <DistributionView projects={data.projects} responses={responses} />}
       {tab === "heatmap" && <HeatmapView projects={data.projects} responses={responses} />}
       {tab === "students" && <StudentsView projects={data.projects} responses={responses} />}
-      {tab === "teams" && <TeamsView projects={data.projects} responses={responses} />}
+      {tab === "teams" && <TeamsView projects={data.projects} responses={responses} students={data.students || []} />}
     </div>
   );
 };

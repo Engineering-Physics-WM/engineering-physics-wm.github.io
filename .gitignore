@@ -19,3 +19,7 @@ dist/
 *.log
 .env
 .env.local
+
+# Local roster exports with private student identifiers
+data/2026-2027/*roster.csv
+data/2026-2027/students-private.local.json

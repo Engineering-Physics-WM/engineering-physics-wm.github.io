@@ -79,6 +79,10 @@ const RankingPage = ({ data, onNavigate }) => {
   }, [name, email, order, submitted]);
 
   const projectsById = React.useMemo(() => Object.fromEntries(data.projects.map(p => [p.id, p])), [data.projects]);
+  const allowedStudentEmails = React.useMemo(
+    () => new Set((data.students || []).map(s => s.email.toLowerCase())),
+    [data.students]
+  );
 
   const move = (from, to) => {
     if (to < 0 || to >= order.length || from === to) return;
@@ -112,6 +116,10 @@ const RankingPage = ({ data, onNavigate }) => {
     const cleanEmail = email.trim().toLowerCase();
     if (!WM_EMAIL_RE.test(cleanEmail)) {
       setStatus("Use your William & Mary email address.");
+      return;
+    }
+    if (allowedStudentEmails.size && !allowedStudentEmails.has(cleanEmail)) {
+      setStatus("This email is not on the allowed student list for this cohort.");
       return;
     }
     if (submitting) return;

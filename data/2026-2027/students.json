@@ -1,0 +1,561 @@
+{
+  "dataset": "Engineering Physics capstone students",
+  "year": "2026-2027",
+  "source": "EP 2026-2027 students roster.csv",
+  "count": 17,
+  "privacy": {
+    "publicFile": true,
+    "omittedFields": [
+      "93 ID number"
+    ],
+    "note": "W&M 93 ID numbers are intentionally omitted from the tracked public JSON."
+  },
+  "students": [
+    {
+      "id": "etucker",
+      "firstName": "Evelyn",
+      "lastName": "Tucker",
+      "name": "Evelyn Tucker",
+      "email": "etucker@wm.edu",
+      "graduationYear": "2027",
+      "honorsProject": {
+        "number": 9,
+        "projectId": "quantum-forge",
+        "projectTitle": "Quantum Forge Pilot Project with IonQ in Quantum Computing or Quantum Sensing",
+        "lockedForMatching": true
+      },
+      "requirements": {
+        "courseText": "APSC 251, PHYS 252, PHYS 351 (you need to take PHYS 256 or CS 241 to register this course, no exceptions)",
+        "courses": [
+          "APSC 251",
+          "PHYS 252",
+          "PHYS 351"
+        ],
+        "computationalRequirement": "I have taken and passed PHYS 256"
+      },
+      "sampleRanking": [
+        "quantum-forge",
+        "animal-crossing",
+        "usv-race-boat",
+        "photosensor-readout",
+        "irays-pupillometry",
+        "audimo",
+        "smr-heat-load",
+        "soft-bio-robot",
+        "biofilm-corrosion"
+      ]
+    },
+    {
+      "id": "cjbandekow",
+      "firstName": "Charlotte",
+      "lastName": "Bandekow",
+      "name": "Charlotte Bandekow",
+      "email": "cjbandekow@wm.edu",
+      "graduationYear": "2027",
+      "honorsProject": {
+        "number": 1,
+        "projectId": "animal-crossing",
+        "projectTitle": "Animal Crossing: Reengineering Effective Wildlife Crossing Structures At The Jamestown Dam",
+        "lockedForMatching": true
+      },
+      "requirements": {
+        "courseText": "APSC 251, PHYS 252, PHYS 351 (you need to take PHYS 256 or CS 241 to register this course, no exceptions), APSC 301, APSC 304",
+        "courses": [
+          "APSC 251",
+          "PHYS 252",
+          "PHYS 351",
+          "APSC 301",
+          "APSC 304"
+        ],
+        "computationalRequirement": "I have taken and passed PHYS 256"
+      },
+      "sampleRanking": [
+        "animal-crossing",
+        "usv-race-boat",
+        "photosensor-readout",
+        "irays-pupillometry",
+        "audimo",
+        "smr-heat-load",
+        "soft-bio-robot",
+        "biofilm-corrosion",
+        "quantum-forge"
+      ]
+    },
+    {
+      "id": "kmmiles",
+      "firstName": "Kamila",
+      "lastName": "Miles",
+      "name": "Kamila Miles",
+      "email": "kmmiles@wm.edu",
+      "graduationYear": "2027",
+      "honorsProject": null,
+      "requirements": {
+        "courseText": "APSC 251, PHYS 252, PHYS 351 (you need to take PHYS 256 or CS 241 to register this course, no exceptions), APSC 301, APSC 304",
+        "courses": [
+          "APSC 251",
+          "PHYS 252",
+          "PHYS 351",
+          "APSC 301",
+          "APSC 304"
+        ],
+        "computationalRequirement": "I have taken and passed PHYS 256"
+      },
+      "sampleRanking": [
+        "photosensor-readout",
+        "irays-pupillometry",
+        "audimo",
+        "smr-heat-load",
+        "soft-bio-robot",
+        "biofilm-corrosion",
+        "quantum-forge",
+        "animal-crossing",
+        "usv-race-boat"
+      ]
+    },
+    {
+      "id": "jye03",
+      "firstName": "Jingyuan",
+      "lastName": "Ye",
+      "name": "Jingyuan Ye",
+      "email": "jye03@wm.edu",
+      "graduationYear": "2027",
+      "honorsProject": null,
+      "requirements": {
+        "courseText": "APSC 251, PHYS 252, PHYS 351 (you need to take PHYS 256 or CS 241 to register this course, no exceptions), APSC 301, APSC 304",
+        "courses": [
+          "APSC 251",
+          "PHYS 252",
+          "PHYS 351",
+          "APSC 301",
+          "APSC 304"
+        ],
+        "computationalRequirement": "I have taken and passed PHYS 256"
+      },
+      "sampleRanking": [
+        "irays-pupillometry",
+        "audimo",
+        "smr-heat-load",
+        "soft-bio-robot",
+        "biofilm-corrosion",
+        "quantum-forge",
+        "animal-crossing",
+        "usv-race-boat",
+        "photosensor-readout"
+      ]
+    },
+    {
+      "id": "saneeley",
+      "firstName": "Solana",
+      "lastName": "Neeley",
+      "name": "Solana Neeley",
+      "email": "saneeley@wm.edu",
+      "graduationYear": "2027",
+      "honorsProject": {
+        "number": 1,
+        "projectId": "animal-crossing",
+        "projectTitle": "Animal Crossing: Reengineering Effective Wildlife Crossing Structures At The Jamestown Dam",
+        "lockedForMatching": true
+      },
+      "requirements": {
+        "courseText": "APSC 251, PHYS 252, PHYS 351 (you need to take PHYS 256 or CS 241 to register this course, no exceptions), APSC 301, APSC 304",
+        "courses": [
+          "APSC 251",
+          "PHYS 252",
+          "PHYS 351",
+          "APSC 301",
+          "APSC 304"
+        ],
+        "computationalRequirement": "I have taken and passed PHYS 256"
+      },
+      "sampleRanking": [
+        "animal-crossing",
+        "audimo",
+        "smr-heat-load",
+        "soft-bio-robot",
+        "biofilm-corrosion",
+        "quantum-forge",
+        "usv-race-boat",
+        "photosensor-readout",
+        "irays-pupillometry"
+      ]
+    },
+    {
+      "id": "foddssoncricco",
+      "firstName": "Finnur",
+      "lastName": "Oddsson Cricco",
+      "name": "Finnur Oddsson Cricco",
+      "email": "foddssoncricco@wm.edu",
+      "graduationYear": "2027",
+      "honorsProject": null,
+      "requirements": {
+        "courseText": "APSC 251, PHYS 252, PHYS 351 (you need to take PHYS 256 or CS 241 to register this course, no exceptions), APSC 301, APSC 304",
+        "courses": [
+          "APSC 251",
+          "PHYS 252",
+          "PHYS 351",
+          "APSC 301",
+          "APSC 304"
+        ],
+        "computationalRequirement": "I have taken and passed PHYS 256"
+      },
+      "sampleRanking": [
+        "smr-heat-load",
+        "soft-bio-robot",
+        "biofilm-corrosion",
+        "quantum-forge",
+        "animal-crossing",
+        "usv-race-boat",
+        "photosensor-readout",
+        "irays-pupillometry",
+        "audimo"
+      ]
+    },
+    {
+      "id": "wfdeluna",
+      "firstName": "Richie",
+      "lastName": "De Luna",
+      "name": "Richie De Luna",
+      "email": "wfdeluna@wm.edu",
+      "graduationYear": "2027",
+      "honorsProject": {
+        "number": 5,
+        "projectId": "audimo",
+        "projectTitle": "Audimo (Sensor-Augmented Acoustic Instruments)",
+        "lockedForMatching": true
+      },
+      "requirements": {
+        "courseText": "APSC 251, PHYS 252, PHYS 351 (you need to take PHYS 256 or CS 241 to register this course, no exceptions), APSC 301, APSC 304",
+        "courses": [
+          "APSC 251",
+          "PHYS 252",
+          "PHYS 351",
+          "APSC 301",
+          "APSC 304"
+        ],
+        "computationalRequirement": "I have taken and passed PHYS 256"
+      },
+      "sampleRanking": [
+        "audimo",
+        "soft-bio-robot",
+        "biofilm-corrosion",
+        "quantum-forge",
+        "animal-crossing",
+        "usv-race-boat",
+        "photosensor-readout",
+        "irays-pupillometry",
+        "smr-heat-load"
+      ]
+    },
+    {
+      "id": "bdstobie",
+      "firstName": "Brandon",
+      "lastName": "Stobie",
+      "name": "Brandon Stobie",
+      "email": "bdstobie@wm.edu",
+      "graduationYear": "2027",
+      "honorsProject": {
+        "number": 9,
+        "projectId": "quantum-forge",
+        "projectTitle": "Quantum Forge Pilot Project with IonQ in Quantum Computing or Quantum Sensing",
+        "lockedForMatching": true
+      },
+      "requirements": {
+        "courseText": "APSC 251, PHYS 252, PHYS 351 (you need to take PHYS 256 or CS 241 to register this course, no exceptions), APSC 301",
+        "courses": [
+          "APSC 251",
+          "PHYS 252",
+          "PHYS 351",
+          "APSC 301"
+        ],
+        "computationalRequirement": "I have taken and passed PHYS 256"
+      },
+      "sampleRanking": [
+        "quantum-forge",
+        "biofilm-corrosion",
+        "animal-crossing",
+        "usv-race-boat",
+        "photosensor-readout",
+        "irays-pupillometry",
+        "audimo",
+        "smr-heat-load",
+        "soft-bio-robot"
+      ]
+    },
+    {
+      "id": "eeverhart",
+      "firstName": "Elisabeth",
+      "lastName": "Everhart",
+      "name": "Elisabeth Everhart",
+      "email": "eeverhart@wm.edu",
+      "graduationYear": "2027",
+      "honorsProject": {
+        "number": 9,
+        "projectId": "quantum-forge",
+        "projectTitle": "Quantum Forge Pilot Project with IonQ in Quantum Computing or Quantum Sensing",
+        "lockedForMatching": true
+      },
+      "requirements": {
+        "courseText": "APSC 251, PHYS 252, PHYS 351 (you need to take PHYS 256 or CS 241 to register this course, no exceptions), APSC 301",
+        "courses": [
+          "APSC 251",
+          "PHYS 252",
+          "PHYS 351",
+          "APSC 301"
+        ],
+        "computationalRequirement": "I have taken and passed CS241"
+      },
+      "sampleRanking": [
+        "quantum-forge",
+        "animal-crossing",
+        "usv-race-boat",
+        "photosensor-readout",
+        "irays-pupillometry",
+        "audimo",
+        "smr-heat-load",
+        "soft-bio-robot",
+        "biofilm-corrosion"
+      ]
+    },
+    {
+      "id": "mphajasz",
+      "firstName": "Michael",
+      "lastName": "Hajasz",
+      "name": "Michael Hajasz",
+      "email": "mphajasz@wm.edu",
+      "graduationYear": "2027",
+      "honorsProject": null,
+      "requirements": {
+        "courseText": "APSC 251, PHYS 252, PHYS 351 (you need to take PHYS 256 or CS 241 to register this course, no exceptions), APSC 301",
+        "courses": [
+          "APSC 251",
+          "PHYS 252",
+          "PHYS 351",
+          "APSC 301"
+        ],
+        "computationalRequirement": "I have taken and passed PHYS 256"
+      },
+      "sampleRanking": [
+        "animal-crossing",
+        "usv-race-boat",
+        "photosensor-readout",
+        "irays-pupillometry",
+        "audimo",
+        "smr-heat-load",
+        "soft-bio-robot",
+        "biofilm-corrosion",
+        "quantum-forge"
+      ]
+    },
+    {
+      "id": "ndmiller",
+      "firstName": "Nick",
+      "lastName": "Miller",
+      "name": "Nick Miller",
+      "email": "ndmiller@wm.edu",
+      "graduationYear": "2027",
+      "honorsProject": null,
+      "requirements": {
+        "courseText": "APSC 251, PHYS 252",
+        "courses": [
+          "APSC 251",
+          "PHYS 252"
+        ],
+        "computationalRequirement": "I have taken and passed PHYS 256"
+      },
+      "sampleRanking": [
+        "usv-race-boat",
+        "photosensor-readout",
+        "irays-pupillometry",
+        "audimo",
+        "smr-heat-load",
+        "soft-bio-robot",
+        "biofilm-corrosion",
+        "quantum-forge",
+        "animal-crossing"
+      ]
+    },
+    {
+      "id": "jehempel",
+      "firstName": "Joss",
+      "lastName": "Hempel",
+      "name": "Joss Hempel",
+      "email": "jehempel@wm.edu",
+      "graduationYear": "2027",
+      "honorsProject": null,
+      "requirements": {
+        "courseText": "APSC 251, PHYS 252, APSC 301, APSC 304",
+        "courses": [
+          "APSC 251",
+          "PHYS 252",
+          "APSC 301",
+          "APSC 304"
+        ],
+        "computationalRequirement": "I have taken and passed PHYS 256"
+      },
+      "sampleRanking": [
+        "photosensor-readout",
+        "irays-pupillometry",
+        "audimo",
+        "smr-heat-load",
+        "soft-bio-robot",
+        "biofilm-corrosion",
+        "quantum-forge",
+        "animal-crossing",
+        "usv-race-boat"
+      ]
+    },
+    {
+      "id": "swmorefield",
+      "firstName": "Scott",
+      "lastName": "Morefield",
+      "name": "Scott Morefield",
+      "email": "swmorefield@wm.edu",
+      "graduationYear": "2027",
+      "honorsProject": null,
+      "requirements": {
+        "courseText": "APSC 251, PHYS 252",
+        "courses": [
+          "APSC 251",
+          "PHYS 252"
+        ],
+        "computationalRequirement": "I have taken and passed PHYS 256"
+      },
+      "sampleRanking": [
+        "irays-pupillometry",
+        "audimo",
+        "smr-heat-load",
+        "soft-bio-robot",
+        "biofilm-corrosion",
+        "quantum-forge",
+        "animal-crossing",
+        "usv-race-boat",
+        "photosensor-readout"
+      ]
+    },
+    {
+      "id": "infabris",
+      "firstName": "Ian",
+      "lastName": "Fabris",
+      "name": "Ian Fabris",
+      "email": "infabris@wm.edu",
+      "graduationYear": "2027",
+      "honorsProject": null,
+      "requirements": {
+        "courseText": "APSC 251, PHYS 252, APSC 301, APSC 304",
+        "courses": [
+          "APSC 251",
+          "PHYS 252",
+          "APSC 301",
+          "APSC 304"
+        ],
+        "computationalRequirement": "I will take CS 241 in the fall 2026 or summer 2026 (this is ok)"
+      },
+      "sampleRanking": [
+        "audimo",
+        "smr-heat-load",
+        "soft-bio-robot",
+        "biofilm-corrosion",
+        "quantum-forge",
+        "animal-crossing",
+        "usv-race-boat",
+        "photosensor-readout",
+        "irays-pupillometry"
+      ]
+    },
+    {
+      "id": "rwsublett",
+      "firstName": "Ryan",
+      "lastName": "Sublett",
+      "name": "Ryan Sublett",
+      "email": "rwsublett@wm.edu",
+      "graduationYear": "2027",
+      "honorsProject": null,
+      "requirements": {
+        "courseText": "APSC 251, PHYS 252, PHYS 351 (you need to take PHYS 256 or CS 241 to register this course, no exceptions), APSC 301, APSC 304",
+        "courses": [
+          "APSC 251",
+          "PHYS 252",
+          "PHYS 351",
+          "APSC 301",
+          "APSC 304"
+        ],
+        "computationalRequirement": "I have taken and passed PHYS 256"
+      },
+      "sampleRanking": [
+        "smr-heat-load",
+        "soft-bio-robot",
+        "biofilm-corrosion",
+        "quantum-forge",
+        "animal-crossing",
+        "usv-race-boat",
+        "photosensor-readout",
+        "irays-pupillometry",
+        "audimo"
+      ]
+    },
+    {
+      "id": "hcgreene",
+      "firstName": "Hayden",
+      "lastName": "Greene",
+      "name": "Hayden Greene",
+      "email": "hcgreene@wm.edu",
+      "graduationYear": "2027",
+      "honorsProject": {
+        "number": 5,
+        "projectId": "audimo",
+        "projectTitle": "Audimo (Sensor-Augmented Acoustic Instruments)",
+        "lockedForMatching": true
+      },
+      "requirements": {
+        "courseText": "APSC 251, PHYS 252, PHYS 351 (you need to take PHYS 256 or CS 241 to register this course, no exceptions)",
+        "courses": [
+          "APSC 251",
+          "PHYS 252",
+          "PHYS 351"
+        ],
+        "computationalRequirement": "I have taken and passed PHYS 256"
+      },
+      "sampleRanking": [
+        "audimo",
+        "soft-bio-robot",
+        "biofilm-corrosion",
+        "quantum-forge",
+        "animal-crossing",
+        "usv-race-boat",
+        "photosensor-readout",
+        "irays-pupillometry",
+        "smr-heat-load"
+      ]
+    },
+    {
+      "id": "aywang03",
+      "firstName": "Andrew",
+      "lastName": "Wang",
+      "name": "Andrew Wang",
+      "email": "aywang03@wm.edu",
+      "graduationYear": "2027",
+      "honorsProject": null,
+      "requirements": {
+        "courseText": "APSC 251, PHYS 252, APSC 301, APSC 304",
+        "courses": [
+          "APSC 251",
+          "PHYS 252",
+          "APSC 301",
+          "APSC 304"
+        ],
+        "computationalRequirement": "I have taken and passed PHYS 256"
+      },
+      "sampleRanking": [
+        "biofilm-corrosion",
+        "quantum-forge",
+        "animal-crossing",
+        "usv-race-boat",
+        "photosensor-readout",
+        "irays-pupillometry",
+        "audimo",
+        "smr-heat-load",
+        "soft-bio-robot"
+      ]
+    }
+  ]
+}

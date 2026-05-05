@@ -230,9 +230,17 @@
 }
 .team-roster li:hover { background: white; border-color: var(--hairline); }
 .team-roster li.dragging { opacity: 0.5; }
-.team-roster .pref-marker {
-  font-family: var(--font-mono); font-size: 10px; color: var(--pink-ink);
+.team-roster li.is-locked {
+  cursor: default;
+  border-color: color-mix(in oklch, var(--accent-ink) 30%, var(--hairline));
+  background: color-mix(in oklch, var(--accent) 24%, white);
 }
+.team-roster .pref-marker {
+  flex: 0 0 auto;
+  font-family: var(--font-mono); font-size: 10px; color: var(--pink-ink);
+  white-space: nowrap;
+}
+.team-roster li.is-locked .pref-marker { color: var(--accent-ink); }
 .team-roster.is-drop-target {
   background: var(--pink-soft);
   outline: 2px dashed var(--pink-ink);

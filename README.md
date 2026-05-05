@@ -41,7 +41,7 @@ npm run preview
 
 ## Data
 
-Project data lives in `data/<year>/`. See `data/schema.json` for the expected shape of each project entry.
+Project data lives in `data/<year>/`. See `data/schema.json` for the expected shape of each project entry. The 2026-2027 cohort roster is normalized into `data/2026-2027/students.json` for the dashboard and matching preview. The raw roster CSV and private JSON with W&M 93 ID numbers are ignored locally.
 
 ## Supabase Polling
 
@@ -53,7 +53,7 @@ cp .env.example .env.local
 
 Before turning on the live poll, run `supabase/schema.sql` in the Supabase SQL Editor. The GitHub Pages workflow reads `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` from repository variables.
 
-To limit submissions to enrolled students, run `supabase/allowlist-migration.sql`, then add their `@wm.edu` addresses to `public.ranking_allowed_students`. The insert policy rejects any email not on that cohort allowlist.
+To limit submissions to enrolled students, run `supabase/allowlist-migration.sql`, then run `supabase/allowed-students-2026-2027.sql`. The insert policy rejects any email not on that cohort allowlist.
 
 ## Deployment
 

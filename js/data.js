@@ -1,3 +1,15 @@
+import students2026 from "../data/2026-2027/students.json";
+
+const cohortStudents = students2026.students;
+const rosterResponses = cohortStudents.map((student) => ({
+  name: student.name,
+  email: student.email,
+  ranking: student.sampleRanking,
+  notes: student.honorsProject
+    ? `Honors project ${String(student.honorsProject.number).padStart(2, "0")} locked`
+    : student.requirements.computationalRequirement,
+}));
+
 const EP_DATA = {
   years: [
     { id: "2024-2025", label: "24·25", status: "archive" },
@@ -128,36 +140,16 @@ const EP_DATA = {
     },
   ],
 
-  // Sample student responses — drives the dashboard demo
-  responses: [
-    { name: "Aiyana Patel",   email: "appatel@wm.edu",     ranking: ["irays-pupillometry","quantum-forge","photosensor-readout","audimo","usv-race-boat","biofilm-corrosion","soft-bio-robot","smr-heat-load","animal-crossing"], notes: "ML/CV interest" },
-    { name: "Bennett Cho",    email: "bcho@wm.edu",        ranking: ["usv-race-boat","soft-bio-robot","irays-pupillometry","photosensor-readout","quantum-forge","animal-crossing","smr-heat-load","biofilm-corrosion","audimo"], notes: "Loves robotics" },
-    { name: "Cara Lin",       email: "clin@wm.edu",        ranking: ["quantum-forge","photosensor-readout","smr-heat-load","irays-pupillometry","biofilm-corrosion","audimo","usv-race-boat","soft-bio-robot","animal-crossing"], notes: "Theory-leaning" },
-    { name: "Daniel Reyes",   email: "dreyes@wm.edu",      ranking: ["irays-pupillometry","photosensor-readout","quantum-forge","biofilm-corrosion","audimo","usv-race-boat","soft-bio-robot","smr-heat-load","animal-crossing"], notes: "Pre-med + EE" },
-    { name: "Elena Rosario",  email: "erosario@wm.edu",    ranking: ["audimo","irays-pupillometry","biofilm-corrosion","photosensor-readout","quantum-forge","soft-bio-robot","usv-race-boat","animal-crossing","smr-heat-load"], notes: "Cellist" },
-    { name: "Felix Okafor",   email: "fokafor@wm.edu",     ranking: ["usv-race-boat","soft-bio-robot","animal-crossing","irays-pupillometry","photosensor-readout","biofilm-corrosion","quantum-forge","smr-heat-load","audimo"], notes: "Wants outdoor + robotics" },
-    { name: "Gita Mehta",     email: "gmehta@wm.edu",      ranking: ["biofilm-corrosion","irays-pupillometry","photosensor-readout","quantum-forge","soft-bio-robot","audimo","animal-crossing","usv-race-boat","smr-heat-load"], notes: "Bio + materials" },
-    { name: "Henrik Sato",    email: "hsato@wm.edu",       ranking: ["smr-heat-load","quantum-forge","photosensor-readout","irays-pupillometry","usv-race-boat","biofilm-corrosion","soft-bio-robot","animal-crossing","audimo"], notes: "Sim-heavy" },
-    { name: "Isla Berger",    email: "iberger@wm.edu",     ranking: ["animal-crossing","soft-bio-robot","biofilm-corrosion","usv-race-boat","irays-pupillometry","photosensor-readout","audimo","quantum-forge","smr-heat-load"], notes: "ENSP minor" },
-    { name: "Jasper Kim",     email: "jkim@wm.edu",        ranking: ["irays-pupillometry","quantum-forge","photosensor-readout","biofilm-corrosion","usv-race-boat","soft-bio-robot","smr-heat-load","audimo","animal-crossing"], notes: "MD-PhD aspirant" },
-    { name: "Kalia Brooks",   email: "kbrooks@wm.edu",     ranking: ["audimo","animal-crossing","soft-bio-robot","irays-pupillometry","biofilm-corrosion","photosensor-readout","quantum-forge","usv-race-boat","smr-heat-load"], notes: "Music + outreach" },
-    { name: "Liam Donnelly",  email: "ldonnelly@wm.edu",   ranking: ["usv-race-boat","photosensor-readout","quantum-forge","irays-pupillometry","soft-bio-robot","smr-heat-load","biofilm-corrosion","animal-crossing","audimo"], notes: "Embedded systems" },
-    { name: "Maya Underwood", email: "munderwood@wm.edu",  ranking: ["quantum-forge","smr-heat-load","photosensor-readout","irays-pupillometry","usv-race-boat","biofilm-corrosion","soft-bio-robot","audimo","animal-crossing"], notes: "Industry-curious" },
-    { name: "Nikhil Verma",   email: "nverma@wm.edu",      ranking: ["soft-bio-robot","usv-race-boat","irays-pupillometry","animal-crossing","photosensor-readout","biofilm-corrosion","quantum-forge","audimo","smr-heat-load"], notes: "Soft robotics" },
-    { name: "Owen Park",      email: "opark@wm.edu",       ranking: ["photosensor-readout","irays-pupillometry","quantum-forge","biofilm-corrosion","smr-heat-load","usv-race-boat","soft-bio-robot","audimo","animal-crossing"], notes: "Detector electronics" },
-    { name: "Priya Anand",    email: "panand@wm.edu",      ranking: ["biofilm-corrosion","animal-crossing","irays-pupillometry","audimo","photosensor-readout","soft-bio-robot","usv-race-boat","quantum-forge","smr-heat-load"], notes: "Wet-lab fluent" },
-    { name: "Quinn Hall",     email: "qhall@wm.edu",       ranking: ["irays-pupillometry","audimo","photosensor-readout","biofilm-corrosion","quantum-forge","usv-race-boat","soft-bio-robot","animal-crossing","smr-heat-load"], notes: "" },
-    { name: "Rohan Iyer",     email: "riyer@wm.edu",       ranking: ["quantum-forge","irays-pupillometry","photosensor-readout","smr-heat-load","biofilm-corrosion","audimo","usv-race-boat","soft-bio-robot","animal-crossing"], notes: "Quantum-curious" },
-    { name: "Sam Whitaker",   email: "swhitaker@wm.edu",   ranking: ["usv-race-boat","photosensor-readout","irays-pupillometry","soft-bio-robot","quantum-forge","biofilm-corrosion","smr-heat-load","audimo","animal-crossing"], notes: "" },
-    { name: "Talia Greene",   email: "tgreene@wm.edu",     ranking: ["irays-pupillometry","biofilm-corrosion","audimo","photosensor-readout","animal-crossing","quantum-forge","soft-bio-robot","usv-race-boat","smr-heat-load"], notes: "Pre-med" },
-    { name: "Uma Castillo",   email: "ucastillo@wm.edu",   ranking: ["soft-bio-robot","animal-crossing","biofilm-corrosion","usv-race-boat","irays-pupillometry","photosensor-readout","audimo","smr-heat-load","quantum-forge"], notes: "Field bio" },
-    { name: "Victor Ng",      email: "vng@wm.edu",         ranking: ["photosensor-readout","quantum-forge","smr-heat-load","irays-pupillometry","biofilm-corrosion","usv-race-boat","soft-bio-robot","audimo","animal-crossing"], notes: "Detector + sim" },
-  ],
+  students: cohortStudents,
+  cohortStudents: students2026,
+
+  // Roster-based sample responses — drives the dashboard demo until live submissions are connected.
+  responses: rosterResponses,
 
   archive: [
     { year: "2024-2025", title: "Founding cohort", projects: 7, teams: 3, students: 9, summary: "First Engineering Physics capstone year. Hand-matched teams, shared lab space established at Small Hall.", status: "past" },
     { year: "2025-2026", title: "Second cohort", projects: 8, teams: 3, students: 8, summary: "Introduced industry partner mentorship pilots. Public showcase added at the Sadler Center.", status: "past" },
-    { year: "2026-2027", title: "Current cohort — you are here", projects: 9, teams: null, students: 22, summary: "Ranking poll + first auto team-making preview running this year. Quantum Forge industry track joins the slate.", status: "current" },
+    { year: "2026-2027", title: "Current cohort — you are here", projects: 9, teams: null, students: 17, summary: "Ranking poll + first auto team-making preview running this year. Quantum Forge industry track joins the slate.", status: "current" },
     { year: "2027-2028", title: "Reserved", projects: null, teams: null, students: null, summary: "Placeholder for next year. Ranking and team data will land here once the cohort starts.", status: "future" },
   ],
 };

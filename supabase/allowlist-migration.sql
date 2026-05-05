@@ -16,6 +16,26 @@ create table if not exists public.ranking_allowed_students (
 
 alter table public.ranking_allowed_students enable row level security;
 
+create or replace function public.is_ranking_student_allowed(
+  check_cohort_year text,
+  check_student_email text
+)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from public.ranking_allowed_students allowed
+    where allowed.cohort_year = check_cohort_year
+      and allowed.student_email_normalized = lower(check_student_email)
+  );
+$$;
+
+grant execute on function public.is_ranking_student_allowed(text, text) to anon;
+
 drop policy if exists "Students can submit rankings" on public.ranking_submissions;
 create policy "Students can submit rankings"
 on public.ranking_submissions
@@ -25,11 +45,9 @@ with check (
   student_email ~* '^[^@[:space:]]+@wm\.edu$'
   and jsonb_typeof(ranking) = 'array'
   and jsonb_array_length(ranking) = 9
-  and exists (
-    select 1
-    from public.ranking_allowed_students allowed
-    where allowed.cohort_year = ranking_submissions.cohort_year
-      and allowed.student_email_normalized = lower(ranking_submissions.student_email)
+  and public.is_ranking_student_allowed(
+    ranking_submissions.cohort_year,
+    ranking_submissions.student_email
   )
 );
 
@@ -41,12 +59,4 @@ to authenticated
 using ((auth.jwt() ->> 'email') in ('rxyan2@wm.edu'))
 with check ((auth.jwt() ->> 'email') in ('rxyan2@wm.edu'));
 
--- After running the migration above, replace these placeholder rows with the
--- 17 allowed student emails and run the insert block.
---
--- insert into public.ranking_allowed_students (cohort_year, student_email, student_name)
--- values
---   ('2026-2027', 'student1@wm.edu', 'Student One'),
---   ('2026-2027', 'student2@wm.edu', 'Student Two')
--- on conflict on constraint ranking_allowed_students_unique_email do update
--- set student_name = excluded.student_name;
+-- After running this migration, run supabase/allowed-students-2026-2027.sql.
