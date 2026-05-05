@@ -45,6 +45,8 @@ Project data lives in `data/<year>/`. See `data/schema.json` for the expected sh
 
 Public cohort updates currently live in `js/data.js` as `announcements2026`. Files for announcement links can be placed in `public/announcements/<year>/` and linked as `/announcements/<year>/filename.pdf`. Editing this file updates the public site after commit/push/deploy; it does not automatically send email.
 
+The protected dashboard has an **Email drafts** tab that can turn a news item or custom note into a `mailto:` draft for selected groups: all students + mentors, all students, Honors students, all mentors, or a selected auto-matched project team. This opens the default mail app with BCC recipients filled in; the instructor still reviews and sends the message manually.
+
 ## Supabase Polling
 
 Copy `.env.example` to `.env.local` and add the Supabase publishable key for local development.

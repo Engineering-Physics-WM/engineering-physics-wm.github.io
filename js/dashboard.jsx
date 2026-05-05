@@ -4,6 +4,86 @@ import * as React from "react";
 import { Reveal } from "./motion.jsx";
 import { buildTeams } from "./teamMatching.js";
 import { PersonLink, YangLink } from "./links.jsx";
+import { sortAnnouncements } from "./news.jsx";
+
+const INSTRUCTOR_EMAIL = "rxyan2@wm.edu";
+const CUSTOM_DRAFT_ID = "custom-draft";
+
+const normalizeEmail = (email) => (email || "").trim().toLowerCase();
+
+const uniqueRecipients = (people) => {
+  const seen = new Set();
+  return (people || [])
+    .map((person) => ({
+      name: (person.name || person.email || "").trim(),
+      email: normalizeEmail(person.email),
+      role: person.role || "recipient",
+    }))
+    .filter((person) => {
+      if (!person.email || seen.has(person.email)) return false;
+      seen.add(person.email);
+      return true;
+    });
+};
+
+const projectNumber = (project) => `P${String(project?.num || 0).padStart(2, "0")}`;
+
+const projectLabel = (project) => (
+  project ? `${projectNumber(project)} · ${project.title.split(":")[0]}` : "Selected project"
+);
+
+const mentorsForProject = (project) => {
+  if (!project) return [];
+  return uniqueRecipients([
+    { name: project.advisor, email: project.advisorEmail, role: "mentor" },
+    ...(project.coadvisors || []).map((person) => ({ ...person, role: "mentor" })),
+  ]);
+};
+
+const resourceLine = (resource) => {
+  const label = resource.kind ? `${resource.kind}: ${resource.label}` : resource.label;
+  if (resource.url) return `${label} - ${resource.url}`;
+  if (resource.page) return `${label} - open the EP site and choose ${resource.page}`;
+  return label;
+};
+
+const draftFromAnnouncement = (announcement, cohortYear) => {
+  if (!announcement) {
+    return {
+      subject: `[EP ${cohortYear}] `,
+      body: "Hello everyone,\n\n\n\nBest,\nRan",
+    };
+  }
+
+  const resources = (announcement.resources || []).map(resourceLine);
+  return {
+    subject: `[EP ${announcement.cohortYear || cohortYear}] ${announcement.title.replace(/\.$/, "")}`,
+    body: [
+      "Hello everyone,",
+      announcement.summary,
+      ...(announcement.body || []),
+      resources.length ? `Resources:\n${resources.map((line) => `- ${line}`).join("\n")}` : "",
+      "Best,\nRan",
+    ].filter(Boolean).join("\n\n"),
+  };
+};
+
+const buildMailtoUrl = ({ recipients, subject, body }) => {
+  const params = new URLSearchParams();
+  params.set("bcc", recipients.map((person) => person.email).join(","));
+  params.set("subject", subject);
+  params.set("body", body);
+  return `mailto:${INSTRUCTOR_EMAIL}?${params.toString()}`;
+};
+
+const buildAiPrompt = ({ cohortYear, audienceLabel, project, subject, body }) => [
+  `Draft a concise, friendly Engineering Physics Capstone email for the ${cohortYear} cohort.`,
+  `Audience: ${audienceLabel}${project ? ` (${projectLabel(project)})` : ""}.`,
+  "Tone: clear, warm, direct, no hype. Keep it short enough that students will actually read it.",
+  `Current subject:\n${subject}`,
+  `Source text or draft:\n${body}`,
+  "Return only a polished subject line and email body.",
+].join("\n\n");
 
 const useDistribution = (projects, responses) => React.useMemo(() => {
   const idx = Object.fromEntries(projects.map((p, i) => [p.id, i]));
@@ -230,6 +310,204 @@ const TeamsView = ({ projects, responses, students }) => {
   );
 };
 
+const EmailDraftView = ({ data, projects, responses, students }) => {
+  const announcements = React.useMemo(
+    () => sortAnnouncements((data.announcements || []).filter(item => item.cohortYear === data.currentYear)),
+    [data.announcements, data.currentYear]
+  );
+  const audienceOptions = data.announcementAudiences || [
+    { id: "all", label: "All students + mentors" },
+    { id: "students", label: "All students" },
+    { id: "honors_students", label: "Honors students" },
+    { id: "mentors", label: "All mentors" },
+    { id: "team", label: "Selected project team" },
+  ];
+  const defaultSource = announcements[0]?.id || CUSTOM_DRAFT_ID;
+  const initialDraft = draftFromAnnouncement(announcements[0], data.currentYear);
+
+  const [audience, setAudience] = React.useState("all");
+  const [projectId, setProjectId] = React.useState(projects[0]?.id || "");
+  const [sourceId, setSourceId] = React.useState(defaultSource);
+  const [subject, setSubject] = React.useState(initialDraft.subject);
+  const [body, setBody] = React.useState(initialDraft.body);
+  const [status, setStatus] = React.useState("");
+
+  const teams = React.useMemo(
+    () => buildTeams({ projects, responses, students, seed: 0 }),
+    [projects, responses, students]
+  );
+
+  const project = projects.find((p) => p.id === projectId);
+  const audienceLabel = audienceOptions.find((option) => option.id === audience)?.label || "Selected group";
+
+  const recipients = React.useMemo(() => {
+    const studentRecipients = students.map((student) => ({ name: student.name, email: student.email, role: "student" }));
+    const honorsRecipients = students
+      .filter((student) => student.honorsProject)
+      .map((student) => ({ name: student.name, email: student.email, role: "student" }));
+    const mentorRecipients = projects.flatMap(mentorsForProject);
+    const teamStudents = (teams.teams[projectId] || []).map((student) => ({
+      name: student.name,
+      email: student.email,
+      role: "student",
+    }));
+
+    if (audience === "students") return uniqueRecipients(studentRecipients);
+    if (audience === "honors_students") return uniqueRecipients(honorsRecipients);
+    if (audience === "mentors") return uniqueRecipients(mentorRecipients);
+    if (audience === "team") return uniqueRecipients([...teamStudents, ...mentorsForProject(project)]);
+    return uniqueRecipients([...studentRecipients, ...mentorRecipients]);
+  }, [audience, project, projectId, projects, students, teams]);
+
+  const studentCount = recipients.filter((person) => person.role === "student").length;
+  const mentorCount = recipients.filter((person) => person.role === "mentor").length;
+  const selectedAnnouncement = announcements.find((item) => item.id === sourceId);
+  const mailtoUrl = buildMailtoUrl({ recipients, subject, body });
+
+  const selectSource = (nextSourceId) => {
+    setSourceId(nextSourceId);
+    const draft = nextSourceId === CUSTOM_DRAFT_ID
+      ? draftFromAnnouncement(null, data.currentYear)
+      : draftFromAnnouncement(announcements.find((item) => item.id === nextSourceId), data.currentYear);
+    setSubject(draft.subject);
+    setBody(draft.body);
+    setStatus("");
+  };
+
+  const copyText = async (text, label) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setStatus(`${label} copied.`);
+    } catch {
+      setStatus("Copy failed. Select the text and copy it manually.");
+    }
+  };
+
+  const openMailDraft = () => {
+    if (!recipients.length) {
+      setStatus("No recipients found for this group yet.");
+      return;
+    }
+    window.location.href = mailtoUrl;
+    setStatus(`Opening your mail composer with ${recipients.length} BCC recipients. Review, choose the W&M account, then send.`);
+  };
+
+  return (
+    <div className="email-draft-grid">
+      <section className="email-composer">
+        <div className="email-section-head">
+          <div>
+            <p className="kicker"><span className="dot">●</span> &nbsp; Dashboard-only</p>
+            <h3>Draft cohort email</h3>
+          </div>
+          <span className="email-mode mono">Mail app draft</span>
+        </div>
+
+        <div className="email-form-grid">
+          <label className="field">
+            <span className="field-label">Send to</span>
+            <select value={audience} onChange={(e) => setAudience(e.target.value)}>
+              {audienceOptions.map((option) => (
+                <option key={option.id} value={option.id}>{option.label}</option>
+              ))}
+            </select>
+          </label>
+
+          {audience === "team" && (
+            <label className="field">
+              <span className="field-label">Project team</span>
+              <select value={projectId} onChange={(e) => setProjectId(e.target.value)}>
+                {[...projects].sort((a, b) => a.num - b.num).map((item) => (
+                  <option key={item.id} value={item.id}>{projectLabel(item)}</option>
+                ))}
+              </select>
+            </label>
+          )}
+
+          <label className="field email-source-field">
+            <span className="field-label">Use news item</span>
+            <select value={sourceId} onChange={(e) => selectSource(e.target.value)}>
+              {announcements.map((item) => (
+                <option key={item.id} value={item.id}>{item.label} · {item.title}</option>
+              ))}
+              <option value={CUSTOM_DRAFT_ID}>Draft something new</option>
+            </select>
+          </label>
+        </div>
+
+        <label className="field">
+          <span className="field-label">Subject</span>
+          <input value={subject} onChange={(e) => setSubject(e.target.value)} />
+        </label>
+
+        <label className="field">
+          <span className="field-label">Message</span>
+          <textarea rows="13" value={body} onChange={(e) => setBody(e.target.value)} />
+        </label>
+
+        <div className="email-actions">
+          <button className="btn btn-primary" onClick={openMailDraft} disabled={!recipients.length} data-spark>
+            Open in Mail
+          </button>
+          <button className="btn btn-ghost" onClick={() => copyText(recipients.map((person) => person.email).join(", "), "Recipient list")}>
+            Copy recipients
+          </button>
+          <button className="btn btn-ghost" onClick={() => copyText(body, "Message body")}>
+            Copy body
+          </button>
+          <button
+            className="btn btn-pink"
+            onClick={() => copyText(buildAiPrompt({ cohortYear: data.currentYear, audienceLabel, project: audience === "team" ? project : null, subject, body }), "AI drafting prompt")}
+          >
+            Copy AI prompt
+          </button>
+        </div>
+
+        <p className="email-note">
+          This prepares a draft with BCC recipients. It does not auto-send, attach files, or choose the sender account for you.
+        </p>
+        {selectedAnnouncement?.resources?.length > 0 && (
+          <p className="email-note">
+            Attachments still need to be added in Mail. Linked resources are included in the message text.
+          </p>
+        )}
+        {status && <p className="email-status">{status}</p>}
+      </section>
+
+      <aside className="recipient-panel">
+        <div className="email-section-head">
+          <div>
+            <p className="field-label">Recipient preview</p>
+            <h3>{recipients.length} people</h3>
+          </div>
+        </div>
+        <div className="recipient-stats">
+          <span><strong>{studentCount}</strong> students</span>
+          <span><strong>{mentorCount}</strong> mentors</span>
+        </div>
+        {audience === "team" && (
+          <div className="team-email-context">
+            <span className="mono">{projectLabel(project)}</span>
+            <span>{(teams.teams[projectId] || []).length || 0} matched students in the current auto preview</span>
+          </div>
+        )}
+        <ul className="recipient-list">
+          {recipients.map((person) => (
+            <li key={person.email}>
+              <span>
+                <strong>{person.name || person.email}</strong>
+                <em>{person.role}</em>
+              </span>
+              <span className="mono">{person.email}</span>
+            </li>
+          ))}
+          {!recipients.length && <li className="empty">No recipients found for this selection.</li>}
+        </ul>
+      </aside>
+    </div>
+  );
+};
+
 const ArchiveView = ({ archive, currentYear, onSwitch }) => (
   <div className="archive-wrap">
     {archive.map((y, i) => (
@@ -285,6 +563,7 @@ const DashboardPage = ({ data, onNavigate }) => {
           ["heatmap", "Conflict heatmap"],
           ["students", "Student responses"],
           ["teams", "Auto team-making"],
+          ["email", "Email drafts"],
         ].map(([k, label]) => (
           <button
             key={k}
@@ -299,6 +578,7 @@ const DashboardPage = ({ data, onNavigate }) => {
       {tab === "heatmap" && <HeatmapView projects={data.projects} responses={responses} />}
       {tab === "students" && <StudentsView projects={data.projects} responses={responses} />}
       {tab === "teams" && <TeamsView projects={data.projects} responses={responses} students={data.students || []} />}
+      {tab === "email" && <EmailDraftView data={data} projects={data.projects} responses={responses} students={data.students || []} />}
     </div>
   );
 };
