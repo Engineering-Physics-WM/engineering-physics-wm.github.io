@@ -1,6 +1,7 @@
 /* Ranking page — drag-and-drop list w/ spring, mock submission. */
 
 import * as React from "react";
+import { Reveal } from "./motion.jsx";
 import { isSupabaseConfigured, supabase } from "./supabaseClient.js";
 
 const WM_EMAIL_RE = /^[^@\s]+@wm\.edu$/i;
