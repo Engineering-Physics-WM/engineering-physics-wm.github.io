@@ -306,6 +306,7 @@ const DashboardPage = ({ data, onNavigate }) => {
             Live-feel preview using sample submissions. Switch tabs to see ranking distribution, individual responses,
             a conflict heatmap, and the auto team-making preview with manual overrides.
           </p>
+          <p className="construction-note">Dashboard mockup · under construction · sample data only</p>
         </div>
         <Reveal as="dl" className="stats">
           <div><dt>Responses</dt><dd>{responses.length}</dd></div>

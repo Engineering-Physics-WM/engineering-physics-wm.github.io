@@ -155,6 +155,7 @@ const RankingPage = ({ data, onNavigate }) => {
           <p className="kicker"><span className="dot">●</span> &nbsp; Step into your capstone year</p>
           <h1>Rank the projects that <span className="ital">pull&nbsp;you&nbsp;in.</span></h1>
           <p>Drag the slate into your preferred order. Top three carry the most weight. We use this to seed teams — your notes and constraints help us read between the lines.</p>
+          <p className="construction-note">Student polling mockup · under construction · submissions stay local for now</p>
         </div>
         <Reveal as="aside" className="submit-card">
           <h2>How submission works</h2>

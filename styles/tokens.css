@@ -155,6 +155,31 @@ a { color: inherit; }
 .kicker .dot { color: var(--pink-ink); }
 .mono { font-family: var(--font-mono); font-feature-settings: "tnum"; }
 
+.construction-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: min(100%, 620px);
+  margin: 16px 0 0;
+  padding: 7px 0 7px 12px;
+  border-left: 2px solid var(--accent-ink);
+  color: var(--accent-ink) !important;
+  font-family: var(--font-mono);
+  font-size: 10px !important;
+  line-height: 1.4;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.construction-note::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent-ink);
+  box-shadow: 0 0 0 4px color-mix(in oklch, var(--accent) 22%, transparent);
+}
+
 /* Hairline rule */
 .rule { height: 1px; background: var(--hairline); border: 0; margin: 0; }
 
