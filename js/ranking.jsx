@@ -1,6 +1,16 @@
 /* Ranking page — drag-and-drop list w/ spring, mock submission. */
 
 import * as React from "react";
+import { isSupabaseConfigured, supabase } from "./supabaseClient.js";
+
+const WM_EMAIL_RE = /^[^@\s]+@wm\.edu$/i;
+
+const createReceiptCode = () => {
+  if (globalThis.crypto?.randomUUID) {
+    return "EP-" + globalThis.crypto.randomUUID().replaceAll("-", "").slice(0, 8).toUpperCase();
+  }
+  return "EP-" + Math.random().toString(36).slice(2, 10).toUpperCase();
+};
 
 const RankItem = ({ project, idx, total, onMove, onDragStart, onDragOver, onDrop, onDragEnd, dragging }) => (
   <li
@@ -35,6 +45,7 @@ const RankingPage = ({ data, onNavigate }) => {
   const [status, setStatus] = React.useState("");
   const [submitted, setSubmitted] = React.useState(null);
   const [step, setStep] = React.useState(1);
+  const [submitting, setSubmitting] = React.useState(false);
 
   // Restore draft
   React.useEffect(() => {
@@ -92,25 +103,65 @@ const RankingPage = ({ data, onNavigate }) => {
 
   const reset = () => { setOrder(data.projects.map(p => p.id)); setStatus("Order reset."); };
 
-  const submit = () => {
+  const submit = async () => {
     if (!name.trim() || !email.trim()) {
       setStatus("Add your name and W&M email before submitting.");
       return;
     }
-    // Mock backend submission — pretends to POST to /api/rankings
+    const cleanEmail = email.trim().toLowerCase();
+    if (!WM_EMAIL_RE.test(cleanEmail)) {
+      setStatus("Use your William & Mary email address.");
+      return;
+    }
+    if (submitting) return;
+
+    const receiptCode = createReceiptCode();
     const receipt = {
-      id: "EP-" + Math.random().toString(36).slice(2, 8).toUpperCase(),
+      id: receiptCode,
       ts: new Date().toISOString(),
-      name, email, notes, order
+      name: name.trim(),
+      email: cleanEmail,
+      notes: notes.trim(),
+      order,
+      source: isSupabaseConfigured ? "supabase" : "local"
     };
-    setStatus("Sending to instructor inbox…");
+
+    setSubmitting(true);
+    setStatus(isSupabaseConfigured ? "Saving to Supabase…" : "Saving local mock submission…");
+
+    if (isSupabaseConfigured) {
+      const { error } = await supabase.from("ranking_submissions").insert({
+        cohort_year: data.currentYear,
+        student_name: receipt.name,
+        student_email: receipt.email,
+        notes: receipt.notes || null,
+        ranking: receipt.order,
+        receipt_code: receiptCode,
+      });
+
+      if (error) {
+        setSubmitting(false);
+        if (error.code === "23505") {
+          setStatus("A response from this email already exists for this cohort.");
+          return;
+        }
+        setStatus("Supabase could not save yet. Make sure the table and RLS policy are created.");
+        return;
+      }
+
+      setSubmitted(receipt);
+      setStatus("");
+      setSubmitting(false);
+      return;
+    }
+
     setTimeout(() => {
       setSubmitted(receipt);
       setStatus("");
-      // Stash in localStorage as a stand-in for the real backend
       const all = JSON.parse(localStorage.getItem("ep-mock-submissions") || "[]");
       all.push(receipt);
       localStorage.setItem("ep-mock-submissions", JSON.stringify(all));
+      setSubmitting(false);
     }, 900);
   };
 
@@ -121,7 +172,7 @@ const RankingPage = ({ data, onNavigate }) => {
           <div>
             <p className="kicker"><span className="dot">●</span> &nbsp; Submission received</p>
             <h1>Your ranking is <span className="ital">in.</span></h1>
-            <p>Prof. Yang sees your preferences alongside the rest of the cohort. You'll hear back as teams are formed.</p>
+            <p>{submitted.source === "supabase" ? "Your preferences are saved to the live poll database." : "This local mock receipt stays in your browser until the live database is enabled."} You'll hear back as teams are formed.</p>
           </div>
         </section>
         <Reveal as="div" className="submitted-card">
@@ -138,8 +189,8 @@ const RankingPage = ({ data, onNavigate }) => {
           </div>
         </Reveal>
         <Reveal as="div" className="submission-mock" style={{ marginTop: 32 }}>
-          <h3>What happens next (placeholder)</h3>
-          <p style={{ color: "var(--ink-soft)", margin: "0 0 12px" }}>The current site mocks the submission. When the backend lands, your ranking will hit one of these endpoints.</p>
+          <h3>What happens next</h3>
+          <p style={{ color: "var(--ink-soft)", margin: "0 0 12px" }}>The form writes to Supabase when the project environment variables and ranking table are present. Local fallback remains available for development.</p>
           <div className="endpoints">
             <div className="endpoint"><div><span className="ep-method">POST</span><span className="ep-path">/api/rankings</span></div><div className="ep-desc">Stores ranking + notes against a year + student.</div></div>
             <div className="endpoint"><div><span className="ep-method">GET</span><span className="ep-path">/api/cohort/2026-2027</span></div><div className="ep-desc">Returns the live response set for the instructor view.</div></div>
@@ -157,11 +208,11 @@ const RankingPage = ({ data, onNavigate }) => {
           <p className="kicker"><span className="dot">●</span> &nbsp; Step into your capstone year</p>
           <h1>Rank the projects that <span className="ital">pull&nbsp;you&nbsp;in.</span></h1>
           <p>Drag the slate into your preferred order. Top three carry the most weight. We use this to seed teams — your notes and constraints help us read between the lines.</p>
-          <p className="construction-note">Student polling mockup · under construction · submissions stay local for now</p>
+          <p className="construction-note">{isSupabaseConfigured ? "Student polling beta · under construction · saves to Supabase" : "Student polling mockup · under construction · submissions stay local for now"}</p>
         </div>
         <Reveal as="aside" className="submit-card">
           <h2>How submission works</h2>
-          <p>Your ranking is sent to <a href="https://yangran.org" style={{ color: "var(--olive-ink)" }}>Prof. Ran Yang</a> via the EP submission endpoint (mocked here; backend goes live alongside the real form launch). Drafts auto-save in this browser.</p>
+          <p>Your ranking is sent to <a href="https://yangran.org" style={{ color: "var(--olive-ink)" }}>Prof. Ran Yang</a>{isSupabaseConfigured ? " through the Supabase-backed poll." : " via the local mock flow until Supabase is configured."} Drafts auto-save in this browser.</p>
         </Reveal>
       </section>
 
@@ -196,7 +247,9 @@ const RankingPage = ({ data, onNavigate }) => {
           </label>
           <p className="status-line">{status}</p>
           <div className="button-row">
-            <button className="btn btn-primary" data-spark onClick={submit}>Submit ranking</button>
+            <button className="btn btn-primary" data-spark onClick={submit} disabled={submitting}>
+              {submitting ? "Submitting…" : "Submit ranking"}
+            </button>
             <button className="btn btn-ghost" onClick={reset}>Reset order</button>
           </div>
         </aside>
