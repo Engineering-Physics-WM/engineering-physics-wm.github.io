@@ -92,7 +92,7 @@ const Footer = ({ onNavigate }) => (
     <div className="footer-meta">
       <span className="mono">EP™ · Engineering Physics Capstone</span>
       <span className="mono">2026 — 2027</span>
-      <span className="mono">© William &amp; Mary</span>
+      <span className="mono">© Ran Yang</span>
     </div>
   </footer>
 );

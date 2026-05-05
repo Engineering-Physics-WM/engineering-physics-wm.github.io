@@ -191,7 +191,7 @@ const CatalogPage = ({ data, onNavigate }) => {
 
           <ul className="hero-marquee" aria-label="At a glance">
             <li><span className="hm-num">09</span><span className="hm-lab">projects</span></li>
-            <li><span className="hm-num">07</span><span className="hm-lab">advisors</span></li>
+            <li><span className="hm-num">14</span><span className="hm-lab">advisors</span></li>
             <li><span className="hm-num">2 – 3</span><span className="hm-lab">per team</span></li>
             <li><span className="hm-num">1</span><span className="hm-lab">academic year</span></li>
           </ul>
@@ -228,9 +228,9 @@ const CatalogPage = ({ data, onNavigate }) => {
             </div>
           </div>
 
-          <blockquote className="hero-pull">
-            <span className="hp-mark">“</span>
-            <p>The capstone is where physics intuition meets the long, slow craft of building something that actually works.</p>
+          <blockquote className=”hero-pull”>
+            <span className=”hp-mark”>”</span>
+            <p>You already know why it works. This year, you find out whether you can make it matter.</p>
             <footer>— Prof. Ran Yang</footer>
           </blockquote>
         </aside>
