@@ -206,16 +206,16 @@ const CatalogPage = ({ data, onNavigate }) => {
                 <span className="what"><strong>Open ranking poll.</strong> Browse the slate and submit your top picks before Friday.</span>
               </li>
               <li>
-                <span className="when mono">Fri · Nov 21</span>
+                <span className="when mono">Mon · May 11</span>
                 <span className="what">Ranking closes. Auto team-making preview shared with cohort.</span>
               </li>
               <li>
-                <span className="when mono">Mon · Nov 24</span>
+                <span className="when mono">Fri · May 15</span>
                 <span className="what">Final teams confirmed. Kickoffs scheduled with advisors.</span>
               </li>
               <li>
-                <span className="when mono">Spring</span>
-                <span className="what">Mid-project reviews, lab visits, and the public showcase in May.</span>
+                <span className="when mono">Coming soon</span>
+                <span className="what">Mid-project reviews, lab visits, and the public showcase in April 2027.</span>
               </li>
             </ol>
             <div className="hero-faculty">
@@ -230,7 +230,7 @@ const CatalogPage = ({ data, onNavigate }) => {
 
           <blockquote className=”hero-pull”>
             <span className=”hp-mark”>”</span>
-            <p>You already know why it works. This year, you find out whether you can make it matter.</p>
+            <p>You might already know why it works. This year, you find out whether you can build it and make it matter.</p>
             <footer>— Prof. Ran Yang</footer>
           </blockquote>
         </aside>
