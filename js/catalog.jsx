@@ -274,20 +274,6 @@ const CatalogPage = ({ data, onNavigate }) => {
         </aside>
       </section>
 
-      <Reveal as="section" className="hero-strip is-emph">
-        <ul className="hs-list">
-          <li><span className="mono">No. 01</span> Instrumentation</li>
-          <li><span className="mono">No. 02</span> Robotics &amp; controls</li>
-          <li><span className="mono">No. 03</span> Bioengineering</li>
-          <li><span className="mono">No. 04</span> Computational imaging</li>
-          <li><span className="mono">No. 05</span> AI-driven measurement</li>
-          <li><span className="mono">No. 06</span> Public-facing</li>
-          <li><span className="mono">No. 07</span> Quantum</li>
-          <li><span className="mono">No. 08</span> Materials</li>
-          <li><span className="mono">No. 09</span> Plasma</li>
-        </ul>
-      </Reveal>
-
       <Reveal as="section" id="projects">
         <div className="section-heading">
           <div>

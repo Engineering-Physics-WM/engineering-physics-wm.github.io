@@ -235,24 +235,6 @@
   color: var(--pink-ink); line-height: 1; opacity: 0.55;
 }
 
-/* Number strip below hero */
-.hero-strip {
-  margin: 16px 0 32px;
-  border-radius: var(--radius-lg);
-}
-.hero-strip .hs-list {
-  list-style: none; margin: 0; padding: 22px 28px;
-  display: flex; flex-wrap: wrap; gap: 14px 32px;
-  font-size: 13px;
-}
-.hero-strip .hs-list li {
-  display: inline-flex; gap: 8px; align-items: baseline;
-  padding-right: 24px;
-  border-right: 1px solid color-mix(in oklch, currentColor 15%, transparent);
-}
-.hero-strip .hs-list li:last-child { border-right: 0; padding-right: 0; }
-.hero-strip .hs-list .mono { font-size: 10.5px; letter-spacing: 0.10em; opacity: 0.65; }
-
 /* Emphasis sections — dark green panels */
 section.is-emph,
 .reveal.is-emph {
@@ -262,7 +244,6 @@ section.is-emph,
   padding: 8px 0;
   position: relative;
 }
-section.is-emph .hs-list, .reveal.is-emph .hs-list { color: var(--paper-emph-ink, white); }
 section.is-emph .kicker, .reveal.is-emph .kicker { color: color-mix(in oklch, var(--paper-emph-ink, white) 80%, transparent); }
 section.is-emph .kicker .dot, .reveal.is-emph .kicker .dot { color: var(--pink); }
 section.is-emph h2, .reveal.is-emph h2 { color: var(--paper-emph-ink, white); }
