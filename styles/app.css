@@ -250,6 +250,7 @@
 
 .hero-faculty {
   display: grid; grid-template-columns: 48px 1fr; gap: 14px; align-items: center;
+  margin-top: 20px;
   padding-top: 18px; border-top: 1px solid var(--hairline);
 }
 .hf-avatar {
@@ -417,10 +418,7 @@ section.is-emph-soft .section-heading,
   line-height: 1.6;
 }
 .news-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(260px, 340px);
-  gap: 28px;
-  align-items: start;
+  max-width: 920px;
 }
 .news-feed {
   display: grid;

@@ -63,7 +63,7 @@ The instructor dashboard is protected with Supabase email/password auth. In Supa
 
 For a Supabase-backed announcement system, run `supabase/announcements-schema.sql`. Public published announcements can be read by anyone; draft/edit/send-job access stays limited to `rxyan2@wm.edu`. The current repo only defines the announcement and email-job tables; actual email delivery still needs a Supabase Edge Function or other trusted backend with a private email-provider API key.
 
-For saved final team assignments, run `supabase/team-assignments-schema.sql`. The current dashboard team email groups use the auto-match preview as a placeholder; once final teams are saved to Supabase, those groups should read from `cohort_team_members` instead.
+For saved final team assignments, run `supabase/team-assignments-schema.sql`. The dashboard team page can drag students between projects and save the final roster to `cohort_team_members`; team email groups use those saved rows when they exist, otherwise they fall back to the auto-match preview.
 
 ## Deployment
 

@@ -282,7 +282,7 @@
 .team-roster li:hover { background: white; border-color: var(--hairline); }
 .team-roster li.dragging { opacity: 0.5; }
 .team-roster li.is-locked {
-  cursor: default;
+  cursor: grab;
   border-color: color-mix(in oklch, var(--accent-ink) 30%, var(--hairline));
   background: color-mix(in oklch, var(--accent) 24%, white);
 }
@@ -301,6 +301,21 @@
 .team-card .team-empty {
   color: var(--muted); font-style: italic; font-size: 12px;
   text-align: center; padding: 8px;
+}
+.team-save-status {
+  margin: -8px 0 18px;
+  padding: 10px 12px;
+  border: 1px solid color-mix(in oklch, var(--accent-ink) 25%, var(--hairline));
+  border-radius: var(--radius);
+  background: color-mix(in oklch, var(--accent) 20%, white);
+  color: var(--accent-ink);
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+.team-save-status.is-warning {
+  border-color: color-mix(in oklch, var(--pink-ink) 30%, var(--hairline));
+  background: var(--pink-soft);
+  color: var(--pink-ink);
 }
 
 /* email draft view */

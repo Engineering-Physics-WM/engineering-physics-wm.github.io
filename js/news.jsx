@@ -96,20 +96,6 @@ const NewsPage = ({ data, currentYear, onNavigate }) => {
             </Reveal>
           ))}
         </div>
-        <aside className="news-side">
-          <h2>Publishing Model</h2>
-          <p>
-            Updates are scoped by cohort year. The public page can stay open, while the instructor dashboard
-            can later publish drafts and trigger email sends to selected groups.
-          </p>
-          <ul>
-            <li>All students + mentors</li>
-            <li>All students</li>
-            <li>Honors students</li>
-            <li>All mentors</li>
-            <li>A selected project team, students, or mentors</li>
-          </ul>
-        </aside>
       </section>
     </div>
   );

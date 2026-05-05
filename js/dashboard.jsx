@@ -5,6 +5,7 @@ import { Reveal } from "./motion.jsx";
 import { buildTeams } from "./teamMatching.js";
 import { PersonLink, YangLink } from "./links.jsx";
 import { sortAnnouncements } from "./news.jsx";
+import { isSupabaseConfigured, supabase } from "./supabaseClient.js";
 
 const INSTRUCTOR_EMAIL = "rxyan2@wm.edu";
 const CUSTOM_DRAFT_ID = "custom-draft";
@@ -40,6 +41,132 @@ const mentorsForProject = (project) => {
     ...(project.coadvisors || []).map((person) => ({ ...person, role: "mentor" })),
   ]);
 };
+
+const projectMentorRows = (project, cohortYear, assignedByEmail) => (
+  mentorsForProject(project).map((mentor, index) => ({
+    cohort_year: cohortYear,
+    project_id: project.id,
+    project_number: project.num,
+    person_name: mentor.name || mentor.email || "Mentor",
+    person_email: mentor.email || null,
+    member_type: "mentor",
+    source: "project_catalog",
+    locked: true,
+    sort_order: index,
+    assigned_by_email: assignedByEmail,
+  }))
+);
+
+const rowsToTeamMap = ({ projects, rows, responses, students }) => {
+  const teams = Object.fromEntries(projects.map((project) => [project.id, []]));
+  const studentByEmail = Object.fromEntries(students.map((student) => [normalizeEmail(student.email), student]));
+  const responseByEmail = Object.fromEntries(responses.map((response) => [normalizeEmail(response.email), response]));
+
+  rows
+    .filter((row) => row.member_type === "student" && teams[row.project_id])
+    .sort((a, b) => (a.project_number || 999) - (b.project_number || 999) || (a.sort_order ?? 999) - (b.sort_order ?? 999))
+    .forEach((row) => {
+      const email = normalizeEmail(row.person_email);
+      const response = responseByEmail[email];
+      teams[row.project_id].push({
+        email: row.person_email,
+        name: row.person_name,
+        prefRank: response ? response.ranking.indexOf(row.project_id) : -1,
+        locked: Boolean(row.locked),
+        honorsProject: studentByEmail[email]?.honorsProject || null,
+      });
+    });
+
+  return teams;
+};
+
+const buildSavedTeamRows = ({ projects, teams, cohortYear, assignedByEmail }) => (
+  projects.flatMap((project) => {
+    const roster = teams[project.id] || [];
+    const studentRows = roster.map((student, index) => ({
+      cohort_year: cohortYear,
+      project_id: project.id,
+      project_number: project.num,
+      person_name: student.name,
+      person_email: student.email,
+      member_type: "student",
+      source: student.honorsProject?.projectId === project.id ? "honors_default" : "manual",
+      locked: true,
+      sort_order: index,
+      assigned_by_email: assignedByEmail,
+    }));
+    return [...studentRows, ...projectMentorRows(project, cohortYear, assignedByEmail)];
+  })
+);
+
+const activeTeamSizeErrors = (teams, minTeamSize, maxTeamSize) => (
+  Object.entries(teams)
+    .filter(([, roster]) => roster.length > 0 && (roster.length < minTeamSize || roster.length > maxTeamSize))
+    .map(([projectId, roster]) => ({ projectId, size: roster.length }))
+);
+
+const summarizeTeamSnapshot = ({ projects, responses, teams, minTeamSize, maxTeamSize, topChoiceWindow }) => {
+  const assigned = {};
+  const responseByEmail = Object.fromEntries(responses.map((response) => [normalizeEmail(response.email), response]));
+
+  Object.entries(teams).forEach(([projectId, roster]) => {
+    roster.forEach((student) => {
+      const email = normalizeEmail(student.email);
+      const response = responseByEmail[email];
+      const prefRank = Number.isFinite(student.prefRank) && student.prefRank >= 0
+        ? student.prefRank
+        : response?.ranking.indexOf(projectId) ?? projects.length;
+      assigned[student.email] = { project: projectId, prefRank, locked: Boolean(student.locked) };
+    });
+  });
+
+  const satisfactionScores = responses.map((response) => {
+    const result = assigned[response.email];
+    if (!result) return 0;
+    if (result.prefRank === 0) return 1;
+    if (result.prefRank === 1) return 0.8;
+    if (result.prefRank === 2) return 0.6;
+    return 0.25;
+  });
+  const avg = satisfactionScores.length
+    ? satisfactionScores.reduce((total, score) => total + score, 0) / satisfactionScores.length
+    : 0;
+  const activeProjectIds = projects.map((project) => project.id).filter((id) => (teams[id] || []).length > 0);
+  const sizeWarnings = activeTeamSizeErrors(teams, minTeamSize, maxTeamSize)
+    .map(({ projectId, size }) => ({ type: "team-size", projectId, size }));
+
+  return {
+    assigned,
+    satisfaction: Math.round(avg * 100),
+    unhappyCount: responses.filter((response) => assigned[response.email]?.prefRank >= topChoiceWindow).length,
+    activeProjectIds,
+    inactiveProjectIds: projects.map((project) => project.id).filter((id) => (teams[id] || []).length === 0),
+    warnings: sizeWarnings,
+  };
+};
+
+const withTeamSummary = (snapshot, projects, responses) => ({
+  ...snapshot,
+  ...summarizeTeamSnapshot({
+    projects,
+    responses,
+    teams: snapshot.teams,
+    minTeamSize: snapshot.minTeamSize,
+    maxTeamSize: snapshot.maxTeamSize,
+    topChoiceWindow: snapshot.topChoiceWindow,
+  }),
+});
+
+const peopleFromTeamRows = (rows, projectId, memberType) => uniqueRecipients(
+  rows
+    .filter((row) => row.project_id === projectId && row.member_type === memberType)
+    .sort((a, b) => (a.sort_order ?? 999) - (b.sort_order ?? 999) || (a.person_name || "").localeCompare(b.person_name || ""))
+    .map((row) => ({
+      name: row.person_name,
+      email: row.person_email,
+      role: memberType,
+    }))
+);
 
 const resourceLine = (resource) => {
   const label = resource.kind ? `${resource.kind}: ${resource.label}` : resource.label;
@@ -223,33 +350,125 @@ const HeatmapView = ({ projects, responses }) => {
   );
 };
 
-const TeamsView = ({ projects, responses, students }) => {
+const teamSaveErrorMessage = (error) => {
+  if (error?.code === "42P01" || /cohort_team_members/i.test(error?.message || "")) {
+    return "Could not save yet. Run supabase/team-assignments-schema.sql in Supabase, then try again.";
+  }
+  return `Could not save teams: ${error?.message || "unknown Supabase error"}`;
+};
+
+const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows, setTeamMemberRows, teamRowsError }) => {
   const [seed, setSeed] = React.useState(0);
   const [teams, setTeams] = React.useState(null);
   const [draggedStudent, setDraggedStudent] = React.useState(null);
   const [dropTarget, setDropTarget] = React.useState(null);
+  const [teamSource, setTeamSource] = React.useState("auto");
+  const [dirty, setDirty] = React.useState(false);
+  const [saving, setSaving] = React.useState(false);
+  const [saveStatus, setSaveStatus] = React.useState("");
 
   React.useEffect(() => {
-    const result = buildTeams({ projects, responses, students, seed });
-    setTeams(result);
-  }, [projects, responses, students, seed]);
+    const autoResult = buildTeams({ projects, responses, students, seed });
+    const savedStudentRows = (teamMemberRows || []).filter((row) => row.member_type === "student");
+
+    if (savedStudentRows.length) {
+      const savedTeams = rowsToTeamMap({ projects, rows: teamMemberRows, responses, students });
+      setTeams(withTeamSummary({ ...autoResult, teams: savedTeams }, projects, responses));
+      setTeamSource("saved");
+      setDirty(false);
+      return;
+    }
+
+    setTeams(autoResult);
+    setTeamSource("auto");
+    setDirty(false);
+  }, [projects, responses, students, seed, teamMemberRows]);
 
   if (!teams) return null;
 
+  const sizeErrors = activeTeamSizeErrors(teams.teams, teams.minTeamSize, teams.maxTeamSize);
+  const activeStudentCount = Object.values(teams.teams).reduce((total, roster) => total + roster.length, 0);
+  const canSave = !saving && sizeErrors.length === 0 && (dirty || teamSource !== "saved");
+
   const moveStudent = (email, fromProjectId, toProjectId) => {
     if (fromProjectId === toProjectId) return;
-    if (teams.teams[fromProjectId]?.find(s => s.email === email)?.locked) return;
     if ((teams.teams[toProjectId] || []).length >= teams.maxTeamSize) return;
     const next = JSON.parse(JSON.stringify(teams.teams));
-    const fromList = next[fromProjectId];
+    const fromList = next[fromProjectId] || [];
     const i = fromList.findIndex(s => s.email === email);
     if (i < 0) return;
     const [stu] = fromList.splice(i, 1);
     // Recompute prefRank for new project
     const r = responses.find(x => x.email === email);
     if (r) stu.prefRank = r.ranking.indexOf(toProjectId);
+    stu.locked = false;
     next[toProjectId].push(stu);
-    setTeams({ ...teams, teams: next });
+    setTeams(withTeamSummary({ ...teams, teams: next }, projects, responses));
+    setDirty(true);
+    setTeamSource("manual");
+    setSaveStatus("Unsaved manual changes.");
+  };
+
+  const saveFinalTeams = async () => {
+    if (!isSupabaseConfigured) {
+      setSaveStatus("Supabase is not configured for this build, so the final teams cannot be saved yet.");
+      return;
+    }
+    if (sizeErrors.length) {
+      setSaveStatus("Fix team sizes before saving. Every active project needs 2-3 students.");
+      return;
+    }
+
+    setSaving(true);
+    setSaveStatus("Saving final team assignments...");
+
+    const rows = buildSavedTeamRows({
+      projects,
+      teams: teams.teams,
+      cohortYear: currentYear,
+      assignedByEmail: INSTRUCTOR_EMAIL,
+    });
+
+    const { error: deleteError } = await supabase
+      .from("cohort_team_members")
+      .delete()
+      .eq("cohort_year", currentYear);
+
+    if (deleteError) {
+      setSaving(false);
+      setSaveStatus(teamSaveErrorMessage(deleteError));
+      return;
+    }
+
+    const { error: insertError } = await supabase
+      .from("cohort_team_members")
+      .insert(rows);
+
+    setSaving(false);
+
+    if (insertError) {
+      setSaveStatus(teamSaveErrorMessage(insertError));
+      return;
+    }
+
+    const lockedTeams = Object.fromEntries(
+      Object.entries(teams.teams).map(([projectId, roster]) => [
+        projectId,
+        roster.map((student) => ({ ...student, locked: true })),
+      ])
+    );
+    const lockedRows = buildSavedTeamRows({
+      projects,
+      teams: lockedTeams,
+      cohortYear: currentYear,
+      assignedByEmail: INSTRUCTOR_EMAIL,
+    });
+
+    setTeams(withTeamSummary({ ...teams, teams: lockedTeams }, projects, responses));
+    setTeamMemberRows(lockedRows);
+    setTeamSource("saved");
+    setDirty(false);
+    setSaveStatus(`Saved ${activeStudentCount} students and ${rows.filter((row) => row.member_type === "mentor" && row.person_email).length} mentors to Supabase.`);
   };
 
   return (
@@ -263,7 +482,16 @@ const TeamsView = ({ projects, responses, students }) => {
           <span className="field-label">Preference window</span>
           <div className="mono" style={{ fontSize: 13 }}>Top 3 first</div>
         </div>
-        <button className="btn btn-ghost" onClick={() => setSeed(s => s + 1)} data-spark>Re-roll</button>
+        <div className="field">
+          <span className="field-label">Source</span>
+          <div className="mono" style={{ fontSize: 13 }}>{teamSource === "saved" ? "Saved final roster" : teamSource === "manual" ? "Manual draft" : "Auto preview"}</div>
+        </div>
+        <button className="btn btn-ghost" onClick={() => { setSaveStatus(""); setSeed(s => s + 1); }} disabled={teamSource === "saved" || saving} data-spark>
+          {teamSource === "saved" ? "Roster locked" : "Re-roll"}
+        </button>
+        <button className="btn btn-primary" onClick={saveFinalTeams} disabled={!canSave} data-spark>
+          {saving ? "Saving..." : dirty || teamSource !== "saved" ? "Save final teams" : "Saved"}
+        </button>
         <div className="satisfaction">
           <div>
             <div style={{ fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase" }}>Cohort satisfaction</div>
@@ -279,6 +507,13 @@ const TeamsView = ({ projects, responses, students }) => {
           </div>
         </div>
       </div>
+      {(saveStatus || teamRowsError || sizeErrors.length > 0) && (
+        <div className={"team-save-status" + (sizeErrors.length ? " is-warning" : "")}>
+          {sizeErrors.length > 0
+            ? `Cannot save yet: ${sizeErrors.length} active team${sizeErrors.length === 1 ? " has" : "s have"} fewer than ${teams.minTeamSize} students.`
+            : saveStatus || teamRowsError}
+        </div>
+      )}
 
       <div className="teams-grid">
         {[...projects].sort((a, b) => a.num - b.num).map((p) => {
@@ -305,15 +540,19 @@ const TeamsView = ({ projects, responses, students }) => {
                 {roster.map(s => (
                   <li
                     key={s.email}
-                    draggable={!s.locked}
+                    draggable
                     className={(draggedStudent?.email === s.email ? "dragging" : "") + (s.locked ? " is-locked" : "")}
-                    onDragStart={() => !s.locked && setDraggedStudent({ email: s.email, fromProject: p.id })}
+                    onDragStart={() => setDraggedStudent({ email: s.email, fromProject: p.id })}
                     onDragEnd={() => setDraggedStudent(null)}
-                    title={s.locked ? "Honors-approved project; locked for matching" : "Drag for manual override"}
+                    title={s.honorsProject ? "Honors default; drag to override manually" : s.locked ? "Saved final assignment; drag to revise" : "Drag for manual override"}
                   >
                     <span>{s.name}</span>
                     <span className="pref-marker">
-                      {s.locked ? `Honors P${String(s.honorsProject?.number).padStart(2, "0")}` : `#${s.prefRank + 1}`}
+                      {s.honorsProject
+                        ? `Honors P${String(s.honorsProject.number).padStart(2, "0")}`
+                        : s.locked
+                          ? "Saved"
+                          : s.prefRank >= 0 ? `#${s.prefRank + 1}` : "Unranked"}
                     </span>
                   </li>
                 ))}
@@ -326,7 +565,7 @@ const TeamsView = ({ projects, responses, students }) => {
   );
 };
 
-const EmailDraftView = ({ data, projects, responses, students }) => {
+const EmailDraftView = ({ data, projects, responses, students, teamMemberRows }) => {
   const announcements = React.useMemo(
     () => sortAnnouncements((data.announcements || []).filter(item => item.cohortYear === data.currentYear)),
     [data.announcements, data.currentYear]
@@ -358,6 +597,8 @@ const EmailDraftView = ({ data, projects, responses, students }) => {
 
   const project = projects.find((p) => p.id === projectId);
   const audienceLabel = audienceOptions.find((option) => option.id === audience)?.label || "Selected group";
+  const hasSavedTeams = (teamMemberRows || []).some((row) => row.member_type === "student");
+  const teamRecipientSource = hasSavedTeams ? "Saved Supabase team assignments" : "Current auto-match preview";
 
   const recipients = React.useMemo(() => {
     const studentRecipients = students.map((student) => ({ name: student.name, email: student.email, role: "student" }));
@@ -365,12 +606,16 @@ const EmailDraftView = ({ data, projects, responses, students }) => {
       .filter((student) => student.honorsProject)
       .map((student) => ({ name: student.name, email: student.email, role: "student" }));
     const mentorRecipients = projects.flatMap(mentorsForProject);
-    const teamStudents = (teams.teams[projectId] || []).map((student) => ({
-      name: student.name,
-      email: student.email,
-      role: "student",
-    }));
-    const teamMentors = mentorsForProject(project);
+    const teamStudents = hasSavedTeams
+      ? peopleFromTeamRows(teamMemberRows || [], projectId, "student")
+      : (teams.teams[projectId] || []).map((student) => ({
+        name: student.name,
+        email: student.email,
+        role: "student",
+      }));
+    const teamMentors = hasSavedTeams
+      ? peopleFromTeamRows(teamMemberRows || [], projectId, "mentor")
+      : mentorsForProject(project);
 
     if (audience === "students") return uniqueRecipients(studentRecipients);
     if (audience === "honors_students") return uniqueRecipients(honorsRecipients);
@@ -379,7 +624,7 @@ const EmailDraftView = ({ data, projects, responses, students }) => {
     if (audience === "team_mentors") return uniqueRecipients(teamMentors);
     if (audience === "team") return uniqueRecipients([...teamStudents, ...teamMentors]);
     return uniqueRecipients([...studentRecipients, ...mentorRecipients]);
-  }, [audience, project, projectId, projects, students, teams]);
+  }, [audience, hasSavedTeams, project, projectId, projects, students, teamMemberRows, teams]);
 
   const studentRecipients = recipients.filter((person) => person.role === "student");
   const mentorRecipients = recipients.filter((person) => person.role === "mentor");
@@ -493,7 +738,7 @@ const EmailDraftView = ({ data, projects, responses, students }) => {
           </button>
           <button
             className="btn btn-pink"
-            onClick={() => copyText(buildAiPrompt({ cohortYear: data.currentYear, audienceLabel, project: audience === "team" ? project : null, subject, body }), "AI drafting prompt")}
+            onClick={() => copyText(buildAiPrompt({ cohortYear: data.currentYear, audienceLabel, project: TEAM_AUDIENCES.has(audience) ? project : null, subject, body }), "AI drafting prompt")}
           >
             Copy AI prompt
           </button>
@@ -546,7 +791,7 @@ const EmailDraftView = ({ data, projects, responses, students }) => {
         {isTeamAudience && (
           <div className="team-email-context">
             <span className="mono">{projectLabel(project)}</span>
-            <span>Preview uses the current auto match. Saved Supabase teams will populate this group after final assignment.</span>
+            <span>{teamRecipientSource}</span>
           </div>
         )}
         <div className="recipient-list">
@@ -591,7 +836,33 @@ const ArchiveView = ({ archive, currentYear, onSwitch }) => (
 
 const DashboardPage = ({ data, onNavigate }) => {
   const [tab, setTab] = React.useState("distribution");
+  const [teamMemberRows, setTeamMemberRows] = React.useState([]);
+  const [teamRowsError, setTeamRowsError] = React.useState("");
   const responses = data.responses;
+
+  React.useEffect(() => {
+    if (!isSupabaseConfigured) return undefined;
+
+    let alive = true;
+    supabase
+      .from("cohort_team_members")
+      .select("*")
+      .eq("cohort_year", data.currentYear)
+      .then(({ data: rows, error }) => {
+        if (!alive) return;
+        if (error) {
+          setTeamMemberRows([]);
+          setTeamRowsError(teamSaveErrorMessage(error));
+          return;
+        }
+        setTeamMemberRows(rows || []);
+        setTeamRowsError("");
+      });
+
+    return () => {
+      alive = false;
+    };
+  }, [data.currentYear]);
 
   return (
     <div className="page">
@@ -632,8 +903,26 @@ const DashboardPage = ({ data, onNavigate }) => {
       {tab === "distribution" && <DistributionView projects={data.projects} responses={responses} />}
       {tab === "heatmap" && <HeatmapView projects={data.projects} responses={responses} />}
       {tab === "students" && <StudentsView projects={data.projects} responses={responses} />}
-      {tab === "teams" && <TeamsView projects={data.projects} responses={responses} students={data.students || []} />}
-      {tab === "email" && <EmailDraftView data={data} projects={data.projects} responses={responses} students={data.students || []} />}
+      {tab === "teams" && (
+        <TeamsView
+          currentYear={data.currentYear}
+          projects={data.projects}
+          responses={responses}
+          students={data.students || []}
+          teamMemberRows={teamMemberRows}
+          setTeamMemberRows={setTeamMemberRows}
+          teamRowsError={teamRowsError}
+        />
+      )}
+      {tab === "email" && (
+        <EmailDraftView
+          data={data}
+          projects={data.projects}
+          responses={responses}
+          students={data.students || []}
+          teamMemberRows={teamMemberRows}
+        />
+      )}
     </div>
   );
 };
