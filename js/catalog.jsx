@@ -190,7 +190,6 @@ const CatalogPage = ({ data, onNavigate }) => {
       });
   }, [data.projects, search, areaFilter, affiliationFilter, sort]);
 
-  const openIdx = openProject ? filtered.findIndex(p => p.id === openProject.id) : -1;
 
   return (
     <div className="page">
@@ -317,7 +316,7 @@ const CatalogPage = ({ data, onNavigate }) => {
           {filtered.length === 0 ? (
             <div className="empty">No projects match those filters yet.</div>
           ) : filtered.map((p, i) => (
-            <ProjectCard key={p.id} project={p} displayIdx={i} onOpen={setOpenProject} />
+            <ProjectCard key={p.id} project={p} displayIdx={p.num - 1} onOpen={setOpenProject} />
           ))}
         </div>
       </Reveal>
@@ -336,7 +335,7 @@ const CatalogPage = ({ data, onNavigate }) => {
         }} />
       </Reveal>
 
-      <ProjectDialog project={openProject} displayIdx={openIdx} onClose={() => setOpenProject(null)} />
+      <ProjectDialog project={openProject} displayIdx={openProject ? openProject.num - 1 : -1} onClose={() => setOpenProject(null)} />
     </div>
   );
 };

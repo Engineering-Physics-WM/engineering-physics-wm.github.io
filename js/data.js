@@ -33,7 +33,7 @@ const EP_DATA = {
       notes: "I've never been involved in EPAD projects before, so this is all new to me!",
     },
     {
-      id: "usv-race-boat", num: 2,
+      id: "usv-race-boat", num: 6,
       slug: "modification-of-a-high-speed-electric-unmanned-surface-vessel-usv-race-boat-towards-full-stack-agentic-control",
       title: "Modification of a high-speed, electric, unmanned surface vessel (USV) race boat towards full-stack agentic control.",
       advisor: "Jonathan Frey", affiliation: "Applied Science", advisorEmail: "jfrey@wm.edu",
@@ -45,7 +45,7 @@ const EP_DATA = {
       notes: null,
     },
     {
-      id: "photosensor-readout", num: 3,
+      id: "photosensor-readout", num: 7,
       slug: "photosensor-readout-electronics-for-fun-and-profit",
       title: "Photosensor readout electronics for fun and profit*",
       advisor: "Mike Kordosky", affiliation: "Physics", advisorEmail: "makordosky@wm.edu",
@@ -57,7 +57,7 @@ const EP_DATA = {
       notes: "This project needs a team with members who liked analog electronics (PHYS 252) and were decent at it. It would also benefit from having some members who have taken instrumentation (PHYS 351) or who are planning to take it in F26. Team members will also need some programming experience (via PHYS 256 or similar) and will benefit from experience with linux/unix.",
     },
     {
-      id: "irays-pupillometry", num: 4,
+      id: "irays-pupillometry", num: 5,
       slug: "irays-computational-dual-spectrum-pupillometry-for-pre-hospital-neuro-triage",
       title: "iRays: Computational Dual-Spectrum Pupillometry for Pre-Hospital Neuro-Triage",
       advisor: "Ran Yang", affiliation: "Physics", advisorEmail: "rxyan2@wm.edu",
@@ -69,7 +69,7 @@ const EP_DATA = {
       notes: null,
     },
     {
-      id: "audimo", num: 5,
+      id: "audimo", num: 2,
       slug: "audimo-sensor-augmented-acoustic-instruments",
       title: "Audimo (Sensor-Augmented Acoustic Instruments)",
       advisor: "Benjamin D. Whiting", affiliation: "Music", advisorEmail: "bdwhiting@wm.edu",
@@ -84,7 +84,7 @@ const EP_DATA = {
       notes: "The team will, on occasion, meet remotely with other experts in the field of sensor-augmented instruments and AI-powered improvisation machines for guidance. My team had a lot of fun this year getting this initiative started, and I expect next year will prove to be just as, if not even more, exhilarating and rewarding.",
     },
     {
-      id: "smr-heat-load", num: 6,
+      id: "smr-heat-load", num: 4,
       slug: "developing-heat-load-model-and-solutions-for-smr-located-on-former-mining-site",
       title: "Developing heat load model and solutions for SMR located on former mining site",
       advisor: "Saskia Mordijck", affiliation: "Physics", advisorEmail: "smordijck@wm.edu",
@@ -96,7 +96,7 @@ const EP_DATA = {
       notes: "This project will put you in contact with major energy companies and engage with a former W&M alumnus.",
     },
     {
-      id: "soft-bio-robot", num: 7,
+      id: "soft-bio-robot", num: 9,
       slug: "soft-shallow-water-biomimetic-robot",
       title: "Soft Shallow Water Biomimetic Robot",
       advisor: "Jonathan Frey", affiliation: "Applied Science", advisorEmail: "jfrey@wm.edu",
@@ -108,7 +108,7 @@ const EP_DATA = {
       notes: null,
     },
     {
-      id: "biofilm-corrosion", num: 8,
+      id: "biofilm-corrosion", num: 3,
       slug: "corrosion-prevention-using-engineered-biofilms",
       title: "Corrosion Prevention Using Engineered Biofilms",
       advisor: "Margaret Saha", affiliation: "Applied Science", advisorEmail: "mssaha@wm.edu",
@@ -123,7 +123,7 @@ const EP_DATA = {
       notes: "The bacteria producing the biofilm is BSL1 — same safety level as the bacteria in the yogurt one eats for breakfast!",
     },
     {
-      id: "quantum-forge", num: 9,
+      id: "quantum-forge", num: 8,
       slug: "quantum-forge-pilot-project-with-inq-in-quantum-computing-or-quantum-sensing",
       title: "Quantum Forge Pilot Project with IonQ in Quantum Computing or Quantum Sensing",
       advisor: "IonQ Industry Mentor", affiliation: "Industry / IonQ", advisorEmail: null,

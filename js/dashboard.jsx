@@ -6,7 +6,7 @@ import { buildTeams } from "./teamMatching.js";
 
 const useDistribution = (projects, responses) => React.useMemo(() => {
   const idx = Object.fromEntries(projects.map((p, i) => [p.id, i]));
-  const dist = projects.map(p => ({ id: p.id, title: p.title, advisor: p.advisor, ranks: Array(projects.length).fill(0), total: 0 }));
+  const dist = projects.map(p => ({ id: p.id, num: p.num, title: p.title, advisor: p.advisor, ranks: Array(projects.length).fill(0), total: 0 }));
   responses.forEach(r => {
     r.ranking.forEach((pid, rank) => {
       const i = idx[pid];
@@ -16,7 +16,7 @@ const useDistribution = (projects, responses) => React.useMemo(() => {
       }
     });
   });
-  return dist;
+  return dist.sort((a, b) => a.num - b.num);
 }, [projects, responses]);
 
 const DistributionView = ({ projects, responses }) => {
@@ -40,7 +40,7 @@ const DistributionView = ({ projects, responses }) => {
           else if (top3 < 2) { flag = "under"; flagText = "UNDER"; }
           return (
             <Reveal as="div" key={row.id} className="dist-row" delay={i * 30}>
-              <span className="dist-num">{String(i + 1).padStart(2, "0")}</span>
+              <span className="dist-num">{String(row.num).padStart(2, "0")}</span>
               <div>
                 <div className="dist-title" title={row.title}>{row.title}</div>
                 <div className="dist-advisor">{row.advisor}</div>
@@ -184,11 +184,11 @@ const TeamsView = ({ projects, responses, students }) => {
       </div>
 
       <div className="teams-grid">
-        {projects.map((p, i) => {
+        {[...projects].sort((a, b) => a.num - b.num).map((p) => {
           const roster = teams.teams[p.id] || [];
           return (
-            <Reveal as="div" key={p.id} className="team-card" delay={i * 30}>
-              <div className="team-num mono">TEAM {String(i+1).padStart(2, "0")}</div>
+            <Reveal as="div" key={p.id} className="team-card" delay={(p.num - 1) * 30}>
+              <div className="team-num mono">TEAM {String(p.num).padStart(2, "0")}</div>
               <h4 className="team-title">{p.title}</h4>
               <div className="team-advisor">{p.advisor} · {p.affiliation}</div>
               <ul
