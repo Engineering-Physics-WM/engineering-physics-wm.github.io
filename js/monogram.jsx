@@ -50,4 +50,4 @@ const Monogram = ({ size = 40, color = "currentColor", trademark = true, decorat
   );
 };
 
-window.Monogram = Monogram;
+export { Monogram };

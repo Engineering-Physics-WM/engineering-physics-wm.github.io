@@ -1,5 +1,8 @@
 /* Instructor dashboard — distribution, students, heatmap, teams (auto + manual) */
 
+import * as React from "react";
+import { Reveal } from "./motion.jsx";
+
 const useDistribution = (projects, responses) => React.useMemo(() => {
   const idx = Object.fromEntries(projects.map((p, i) => [p.id, i]));
   const dist = projects.map(p => ({ id: p.id, title: p.title, advisor: p.advisor, ranks: Array(projects.length).fill(0), total: 0 }));
@@ -355,4 +358,4 @@ const ArchivePage = ({ data, onNavigate, currentYear, setYear }) => (
   </div>
 );
 
-Object.assign(window, { DashboardPage, ArchivePage });
+export { ArchivePage, DashboardPage };

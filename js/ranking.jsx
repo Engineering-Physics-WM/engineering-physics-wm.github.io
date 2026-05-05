@@ -1,5 +1,7 @@
 /* Ranking page — drag-and-drop list w/ spring, mock submission. */
 
+import * as React from "react";
+
 const RankItem = ({ project, idx, total, onMove, onDragStart, onDragOver, onDrop, onDragEnd, dragging }) => (
   <li
     className={"ranking-item" + (dragging ? " dragging" : "")}
@@ -223,4 +225,4 @@ const RankingPage = ({ data, onNavigate }) => {
   );
 };
 
-window.RankingPage = RankingPage;
+export { RankingPage };

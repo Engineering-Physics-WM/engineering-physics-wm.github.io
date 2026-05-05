@@ -1,5 +1,15 @@
 /* Main app shell — header, year switcher, page routing */
 
+import * as React from "react";
+import { createRoot } from "react-dom/client";
+import { EP_DATA } from "./data.js";
+import { Monogram } from "./monogram.jsx";
+import { SparkLayer } from "./motion.jsx";
+import { CatalogPage } from "./catalog.jsx";
+import { RankingPage } from "./ranking.jsx";
+import { ArchivePage, DashboardPage } from "./dashboard.jsx";
+import { TweakPanelInline } from "./tweaks.jsx";
+
 const Header = ({ page, onNavigate, year, setYear, years }) => {
   const [mobileOpen, setMobileOpen] = React.useState(false);
 
@@ -108,7 +118,7 @@ const Footer = ({ onNavigate }) => (
 );
 
 const App = () => {
-  const data = window.EP_DATA;
+  const data = EP_DATA;
   const [page, setPage] = React.useState("catalog");
   const [year, setYear] = React.useState(data.currentYear);
   const [sparks, setSparks] = React.useState(1);
@@ -143,4 +153,4 @@ const App = () => {
   );
 };
 
-ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+createRoot(document.getElementById("root")).render(<App />);

@@ -1,5 +1,7 @@
 /* Motion: ambient particles in hero, hover sparks, reveal-on-scroll. */
 
+import * as React from "react";
+
 // ---------- Hero particles ----------
 const HeroParticles = ({ count = 14, intensity = 1 }) => {
   if (intensity <= 0) return null;
@@ -158,4 +160,4 @@ const Reveal = ({ children, delay = 0, as: Tag = "div", className = "", ...rest 
   return <Tag ref={ref} className={"reveal " + (seen ? "in " : "") + className} {...rest}>{children}</Tag>;
 };
 
-Object.assign(window, { HeroParticles, SparkLayer, Reveal });
+export { HeroParticles, Reveal, SparkLayer };

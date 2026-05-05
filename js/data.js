@@ -1,4 +1,4 @@
-window.EP_DATA = {
+const EP_DATA = {
   years: [
     { id: "2024-2025", label: "24·25", status: "archive" },
     { id: "2025-2026", label: "25·26", status: "archive-pending" },
@@ -161,3 +161,5 @@ window.EP_DATA = {
     { year: "2027-2028", title: "Reserved", projects: null, teams: null, students: null, summary: "Placeholder for next year. Ranking and team data will land here once the cohort starts.", status: "future" },
   ],
 };
+
+export { EP_DATA };

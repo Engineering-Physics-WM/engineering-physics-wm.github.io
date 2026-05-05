@@ -1,5 +1,8 @@
 /* Catalog (project browser) — hero, filters, grid, theme map, project dialog */
 
+import * as React from "react";
+import { HeroParticles, Reveal } from "./motion.jsx";
+
 const AREA_COLORS = {
   "Instrumentation / sensors": "oklch(72% 0.060 18)",
   "Robotics / autonomy / controls": "oklch(54% 0.055 220)",
@@ -187,7 +190,7 @@ const CatalogPage = ({ data, onNavigate }) => {
       });
   }, [data.projects, search, areaFilter, affiliationFilter, sort]);
 
-  const openIdx = openProject ? data.projects.findIndex(p => p.id === openProject.id) : -1;
+  const openIdx = openProject ? filtered.findIndex(p => p.id === openProject.id) : -1;
 
   return (
     <div className="page">
@@ -338,5 +341,4 @@ const CatalogPage = ({ data, onNavigate }) => {
   );
 };
 
-window.CatalogPage = CatalogPage;
-window.AREA_COLORS = AREA_COLORS;
+export { AREA_COLORS, CatalogPage };

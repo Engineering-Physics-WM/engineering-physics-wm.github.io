@@ -9,18 +9,35 @@ The public website for the William & Mary Engineering Physics Capstone program. 
 ```
 index.html          — single-page entry point
 data/               — project data by cohort year (JSON)
-js/                 — React components (transpiled in-browser via Babel)
+js/                 — React components bundled by Vite
 styles/             — CSS (design tokens, app layout, ranking, dashboard)
 ```
 
 ## Running locally
 
-Open `index.html` directly in a browser — no build step required. The site uses React 18 and Babel loaded from CDN, so all JSX is transpiled client-side.
+Install dependencies once:
 
-> Note: some browsers block local file fetches. If data doesn't load, serve the directory with any static file server:
-> ```
-> npx serve .
-> ```
+```sh
+npm install
+```
+
+Start the Vite dev server:
+
+```sh
+npm run dev
+```
+
+Build the static site:
+
+```sh
+npm run build
+```
+
+Preview the production build locally:
+
+```sh
+npm run preview
+```
 
 ## Data
 
@@ -28,4 +45,6 @@ Project data lives in `data/<year>/`. See `data/schema.json` for the expected sh
 
 ## Deployment
 
-This repo is hosted on GitHub Pages. Push to `main` to deploy.
+This repo is hosted on GitHub Pages. Push to `main` to run the Vite build workflow and deploy the generated `dist/` artifact.
+
+In the GitHub repository settings, Pages should be configured to deploy from **GitHub Actions**.

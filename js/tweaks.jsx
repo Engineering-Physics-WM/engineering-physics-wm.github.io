@@ -1,5 +1,14 @@
 /* Tweaks panel — color/sparks/fonts/density/ranking */
 
+import * as React from "react";
+import {
+  TweaksPanel,
+  TweakRadio,
+  TweakSection,
+  TweakSlider,
+  useTweaks,
+} from "../tweaks-panel.jsx";
+
 const TweakPanelInline = () => {
   const defaults = /*EDITMODE-BEGIN*/{
     "paper": "olive",
@@ -82,4 +91,4 @@ const TweakPanelInline = () => {
   );
 };
 
-window.TweakPanelInline = TweakPanelInline;
+export { TweakPanelInline };

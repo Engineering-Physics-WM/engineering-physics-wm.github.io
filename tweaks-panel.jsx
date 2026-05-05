@@ -40,6 +40,8 @@
 //
 // ─────────────────────────────────────────────────────────────────────────────
 
+import * as React from "react";
+
 const __TWEAKS_STYLE = `
   .twk-panel{position:fixed;right:16px;bottom:16px;z-index:2147483646;width:280px;
     max-height:calc(100vh - 32px);display:flex;flex-direction:column;
@@ -247,10 +249,14 @@ function TweaksPanel({ title = 'Tweaks', children }) {
 
 // ── Layout helpers ──────────────────────────────────────────────────────────
 
-function TweakSection({ label, children }) {
+function TweakSection({ label, title, subtitle, children }) {
+  const heading = label || title;
   return (
     <>
-      <div className="twk-sect">{label}</div>
+      <div className="twk-sect">
+        {heading}
+        {subtitle && <span style={{ display: "block", marginTop: 2, fontWeight: 400, letterSpacing: 0, textTransform: "none" }}>{subtitle}</span>}
+      </div>
       {children}
     </>
   );
@@ -418,8 +424,8 @@ function TweakButton({ label, onClick, secondary = false }) {
   );
 }
 
-Object.assign(window, {
+export {
   useTweaks, TweaksPanel, TweakSection, TweakRow,
   TweakSlider, TweakToggle, TweakRadio, TweakSelect,
   TweakText, TweakNumber, TweakColor, TweakButton,
-});
+};
