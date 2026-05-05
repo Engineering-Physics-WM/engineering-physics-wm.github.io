@@ -228,8 +228,8 @@ const CatalogPage = ({ data, onNavigate }) => {
             </div>
           </div>
 
-          <blockquote className=”hero-pull”>
-            <span className=”hp-mark”>”</span>
+          <blockquote className="hero-pull">
+            <span className="hp-mark">"</span>
             <p>You might already know why it works. This year, you find out whether you can build it and make it matter.</p>
             <footer>— Prof. Ran Yang</footer>
           </blockquote>
