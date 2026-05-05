@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { HeroParticles, Reveal } from "./motion.jsx";
+import { LinkedText, PersonLink, YangLink, isYangName } from "./links.jsx";
 
 const AREA_COLORS = {
   "Instrumentation / sensors": "oklch(72% 0.060 18)",
@@ -18,11 +19,20 @@ const ALL_AREAS = Object.keys(AREA_COLORS);
 
 const ProjectCard = ({ project, displayIdx, onOpen }) => {
   const railColor = AREA_COLORS[project.areas[0]] || "var(--pink)";
+  const openFromKeyboard = (event) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    onOpen(project);
+  };
+
   return (
-    <button
+    <article
       className="project-card"
       data-spark="card"
+      role="button"
+      tabIndex={0}
       onClick={() => onOpen(project)}
+      onKeyDown={openFromKeyboard}
       style={{ "--rail-color": railColor }}
     >
       <span className="project-card-thrust-rail" />
@@ -36,13 +46,14 @@ const ProjectCard = ({ project, displayIdx, onOpen }) => {
       </div>
       <h3 className="project-card-title">{project.title}</h3>
       <p className="project-card-advisor">
-        {project.advisor} <span className="aff">/ {project.affiliation}</span>
+        <PersonLink name={project.advisor} onClick={(event) => event.stopPropagation()}>{project.advisor}</PersonLink>{" "}
+        <span className="aff">/ {project.affiliation}</span>
       </p>
       <p className="project-card-pitch">{project.pitch}</p>
       <div className="project-card-foot">
         <span className="read">Read brief</span>
       </div>
-    </button>
+    </article>
   );
 };
 
@@ -69,7 +80,7 @@ const ProjectDialog = ({ project, displayIdx, onClose }) => {
           <div>
             <span className="num">PROJECT NO. {String(displayIdx + 1).padStart(2, "0")} · 2026·27</span>
             <h2>{project.title}</h2>
-            <p className="advisor">{project.advisor} · {project.affiliation}</p>
+            <p className="advisor"><PersonLink name={project.advisor}>{project.advisor}</PersonLink> · {project.affiliation}</p>
           </div>
           <button className="dialog-close" onClick={onClose} aria-label="Close">✕</button>
         </div>
@@ -82,7 +93,9 @@ const ProjectDialog = ({ project, displayIdx, onClose }) => {
           <dl className="detail-grid">
             <dt>Advisor</dt>
             <dd>
-              {project.advisorEmail
+              {isYangName(project.advisor)
+                ? <PersonLink name={project.advisor}>{project.advisor}</PersonLink>
+                : project.advisorEmail
                 ? <a href={"mailto:" + project.advisorEmail}>{project.advisor}</a>
                 : project.advisor}
             </dd>
@@ -100,7 +113,11 @@ const ProjectDialog = ({ project, displayIdx, onClose }) => {
                 <dd>
                   {project.coadvisors.map((c, i) => (
                     <span key={i} style={{ display: "block" }}>
-                      {c.email ? <a href={"mailto:" + c.email}>{c.name}</a> : c.name}
+                      {isYangName(c.name)
+                        ? <PersonLink name={c.name}>{c.name}</PersonLink>
+                        : c.email
+                        ? <a href={"mailto:" + c.email}>{c.name}</a>
+                        : c.name}
                       {" "}({c.affiliation})
                     </span>
                   ))}
@@ -112,20 +129,20 @@ const ProjectDialog = ({ project, displayIdx, onClose }) => {
           </dl>
           <section className="dialog-section">
             <h3>Student pitch</h3>
-            {project.pitch.split("\n").map((para, i) => para.trim() && <p key={i}>{para}</p>)}
+            {project.pitch.split("\n").map((para, i) => para.trim() && <p key={i}><LinkedText text={para} /></p>)}
           </section>
           <section className="dialog-section">
             <h3>Background, objectives &amp; deliverables</h3>
-            {project.background.split("\n").map((para, i) => para.trim() && <p key={i}>{para}</p>)}
+            {project.background.split("\n").map((para, i) => para.trim() && <p key={i}><LinkedText text={para} /></p>)}
           </section>
           <section className="dialog-section">
             <h3>Workspace &amp; access</h3>
-            <p>{project.workspace}</p>
+            <p><LinkedText text={project.workspace} /></p>
           </section>
           {project.notes && (
             <section className="dialog-section">
               <h3>Advisor notes</h3>
-              <p>{project.notes}</p>
+              <p><LinkedText text={project.notes} /></p>
             </section>
           )}
         </div>
@@ -242,7 +259,7 @@ const CatalogPage = ({ data, onNavigate }) => {
             <div className="hero-faculty">
               <div className="hf-avatar" aria-hidden="true">RY</div>
               <div>
-                <div className="hf-name">Prof. Ran Yang</div>
+                <div className="hf-name"><YangLink>Prof. Ran Yang</YangLink></div>
                 <div className="hf-role">Capstone director · Engineering Physics</div>
                 <a href="https://yangran.org" className="hf-link">yangran.org ↗</a>
               </div>
@@ -252,7 +269,7 @@ const CatalogPage = ({ data, onNavigate }) => {
           <blockquote className="hero-pull">
             <span className="hp-mark">"</span>
             <p>You might already know why it works. This year, you find out whether you can build it and make it matter.</p>
-            <footer>— Prof. Ran Yang</footer>
+            <footer>— <YangLink>Prof. Ran Yang</YangLink></footer>
           </blockquote>
         </aside>
       </section>

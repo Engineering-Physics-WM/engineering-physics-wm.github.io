@@ -433,6 +433,11 @@ section.is-emph-soft .section-heading,
   background: color-mix(in oklch, var(--paper) 90%, white);
   z-index: 2;
 }
+.project-card:focus-visible {
+  outline: 3px solid color-mix(in oklch, var(--pink-ink) 40%, transparent);
+  outline-offset: -3px;
+  z-index: 3;
+}
 .project-card:hover .project-card-num { color: var(--pink-ink); }
 .project-card:hover .project-card-title { color: var(--olive-ink); }
 
@@ -468,6 +473,7 @@ section.is-emph-soft .section-heading,
   font-size: 13px; color: var(--ink-soft);
   margin: 0;
 }
+.project-card-advisor a { position: relative; z-index: 4; }
 .project-card-advisor .aff { color: var(--muted); }
 
 .project-card-pitch {
@@ -689,6 +695,11 @@ section.is-emph-soft .section-heading,
   display: flex; flex-wrap: wrap; gap: 8px 28px;
   font-size: 11px; color: var(--muted);
   letter-spacing: 0.06em;
+}
+.footer-meta a {
+  color: inherit;
+  text-decoration-color: color-mix(in oklch, var(--muted) 45%, transparent);
+  text-underline-offset: 3px;
 }
 
 /* All in-content links default to pink (keep this for hero/main areas) */

@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Reveal } from "./motion.jsx";
 import { buildTeams } from "./teamMatching.js";
+import { PersonLink, YangLink } from "./links.jsx";
 
 const useDistribution = (projects, responses) => React.useMemo(() => {
   const idx = Object.fromEntries(projects.map((p, i) => [p.id, i]));
@@ -43,7 +44,7 @@ const DistributionView = ({ projects, responses }) => {
               <span className="dist-num">{String(row.num).padStart(2, "0")}</span>
               <div>
                 <div className="dist-title" title={row.title}>{row.title}</div>
-                <div className="dist-advisor">{row.advisor}</div>
+                <div className="dist-advisor"><PersonLink name={row.advisor}>{row.advisor}</PersonLink></div>
               </div>
               <div className="dist-bar" title={`Top-3 picks: ${top3}`}>
                 {row.ranks.map((c, r) => {
@@ -190,7 +191,7 @@ const TeamsView = ({ projects, responses, students }) => {
             <Reveal as="div" key={p.id} className="team-card" delay={(p.num - 1) * 30}>
               <div className="team-num mono">TEAM {String(p.num).padStart(2, "0")}</div>
               <h4 className="team-title">{p.title}</h4>
-              <div className="team-advisor">{p.advisor} · {p.affiliation}</div>
+              <div className="team-advisor"><PersonLink name={p.advisor}>{p.advisor}</PersonLink> · {p.affiliation}</div>
               <ul
                 className={"team-roster" + (dropTarget === p.id ? " is-drop-target" : "")}
                 onDragOver={(e) => { e.preventDefault(); setDropTarget(p.id); }}
@@ -263,7 +264,7 @@ const DashboardPage = ({ data, onNavigate }) => {
     <div className="page">
       <section className="dashboard-hero">
         <div>
-          <p className="kicker"><span className="dot">●</span> &nbsp; Instructor view · Prof. Ran Yang</p>
+          <p className="kicker"><span className="dot">●</span> &nbsp; Instructor view · <YangLink>Prof. Ran Yang</YangLink></p>
           <h1>Cohort dashboard <span style={{ color: "var(--muted)", fontStyle: "italic" }}>2026·27</span></h1>
           <p style={{ color: "var(--ink-soft)", fontSize: 16, maxWidth: 580 }}>
             Live-feel preview using sample submissions. Switch tabs to see ranking distribution, individual responses,

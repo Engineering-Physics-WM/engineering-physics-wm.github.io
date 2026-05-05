@@ -9,6 +9,7 @@ import { CatalogPage } from "./catalog.jsx";
 import { RankingPage } from "./ranking.jsx";
 import { ArchivePage, DashboardPage } from "./dashboard.jsx";
 import { AuthGate } from "./auth.jsx";
+import { YangLink } from "./links.jsx";
 import { TweakPanelInline } from "./tweaks.jsx";
 
 const Header = ({ page, onNavigate, year, setYear, years }) => {
@@ -113,7 +114,7 @@ const Footer = ({ onNavigate }) => (
     <div className="footer-meta">
       <span className="mono">EP™ · Engineering Physics Capstone</span>
       <span className="mono">2026 — 2027</span>
-      <span className="mono">© Ran Yang</span>
+      <YangLink className="mono">© Ran Yang</YangLink>
     </div>
   </footer>
 );

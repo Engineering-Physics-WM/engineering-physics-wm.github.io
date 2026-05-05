@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Reveal } from "./motion.jsx";
 import { isSupabaseConfigured, supabase } from "./supabaseClient.js";
+import { PersonLink, YangLink } from "./links.jsx";
 
 const WM_EMAIL_RE = /^[^@\s]+@wm\.edu$/i;
 
@@ -26,7 +27,7 @@ const RankItem = ({ project, idx, total, onMove, onDragStart, onDragOver, onDrop
     <span className="rank-num">{idx + 1}</span>
     <div className="rank-body">
       <h4 className="rank-title">{project.title}</h4>
-      <span className="rank-meta">{project.advisor} · {project.affiliation}</span>
+      <span className="rank-meta"><PersonLink name={project.advisor}>{project.advisor}</PersonLink> · {project.affiliation}</span>
     </div>
     <div className="rank-controls">
       <span className="drag-handle" aria-hidden="true">⋮⋮</span>
@@ -189,7 +190,7 @@ const RankingPage = ({ data, onNavigate }) => {
           </div>
         </section>
         <Reveal as="div" className="submitted-card">
-          <h3>Submitted to Prof. Ran Yang</h3>
+          <h3>Submitted to <YangLink>Prof. Ran Yang</YangLink></h3>
           <p className="receipt-mono">RECEIPT {submitted.id} · {new Date(submitted.ts).toLocaleString()}</p>
           <p style={{ margin: 0, color: "var(--ink-soft)" }}>Name: {submitted.name} · {submitted.email}</p>
           <ol>
@@ -225,7 +226,7 @@ const RankingPage = ({ data, onNavigate }) => {
         </div>
         <Reveal as="aside" className="submit-card">
           <h2>How submission works</h2>
-          <p>Your ranking is sent to <a href="https://yangran.org" style={{ color: "var(--olive-ink)" }}>Prof. Ran Yang</a>{isSupabaseConfigured ? " through the Supabase-backed poll." : " via the local mock flow until Supabase is configured."} Drafts auto-save in this browser.</p>
+          <p>Your ranking is sent to <YangLink style={{ color: "var(--olive-ink)" }}>Prof. Ran Yang</YangLink>{isSupabaseConfigured ? " through the Supabase-backed poll." : " via the local mock flow until Supabase is configured."} Drafts auto-save in this browser.</p>
         </Reveal>
       </section>
 
