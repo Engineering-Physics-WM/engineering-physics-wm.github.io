@@ -215,7 +215,7 @@ const CatalogPage = ({ data, onNavigate }) => {
             <ol className="hero-timeline">
               <li className="is-current">
                 <span className="when mono">Now</span>
-                <span className="what"><strong>Open ranking poll.</strong> Browse the slate and submit your top picks before Friday.</span>
+                <span className="what"><strong>Open ranking poll.</strong> Browse the slate and submit your top picks.</span>
               </li>
               <li>
                 <span className="when mono">Mon · May 11</span>
