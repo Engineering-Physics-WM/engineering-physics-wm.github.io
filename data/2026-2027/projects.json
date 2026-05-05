@@ -13,7 +13,7 @@
       "advisor_affiliation": "ENSP",
       "thrust_area": "Instrumentation / sensors, Public-facing / installation / outreach",
       "submitted_at": "2026-04-23T16:29:26.718000",
-      "path": "projects/animal-crossing-reengineering-effective-wildlife-crossing-structures-at-the-jamestown-dam.json"
+      "path": "data/2026-2027/projects/animal-crossing-reengineering-effective-wildlife-crossing-structures-at-the-jamestown-dam.json"
     },
     {
       "id": "modification-of-a-high-speed-electric-unmanned-surface-vessel-usv-race-boat-towards-full-stack-agentic-control",
@@ -23,7 +23,7 @@
       "advisor_affiliation": "Applied Science",
       "thrust_area": "AI-driven measurement or analysis, Robotics / autonomy / controls, Public-facing / installation / outreach, Instrumentation / sensors",
       "submitted_at": "2026-04-24T11:19:52.181000",
-      "path": "projects/modification-of-a-high-speed-electric-unmanned-surface-vessel-usv-race-boat-towards-full-stack-agentic-control.json"
+      "path": "data/2026-2027/projects/modification-of-a-high-speed-electric-unmanned-surface-vessel-usv-race-boat-towards-full-stack-agentic-control.json"
     },
     {
       "id": "photosensor-readout-electronics-for-fun-and-profit",
@@ -33,7 +33,7 @@
       "advisor_affiliation": "Physics",
       "thrust_area": "Bioengineering / medical devices, Instrumentation / sensors, Plasma / high-energy adjacent",
       "submitted_at": "2026-04-24T14:40:41.754000",
-      "path": "projects/photosensor-readout-electronics-for-fun-and-profit.json"
+      "path": "data/2026-2027/projects/photosensor-readout-electronics-for-fun-and-profit.json"
     },
     {
       "id": "irays-computational-dual-spectrum-pupillometry-for-pre-hospital-neuro-triage",
@@ -43,7 +43,7 @@
       "advisor_affiliation": "Physics",
       "thrust_area": "Instrumentation / sensors, AI-driven measurement or analysis, Bioengineering / medical devices, Computational imaging / simulation, Robotics / autonomy / controls",
       "submitted_at": "2026-04-25T12:03:11.335000",
-      "path": "projects/irays-computational-dual-spectrum-pupillometry-for-pre-hospital-neuro-triage.json"
+      "path": "data/2026-2027/projects/irays-computational-dual-spectrum-pupillometry-for-pre-hospital-neuro-triage.json"
     },
     {
       "id": "audimo-sensor-augmented-acoustic-instruments",
@@ -53,7 +53,7 @@
       "advisor_affiliation": "Music",
       "thrust_area": "Instrumentation / sensors",
       "submitted_at": "2026-04-26T16:27:50.155000",
-      "path": "projects/audimo-sensor-augmented-acoustic-instruments.json"
+      "path": "data/2026-2027/projects/audimo-sensor-augmented-acoustic-instruments.json"
     },
     {
       "id": "developing-heat-load-model-and-solutions-for-smr-located-on-former-mining-site",
@@ -63,7 +63,7 @@
       "advisor_affiliation": "Physics",
       "thrust_area": "Computational imaging / simulation",
       "submitted_at": "2026-04-27T21:47:14.847000",
-      "path": "projects/developing-heat-load-model-and-solutions-for-smr-located-on-former-mining-site.json"
+      "path": "data/2026-2027/projects/developing-heat-load-model-and-solutions-for-smr-located-on-former-mining-site.json"
     },
     {
       "id": "soft-shallow-water-biomimetic-robot",
@@ -73,7 +73,7 @@
       "advisor_affiliation": "Applied Science",
       "thrust_area": "Public-facing / installation / outreach, Instrumentation / sensors, Robotics / autonomy / controls",
       "submitted_at": "2026-04-28T18:02:13.721000",
-      "path": "projects/soft-shallow-water-biomimetic-robot.json"
+      "path": "data/2026-2027/projects/soft-shallow-water-biomimetic-robot.json"
     },
     {
       "id": "corrosion-prevention-using-engineered-biofilms",
@@ -83,7 +83,7 @@
       "advisor_affiliation": "Applied Science",
       "thrust_area": "Bioengineering / medical devices, Instrumentation / sensors, Materials",
       "submitted_at": "2026-04-29T11:11:28.879000",
-      "path": "projects/corrosion-prevention-using-engineered-biofilms.json"
+      "path": "data/2026-2027/projects/corrosion-prevention-using-engineered-biofilms.json"
     },
     {
       "id": "quantum-forge-pilot-project-with-inq-in-quantum-computing-or-quantum-sensing",
@@ -93,7 +93,7 @@
       "advisor_affiliation": "Industry / Quantum Forge",
       "thrust_area": "Quantum science and technology, Computational imaging / simulation, Instrumentation / sensors",
       "submitted_at": "2026-05-04T00:00:00",
-      "path": "projects/quantum-forge-pilot-project-with-inq-in-quantum-computing-or-quantum-sensing.json"
+      "path": "data/2026-2027/projects/quantum-forge-pilot-project-with-inq-in-quantum-computing-or-quantum-sensing.json"
     }
   ]
 }

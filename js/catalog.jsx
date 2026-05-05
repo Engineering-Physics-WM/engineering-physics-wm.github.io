@@ -77,23 +77,35 @@ const ProjectDialog = ({ project, displayIdx, onClose }) => {
             ))}
           </div>
           <dl className="detail-grid">
-            <dt>Advisor</dt><dd>{project.advisor}</dd>
+            <dt>Advisor</dt>
+            <dd>
+              {project.advisorEmail
+                ? <a href={"mailto:" + project.advisorEmail}>{project.advisor}</a>
+                : project.advisor}
+            </dd>
             <dt>Affiliation</dt><dd>{project.affiliation}</dd>
+            {project.coadvisors && <><dt>Co-advisors</dt><dd>{project.coadvisors}</dd></>}
             <dt>Year</dt><dd className="mono">2026 — 2027</dd>
             <dt>Team size</dt><dd>2 – 3 students</dd>
           </dl>
           <section className="dialog-section">
             <h3>Student pitch</h3>
-            <p>{project.pitch}</p>
+            {project.pitch.split("\n").map((para, i) => para.trim() && <p key={i}>{para}</p>)}
           </section>
           <section className="dialog-section">
-            <h3>Background, objectives, deliverables</h3>
-            <p>Detailed project brief loads from <span className="mono">projects/{project.id}.json</span> when wired to the data folder. Until then, this section shows a structured placeholder so the layout reflects the final shape — long-form scope, weekly milestones, deliverables, and faculty notes.</p>
+            <h3>Background, objectives &amp; deliverables</h3>
+            {project.background.split("\n").map((para, i) => para.trim() && <p key={i}>{para}</p>)}
           </section>
           <section className="dialog-section">
-            <h3>Workspace</h3>
-            <p>Lab assignments and access notes will populate here from the form data.</p>
+            <h3>Workspace &amp; access</h3>
+            <p>{project.workspace}</p>
           </section>
+          {project.notes && (
+            <section className="dialog-section">
+              <h3>Advisor notes</h3>
+              <p>{project.notes}</p>
+            </section>
+          )}
         </div>
       </div>
     </dialog>
