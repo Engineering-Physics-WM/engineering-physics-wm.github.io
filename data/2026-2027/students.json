@@ -19,9 +19,9 @@
       "email": "etucker@wm.edu",
       "graduationYear": "2027",
       "honorsProject": {
-        "number": 8,
-        "projectId": "quantum-forge",
-        "projectTitle": "Quantum Forge Pilot Project with IonQ in Quantum Computing or Quantum Sensing",
+        "number": 9,
+        "projectId": "soft-bio-robot",
+        "projectTitle": "Soft Shallow Water Biomimetic Robot",
         "lockedForMatching": true
       },
       "requirements": {
@@ -218,9 +218,9 @@
       "email": "wfdeluna@wm.edu",
       "graduationYear": "2027",
       "honorsProject": {
-        "number": 2,
-        "projectId": "audimo",
-        "projectTitle": "Audimo (Sensor-Augmented Acoustic Instruments)",
+        "number": 5,
+        "projectId": "irays-pupillometry",
+        "projectTitle": "iRays: Computational Dual-Spectrum Pupillometry for Pre-Hospital Neuro-Triage",
         "lockedForMatching": true
       },
       "requirements": {
@@ -254,9 +254,9 @@
       "email": "bdstobie@wm.edu",
       "graduationYear": "2027",
       "honorsProject": {
-        "number": 8,
-        "projectId": "quantum-forge",
-        "projectTitle": "Quantum Forge Pilot Project with IonQ in Quantum Computing or Quantum Sensing",
+        "number": 9,
+        "projectId": "soft-bio-robot",
+        "projectTitle": "Soft Shallow Water Biomimetic Robot",
         "lockedForMatching": true
       },
       "requirements": {
@@ -289,9 +289,9 @@
       "email": "eeverhart@wm.edu",
       "graduationYear": "2027",
       "honorsProject": {
-        "number": 8,
-        "projectId": "quantum-forge",
-        "projectTitle": "Quantum Forge Pilot Project with IonQ in Quantum Computing or Quantum Sensing",
+        "number": 9,
+        "projectId": "soft-bio-robot",
+        "projectTitle": "Soft Shallow Water Biomimetic Robot",
         "lockedForMatching": true
       },
       "requirements": {
@@ -501,9 +501,9 @@
       "email": "hcgreene@wm.edu",
       "graduationYear": "2027",
       "honorsProject": {
-        "number": 2,
-        "projectId": "audimo",
-        "projectTitle": "Audimo (Sensor-Augmented Acoustic Instruments)",
+        "number": 5,
+        "projectId": "irays-pupillometry",
+        "projectTitle": "iRays: Computational Dual-Spectrum Pupillometry for Pre-Hospital Neuro-Triage",
         "lockedForMatching": true
       },
       "requirements": {
