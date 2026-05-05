@@ -8,6 +8,7 @@ import { SparkLayer } from "./motion.jsx";
 import { CatalogPage } from "./catalog.jsx";
 import { RankingPage } from "./ranking.jsx";
 import { ArchivePage, DashboardPage } from "./dashboard.jsx";
+import { AuthGate } from "./auth.jsx";
 import { TweakPanelInline } from "./tweaks.jsx";
 
 const Header = ({ page, onNavigate, year, setYear, years }) => {
@@ -144,7 +145,11 @@ const App = () => {
       <main key={page + year}>
         {page === "catalog" && <CatalogPage data={data} onNavigate={onNavigate} />}
         {page === "ranking" && <RankingPage data={data} onNavigate={onNavigate} />}
-        {page === "dashboard" && <DashboardPage data={data} onNavigate={onNavigate} />}
+        {page === "dashboard" && (
+          <AuthGate>
+            <DashboardPage data={data} onNavigate={onNavigate} />
+          </AuthGate>
+        )}
         {page === "archive" && <ArchivePage data={data} onNavigate={onNavigate} currentYear={year} setYear={setYear} />}
       </main>
       <Footer onNavigate={onNavigate} />

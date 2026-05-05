@@ -55,6 +55,8 @@ Before turning on the live poll, run `supabase/schema.sql` in the Supabase SQL E
 
 To limit submissions to enrolled students, run `supabase/allowlist-migration.sql`, then run `supabase/allowed-students-2026-2027.sql`. The insert policy rejects any email not on that cohort allowlist.
 
+The instructor dashboard is protected with Supabase email/password auth. In Supabase, create a confirmed Auth user for `rxyan2@wm.edu` with the dashboard password. The app does not expose public sign-up; only that email can pass the dashboard gate.
+
 ## Deployment
 
 This repo is hosted on GitHub Pages. Push to `main` to run the Vite build workflow and deploy the generated `dist/` artifact.

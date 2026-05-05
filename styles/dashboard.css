@@ -1,4 +1,55 @@
 /* Instructor dashboard + teams */
+.auth-panel {
+  margin: 0 auto;
+  max-width: 560px;
+  padding: clamp(28px, 6vw, 56px);
+  background: white;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+}
+.auth-panel h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(36px, 7vw, 64px);
+  font-weight: 500;
+  line-height: 0.98;
+  letter-spacing: -0.03em;
+}
+.auth-panel p {
+  color: var(--ink-soft);
+  line-height: 1.55;
+}
+.auth-form {
+  display: grid;
+  gap: 14px;
+  margin-top: 24px;
+}
+.auth-status {
+  margin: 0;
+  color: var(--pink-ink) !important;
+  font-size: 13px;
+}
+.auth-strip {
+  width: min(var(--max), calc(100% - 32px));
+  margin: 18px auto 0;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: color-mix(in oklch, var(--accent) 20%, white);
+  border: 1px solid color-mix(in oklch, var(--accent-ink) 22%, var(--hairline));
+  border-radius: var(--radius-lg);
+  color: var(--accent-ink);
+  font-size: 13px;
+}
+.auth-strip strong {
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+.auth-strip .btn { padding: 7px 12px; }
+
 .dashboard-hero {
   display: grid;
   grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.6fr);

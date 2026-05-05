@@ -6,7 +6,7 @@ const rosterResponses = cohortStudents.map((student) => ({
   email: student.email,
   ranking: student.sampleRanking,
   notes: student.honorsProject
-    ? `Honors project ${String(student.honorsProject.number).padStart(2, "0")} locked`
+    ? `Honors project ${String(student.honorsProject.number).padStart(2, "0")} matching default`
     : student.requirements.computationalRequirement,
 }));
 
