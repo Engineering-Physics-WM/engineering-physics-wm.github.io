@@ -1,45 +1,31 @@
-# Capstone site data
+# Engineering Physics Capstone · William & Mary
 
-This folder contains a static website and website-ready JSON extracted from the
-spreadsheet.
+The public website for the William & Mary Engineering Physics Capstone program. Students can browse projects, rank preferences, and view the cohort dashboard.
 
-## Files
+**Live site:** [engineering-physics-wm.github.io](https://engineering-physics-wm.github.io)
 
-- `index.html`, `ranking.html`, `styles.css`, and `app.js` make the project
-  browser, clickable theme map, and ranking workspace.
-- `projects.json` contains the top-level index for listings.
-- `projects/<slug>.json` contains one full record per project.
-- `schema.json` documents the field layout.
+## Structure
+
+```
+index.html          — single-page entry point
+data/               — project data by cohort year (JSON)
+js/                 — React components (transpiled in-browser via Babel)
+styles/             — CSS (design tokens, app layout, ranking, dashboard)
+```
 
 ## Running locally
 
-Because the browser loads project data with `fetch()`, serve the folder over
-HTTP instead of opening `index.html` directly from the filesystem:
+Open `index.html` directly in a browser — no build step required. The site uses React 18 and Babel loaded from CDN, so all JSX is transpiled client-side.
 
-```sh
-python3 -m http.server 8000
-```
+> Note: some browsers block local file fetches. If data doesn't load, serve the directory with any static file server:
+> ```
+> npx serve .
+> ```
 
-Then open `http://localhost:8000/`.
+## Data
 
-## Suggested static site flow
+Project data lives in `data/<year>/`. See `data/schema.json` for the expected shape of each project entry.
 
-1. Load `projects.json` on the homepage.
-2. Render each item as a project card.
-3. Open project details in a dialog.
-4. Fetch `projects/<slug>.json` when a student opens a project.
-5. Use `ranking.html` for preference ordering and draft submission.
+## Deployment
 
-## Survey collection
-
-The current site is fully static. It can help students draft and export project
-rankings, but it cannot securely store submissions by itself. The current
-`ranking.html` submit button opens an email draft to Prof. Ran Yang. For central
-collection and automatic matching, connect the ranking flow to Google Forms,
-Qualtrics, Google Sheets Apps Script, Netlify Forms, Formspree, Firebase, or
-Supabase.
-
-## Notes
-
-- Long text fields preserve paragraph breaks.
-- The co-advisor field is kept as raw text because entries are free-form.
+This repo is hosted on GitHub Pages. Push to `main` to deploy.
