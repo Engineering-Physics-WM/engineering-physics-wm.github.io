@@ -43,7 +43,7 @@ npm run preview
 
 Project data lives in `data/<year>/`. See `data/schema.json` for the expected shape of each project entry. The 2026-2027 cohort roster is normalized into `data/2026-2027/students.json` for the dashboard and matching preview. The raw roster CSV and private JSON with W&M 93 ID numbers are ignored locally.
 
-Public cohort updates currently live in `js/data.js` as `announcements2026`. Files for announcement links can be placed in `public/announcements/<year>/` and linked as `/announcements/<year>/filename.pdf`.
+Public cohort updates currently live in `js/data.js` as `announcements2026`. Files for announcement links can be placed in `public/announcements/<year>/` and linked as `/announcements/<year>/filename.pdf`. Editing this file updates the public site after commit/push/deploy; it does not automatically send email.
 
 ## Supabase Polling
 
@@ -59,7 +59,7 @@ To limit submissions to enrolled students, run `supabase/allowlist-migration.sql
 
 The instructor dashboard is protected with Supabase email/password auth. In Supabase, create a confirmed Auth user for `rxyan2@wm.edu` with the dashboard password. The app does not expose public sign-up; only that email can pass the dashboard gate.
 
-For a Supabase-backed announcement system, run `supabase/announcements-schema.sql`. Public published announcements can be read by anyone; draft/edit/send-job access stays limited to `rxyan2@wm.edu`. Email sends should be handled by a Supabase Edge Function or other trusted backend with a private email-provider API key.
+For a Supabase-backed announcement system, run `supabase/announcements-schema.sql`. Public published announcements can be read by anyone; draft/edit/send-job access stays limited to `rxyan2@wm.edu`. The current repo only defines the announcement and email-job tables; actual email delivery still needs a Supabase Edge Function or other trusted backend with a private email-provider API key.
 
 ## Deployment
 

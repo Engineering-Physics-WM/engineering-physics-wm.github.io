@@ -65,7 +65,6 @@ const AnnouncementPanel = ({ announcements, onNavigate }) => {
             item={item}
             onNavigate={onNavigate}
             compact
-            defaultOpen={index === 0}
           />
         ))}
       </div>
