@@ -101,8 +101,8 @@ window.EP_DATA = {
       title: "Corrosion Prevention Using Engineered Biofilms",
       advisor: "Margaret Saha", affiliation: "Applied Science", advisorEmail: "mssaha@wm.edu",
       coadvisors: [
-        { name: "Doug Beringer", affiliation: "Applied Science", email: "dbberinger@wm.edu" },
-        { name: "Dennis Manos", affiliation: "Applied Science", email: "dmanos@wm.edu" },
+        { name: "Doug Beringer", affiliation: "Core Labs", email: "dbberinger@wm.edu" },
+        { name: "Dennis Manos", affiliation: "Physics", email: "dmanos@wm.edu" },
       ],
       areas: ["Bioengineering / medical devices", "Instrumentation / sensors", "Materials"],
       pitch: "Developing novel approaches using biofilms to prevent corrosion is important because traditional anti-corrosion methods often rely on toxic chemicals that can harm the environment. Corrosion causes an estimated $2.5 trillion in damage globally each year, or about 3–4% of global GDP, making more effective solutions economically critical. Biofilms offer a more sustainable and potentially self-regenerating solution by forming protective layers on material surfaces. They can adapt to changing conditions, improving long-term durability, reducing maintenance costs, and helping mitigate the massive economic burden of corrosion.",
