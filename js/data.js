@@ -10,6 +10,79 @@ const rosterResponses = cohortStudents.map((student) => ({
     : student.requirements.computationalRequirement,
 }));
 
+const announcements2026 = [
+  {
+    id: "ranking-poll-open",
+    cohortYear: "2026-2027",
+    order: 1,
+    date: "2026-05-05",
+    label: "Now",
+    title: "Ranking poll is open.",
+    summary: "Browse the slate and submit your ordered project preferences.",
+    body: [
+      "Use the ranking poll to drag all nine projects into your preferred order. Your top three choices carry the most weight, but the full ranking helps when teams need balancing.",
+      "Honors students can rank freely; the auto-matching preview will simply default them to their already approved Honors projects.",
+    ],
+    audience: "All students",
+    pinned: true,
+    resources: [
+      { label: "Take the ranking poll", kind: "Site", page: "ranking" },
+      { label: "Review project catalog", kind: "Site", page: "catalog" },
+    ],
+  },
+  {
+    id: "ranking-close",
+    cohortYear: "2026-2027",
+    order: 2,
+    date: "2026-05-11",
+    label: "Mon · May 11",
+    title: "Ranking closes.",
+    summary: "Late edits should be sent directly to Prof. Ran Yang.",
+    body: [
+      "The poll closes at the end of the day on May 11. If you need to change a response after submitting, use the same email address or contact Prof. Ran Yang.",
+    ],
+    audience: "All students",
+    pinned: false,
+    resources: [
+      { label: "Ranking poll", kind: "Site", page: "ranking" },
+    ],
+  },
+  {
+    id: "team-preview",
+    cohortYear: "2026-2027",
+    order: 3,
+    date: "2026-05-15",
+    label: "Fri · May 15",
+    title: "Team preview shared.",
+    summary: "The first auto team-making preview will be checked before final confirmations.",
+    body: [
+      "The dashboard will show a first-pass matching preview using student rankings, Honors defaults, and the 2-3 students per project constraint.",
+      "Manual overrides can still happen where the algorithm misses an important context note.",
+    ],
+    audience: "Students and mentors",
+    pinned: false,
+    resources: [
+      { label: "Instructor dashboard", kind: "Dashboard", page: "dashboard" },
+    ],
+  },
+  {
+    id: "resource-hub",
+    cohortYear: "2026-2027",
+    order: 4,
+    date: "2026-05-18",
+    label: "Coming soon",
+    title: "Resource posts will live here.",
+    summary: "Future updates can include PDFs, slide decks, forms, meeting links, and recordings.",
+    body: [
+      "For file posts, put public files under public/announcements/2026-2027/ and add them as resources on the announcement.",
+      "When the Supabase announcement editor is added, this same public page can be fed from the database instead of this local data file.",
+    ],
+    audience: "Public",
+    pinned: false,
+    resources: [],
+  },
+];
+
 const EP_DATA = {
   years: [
     { id: "2024-2025", label: "24·25", status: "archive" },
@@ -145,6 +218,15 @@ const EP_DATA = {
 
   // Roster-based sample responses — drives the dashboard demo until live submissions are connected.
   responses: rosterResponses,
+
+  announcements: announcements2026,
+  announcementAudiences: [
+    { id: "all", label: "All students + mentors" },
+    { id: "students", label: "All students" },
+    { id: "honors_students", label: "Honors students" },
+    { id: "mentors", label: "All mentors" },
+    { id: "team", label: "Selected project team" },
+  ],
 
   archive: [
     { year: "2024-2025", title: "Founding cohort", projects: 7, teams: 3, students: 9, summary: "First Engineering Physics capstone year. Hand-matched teams, shared lab space established at Small Hall.", status: "past" },

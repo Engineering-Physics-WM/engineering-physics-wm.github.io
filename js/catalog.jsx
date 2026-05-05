@@ -3,6 +3,7 @@
 import * as React from "react";
 import { HeroParticles, Reveal } from "./motion.jsx";
 import { LinkedText, PersonLink, YangLink, isYangName } from "./links.jsx";
+import { AnnouncementPanel } from "./news.jsx";
 
 const AREA_COLORS = {
   "Instrumentation / sensors": "oklch(72% 0.060 18)",
@@ -238,24 +239,10 @@ const CatalogPage = ({ data, onNavigate }) => {
         <aside className="hero-aside" style={{ position: "relative", zIndex: 1 }}>
           <div className="hero-card">
             <p className="kicker" style={{ marginBottom: 14 }}><span className="dot">●</span> &nbsp; This week</p>
-            <ol className="hero-timeline">
-              <li className="is-current">
-                <span className="when mono">Now</span>
-                <span className="what"><strong>Open ranking poll.</strong> Browse the slate and submit your top picks.</span>
-              </li>
-              <li>
-                <span className="when mono">Mon · May 11</span>
-                <span className="what">Ranking closes. Auto team-making preview shared with cohort.</span>
-              </li>
-              <li>
-                <span className="when mono">Fri · May 15</span>
-                <span className="what">Final teams confirmed. Kickoffs scheduled with advisors.</span>
-              </li>
-              <li>
-                <span className="when mono">Coming soon</span>
-                <span className="what">Mid-project reviews, lab visits, and the public showcase in April 2027.</span>
-              </li>
-            </ol>
+            <AnnouncementPanel
+              announcements={(data.announcements || []).filter(item => item.cohortYear === data.currentYear)}
+              onNavigate={onNavigate}
+            />
             <div className="hero-faculty">
               <div className="hf-avatar" aria-hidden="true">RY</div>
               <div>

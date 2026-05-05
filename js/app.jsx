@@ -10,6 +10,7 @@ import { RankingPage } from "./ranking.jsx";
 import { ArchivePage, DashboardPage } from "./dashboard.jsx";
 import { AuthGate } from "./auth.jsx";
 import { YangLink } from "./links.jsx";
+import { NewsPage } from "./news.jsx";
 import { TweakPanelInline } from "./tweaks.jsx";
 
 const Header = ({ page, onNavigate, year, setYear, years }) => {
@@ -60,6 +61,7 @@ const Header = ({ page, onNavigate, year, setYear, years }) => {
 
       <nav className="site-nav" aria-label="Sections">
         <button aria-current={page === "catalog"} onClick={() => { onNavigate("catalog"); setMobileOpen(false); }}>Projects</button>
+        <button aria-current={page === "news"} onClick={() => { onNavigate("news"); setMobileOpen(false); }}>Updates</button>
         <button aria-current={page === "dashboard"} onClick={() => { onNavigate("dashboard"); setMobileOpen(false); }}>Dashboard</button>
         <button aria-current={page === "archive"} onClick={() => { onNavigate("archive"); setMobileOpen(false); }}>Archive</button>
         <button className="nav-cta" onClick={() => { onNavigate("ranking"); setMobileOpen(false); }} data-spark>
@@ -87,6 +89,7 @@ const Footer = ({ onNavigate }) => (
           <h4>Cohort</h4>
           <ul>
             <li><a href="#" onClick={(e) => { e.preventDefault(); onNavigate("catalog"); }}>Project catalog</a></li>
+            <li><a href="#" onClick={(e) => { e.preventDefault(); onNavigate("news"); }}>Cohort updates</a></li>
             <li><a href="#" onClick={(e) => { e.preventDefault(); onNavigate("ranking"); }}>Ranking poll</a></li>
             <li><a href="#" onClick={(e) => { e.preventDefault(); onNavigate("dashboard"); }}>Instructor dashboard</a></li>
             <li><a href="#" onClick={(e) => { e.preventDefault(); onNavigate("archive"); }}>Archive</a></li>
@@ -145,6 +148,7 @@ const App = () => {
       <Header page={page} onNavigate={onNavigate} year={year} setYear={setYear} years={data.years} />
       <main key={page + year}>
         {page === "catalog" && <CatalogPage data={data} onNavigate={onNavigate} />}
+        {page === "news" && <NewsPage data={data} currentYear={year} onNavigate={onNavigate} />}
         {page === "ranking" && <RankingPage data={data} onNavigate={onNavigate} />}
         {page === "dashboard" && (
           <AuthGate>
