@@ -15,10 +15,38 @@ import { TweakPanelInline } from "./tweaks.jsx";
 
 const Header = ({ page, onNavigate, year, setYear, years }) => {
   const [mobileOpen, setMobileOpen] = React.useState(false);
+  const [compactHeader, setCompactHeader] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!globalThis.matchMedia) return undefined;
+    const media = globalThis.matchMedia("(max-width: 860px)");
+    const syncHeaderMode = () => setCompactHeader(media.matches);
+    syncHeaderMode();
+    media.addEventListener("change", syncHeaderMode);
+    return () => media.removeEventListener("change", syncHeaderMode);
+  }, []);
+
+  React.useEffect(() => {
+    if (!compactHeader) setMobileOpen(false);
+  }, [compactHeader]);
+
+  const handleBrandClick = () => {
+    if (compactHeader) {
+      setMobileOpen(open => !open);
+      return;
+    }
+    onNavigate("catalog");
+  };
 
   return (
     <header className={"site-header" + (mobileOpen ? " is-open" : "")}>
-      <button className="brand" onClick={() => onNavigate("catalog")} aria-label="Engineering Physics home">
+      <button
+        className="brand"
+        onClick={handleBrandClick}
+        aria-label={compactHeader ? (mobileOpen ? "Close site menu" : "Open site menu") : "Engineering Physics home"}
+        aria-expanded={compactHeader ? mobileOpen : undefined}
+        aria-controls={compactHeader ? "site-menu" : undefined}
+      >
         <Monogram size={36} />
         <div className="brand-stack">
           <span className="brand-mono">Engineering Physics<em>Capstone</em></span>
@@ -34,40 +62,33 @@ const Header = ({ page, onNavigate, year, setYear, years }) => {
         </div>
       </button>
 
-      <button
-        className="mobile-menu-toggle"
-        onClick={() => setMobileOpen(o => !o)}
-        aria-label="Menu"
-        aria-expanded={mobileOpen}
-      >
-        <Monogram size={28} trademark={false} />
-      </button>
+      <div id="site-menu" className="header-menu">
+        <div className="year-switcher" role="tablist" aria-label="Year">
+          {years.map(y => (
+            <button
+              key={y.id}
+              className="year-pill"
+              aria-current={y.id === year}
+              disabled={y.status === "future" || (y.status !== "current" && y.id !== year)}
+              onClick={() => { setYear(y.id); setMobileOpen(false); }}
+              title={y.status === "future" ? "Reserved" : y.id === "2026-2027" ? "Current cohort" : "Archive"}
+            >
+              {y.status === "future" && <span className="future-dot" />}
+              {y.label}
+            </button>
+          ))}
+        </div>
 
-      <div className="year-switcher" role="tablist" aria-label="Year">
-        {years.map(y => (
-          <button
-            key={y.id}
-            className="year-pill"
-            aria-current={y.id === year}
-            disabled={y.status === "future" || (y.status !== "current" && y.id !== year)}
-            onClick={() => { setYear(y.id); setMobileOpen(false); }}
-            title={y.status === "future" ? "Reserved" : y.id === "2026-2027" ? "Current cohort" : "Archive"}
-          >
-            {y.status === "future" && <span className="future-dot" />}
-            {y.label}
+        <nav className="site-nav" aria-label="Sections">
+          <button aria-current={page === "catalog"} onClick={() => { onNavigate("catalog"); setMobileOpen(false); }}>Projects</button>
+          <button aria-current={page === "news"} onClick={() => { onNavigate("news"); setMobileOpen(false); }}>Updates</button>
+          <button aria-current={page === "dashboard"} onClick={() => { onNavigate("dashboard"); setMobileOpen(false); }}>Dashboard</button>
+          <button aria-current={page === "archive"} onClick={() => { onNavigate("archive"); setMobileOpen(false); }}>Archive</button>
+          <button className="nav-cta" onClick={() => { onNavigate("ranking"); setMobileOpen(false); }} data-spark>
+            Rank projects
           </button>
-        ))}
+        </nav>
       </div>
-
-      <nav className="site-nav" aria-label="Sections">
-        <button aria-current={page === "catalog"} onClick={() => { onNavigate("catalog"); setMobileOpen(false); }}>Projects</button>
-        <button aria-current={page === "news"} onClick={() => { onNavigate("news"); setMobileOpen(false); }}>Updates</button>
-        <button aria-current={page === "dashboard"} onClick={() => { onNavigate("dashboard"); setMobileOpen(false); }}>Dashboard</button>
-        <button aria-current={page === "archive"} onClick={() => { onNavigate("archive"); setMobileOpen(false); }}>Archive</button>
-        <button className="nav-cta" onClick={() => { onNavigate("ranking"); setMobileOpen(false); }} data-spark>
-          Rank projects
-        </button>
-      </nav>
     </header>
   );
 };
