@@ -23,11 +23,23 @@ create table if not exists public.ranking_allowed_students (
   student_email text not null,
   student_email_normalized text generated always as (lower(student_email)) stored,
   student_name text,
+  honors_project_id text,
+  honors_project_number integer,
+  honors_project_title text,
   constraint ranking_allowed_students_wm_email
     check (student_email ~* '^[^@[:space:]]+@wm\.edu$'),
   constraint ranking_allowed_students_unique_email
     unique (cohort_year, student_email_normalized)
 );
+
+alter table public.ranking_allowed_students
+  add column if not exists honors_project_id text;
+
+alter table public.ranking_allowed_students
+  add column if not exists honors_project_number integer;
+
+alter table public.ranking_allowed_students
+  add column if not exists honors_project_title text;
 
 create unique index if not exists ranking_one_response_per_student
 on public.ranking_submissions (cohort_year, lower(student_email));
@@ -85,4 +97,5 @@ to authenticated
 using ((auth.jwt() ->> 'email') in ('rxyan2@wm.edu'))
 with check ((auth.jwt() ->> 'email') in ('rxyan2@wm.edu'));
 
--- To populate the cohort allowlist, run supabase/allowed-students-2026-2027.sql.
+-- To populate the cohort allowlist, copy supabase/allowed-students-template.sql
+-- into a private local SQL file, fill in real students, and run it in Supabase.

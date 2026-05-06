@@ -80,11 +80,6 @@ const RankingPage = ({ data, onNavigate }) => {
   }, [name, email, order, submitted]);
 
   const projectsById = React.useMemo(() => Object.fromEntries(data.projects.map(p => [p.id, p])), [data.projects]);
-  const allowedStudentEmails = React.useMemo(
-    () => new Set((data.students || []).map(s => s.email.toLowerCase())),
-    [data.students]
-  );
-
   const move = (from, to) => {
     if (to < 0 || to >= order.length || from === to) return;
     const next = order.slice();
@@ -117,10 +112,6 @@ const RankingPage = ({ data, onNavigate }) => {
     const cleanEmail = email.trim().toLowerCase();
     if (!WM_EMAIL_RE.test(cleanEmail)) {
       setStatus("Use your William & Mary email address.");
-      return;
-    }
-    if (allowedStudentEmails.size && !allowedStudentEmails.has(cleanEmail)) {
-      setStatus("This email is not on the allowed student list for this cohort.");
       return;
     }
     if (submitting) return;
@@ -222,7 +213,7 @@ const RankingPage = ({ data, onNavigate }) => {
           <p className="kicker"><span className="dot">●</span> &nbsp; Step into your capstone year</p>
           <h1>Rank the projects that <span className="ital">pull&nbsp;you&nbsp;in.</span></h1>
           <p>Drag the slate into your preferred order. Top three carry the most weight. We use this to seed teams — your notes and constraints help us read between the lines.</p>
-          <p className="construction-note">{isSupabaseConfigured ? "Student polling beta · under construction · saves to Supabase" : "Student polling mockup · under construction · submissions stay local for now"}</p>
+          <p className="construction-note">{isSupabaseConfigured ? "Student polling live · Supabase allowlist enforced" : "Student polling mockup · under construction · submissions stay local for now"}</p>
         </div>
         <Reveal as="aside" className="submit-card">
           <h2>How submission works</h2>

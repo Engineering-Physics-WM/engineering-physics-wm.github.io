@@ -1,15 +1,3 @@
-import students2026 from "../data/2026-2027/students.json";
-
-const cohortStudents = students2026.students;
-const rosterResponses = cohortStudents.map((student) => ({
-  name: student.name,
-  email: student.email,
-  ranking: student.sampleRanking,
-  notes: student.honorsProject
-    ? `Honors project ${String(student.honorsProject.number).padStart(2, "0")} matching default`
-    : student.requirements.computationalRequirement,
-}));
-
 const announcements2026 = [
   {
     id: "ranking-poll-open",
@@ -39,7 +27,7 @@ const announcements2026 = [
     title: "Ranking closes.",
     summary: "Late edits should be sent directly to Prof. Ran Yang.",
     body: [
-      "The poll closes at the end of the day on May 11. If you need to change a response after submitting, use the same email address or contact Prof. Ran Yang.",
+      "The poll closes at the end of the day on May 11. If you need to change a response after submitting, contact Prof. Ran Yang.",
     ],
     audience: "All students",
     pinned: false,
@@ -212,12 +200,6 @@ const EP_DATA = {
       notes: "This is a pilot Quantum Forge project for the 2026-2027 capstone cycle. The exact technical direction is being finalized with IonQ and Q-SEnSE program mentors. A W&M Physics faculty co-advisor in the relevant area will be confirmed once the scope is set.",
     },
   ],
-
-  students: cohortStudents,
-  cohortStudents: students2026,
-
-  // Roster-based sample responses — drives the dashboard demo until live submissions are connected.
-  responses: rosterResponses,
 
   announcements: announcements2026,
   announcementAudiences: [

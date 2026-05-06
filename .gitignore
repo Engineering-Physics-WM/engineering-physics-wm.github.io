@@ -20,6 +20,9 @@ dist/
 .env
 .env.local
 
-# Local roster exports with private student identifiers
-data/2026-2027/*roster.csv
-data/2026-2027/students-private.local.json
+# Local roster exports and private student/contact data
+data/*/*roster*.csv
+data/*/students*.json
+supabase/allowed-students-*.sql
+supabase/*.private.sql
+!supabase/allowed-students-template.sql

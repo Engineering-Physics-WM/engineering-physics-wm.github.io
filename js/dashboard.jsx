@@ -34,6 +34,46 @@ const projectLabel = (project) => (
   project ? `${projectNumber(project)} · ${project.title.split(":")[0]}` : "Selected project"
 );
 
+const normalizeSubmissionRow = (row, projects) => {
+  const projectIds = projects.map((project) => project.id);
+  const seen = new Set();
+  const ranking = (Array.isArray(row.ranking) ? row.ranking : [])
+    .filter((projectId) => projectIds.includes(projectId) && !seen.has(projectId) && seen.add(projectId));
+  const missing = projectIds.filter((projectId) => !seen.has(projectId));
+
+  return {
+    id: row.id,
+    name: row.student_name || row.student_email || "Student",
+    email: normalizeEmail(row.student_email),
+    notes: row.notes || "",
+    ranking: [...ranking, ...missing],
+    submittedAt: row.created_at,
+    receiptCode: row.receipt_code,
+  };
+};
+
+const normalizeAllowedStudentRow = (row, projects) => {
+  const honorsProject = projects.find((project) => (
+    project.id === row.honors_project_id ||
+    (row.honors_project_number && project.num === Number(row.honors_project_number))
+  ));
+
+  return {
+    name: row.student_name || row.student_email || "Student",
+    email: normalizeEmail(row.student_email),
+    honorsProject: honorsProject ? {
+      number: honorsProject.num,
+      projectId: honorsProject.id,
+      projectTitle: row.honors_project_title || honorsProject.title,
+      lockedForMatching: true,
+    } : null,
+  };
+};
+
+const dashboardReadError = (label, error) => (
+  `${label} could not load: ${error?.message || "unknown Supabase error"}`
+);
+
 const mentorsForProject = (project) => {
   if (!project) return [];
   return uniqueRecipients([
@@ -59,7 +99,7 @@ const projectMentorRows = (project, cohortYear, assignedByEmail) => (
 
 const rowsToTeamMap = ({ projects, rows, responses, students }) => {
   const teams = Object.fromEntries(projects.map((project) => [project.id, []]));
-  const studentByEmail = Object.fromEntries(students.map((student) => [normalizeEmail(student.email), student]));
+  const studentByEmail = Object.fromEntries((students || []).map((student) => [normalizeEmail(student.email), student]));
   const responseByEmail = Object.fromEntries(responses.map((response) => [normalizeEmail(response.email), response]));
 
   rows
@@ -273,7 +313,6 @@ const DistributionView = ({ projects, responses }) => {
                 {row.ranks.map((c, r) => {
                   if (c === 0) return null;
                   const cls = r < 5 ? `r${r+1}` : "rN";
-                  const w = (c / responses.length) * 100;
                   return <span key={r} className={"dist-seg " + cls} style={{ flex: c }}>{c > 1 ? c : ""}</span>;
                 })}
               </div>
@@ -291,6 +330,10 @@ const DistributionView = ({ projects, responses }) => {
 
 const StudentsView = ({ projects, responses }) => {
   const map = Object.fromEntries(projects.map(p => [p.id, p]));
+  if (!responses.length) {
+    return <div className="recipient-empty">No submitted rankings yet. This tab will fill as students complete the poll.</div>;
+  }
+
   return (
     <div className="students-grid">
       <div className="student-row head">
@@ -388,7 +431,7 @@ const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows,
 
   const sizeErrors = activeTeamSizeErrors(teams.teams, teams.minTeamSize, teams.maxTeamSize);
   const activeStudentCount = Object.values(teams.teams).reduce((total, roster) => total + roster.length, 0);
-  const canSave = !saving && sizeErrors.length === 0 && (dirty || teamSource !== "saved");
+  const canSave = activeStudentCount > 0 && !saving && sizeErrors.length === 0 && (dirty || teamSource !== "saved");
 
   const moveStudent = (email, fromProjectId, toProjectId) => {
     if (fromProjectId === toProjectId) return;
@@ -514,6 +557,11 @@ const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows,
             : saveStatus || teamRowsError}
         </div>
       )}
+      {!responses.length && !saveStatus && !teamRowsError && (
+        <div className="team-save-status">
+          Waiting for submitted rankings before creating the first auto-match preview.
+        </div>
+      )}
 
       <div className="teams-grid">
         {[...projects].sort((a, b) => a.num - b.num).map((p) => {
@@ -594,6 +642,15 @@ const EmailDraftView = ({ data, projects, responses, students, teamMemberRows })
     () => buildTeams({ projects, responses, students, seed: 0 }),
     [projects, responses, students]
   );
+  const fallbackStudentRecipients = React.useMemo(
+    () => responses.map((response) => ({
+      name: response.name,
+      email: response.email,
+      honorsProject: null,
+    })),
+    [responses]
+  );
+  const emailStudents = students.length ? students : fallbackStudentRecipients;
 
   const project = projects.find((p) => p.id === projectId);
   const audienceLabel = audienceOptions.find((option) => option.id === audience)?.label || "Selected group";
@@ -601,8 +658,8 @@ const EmailDraftView = ({ data, projects, responses, students, teamMemberRows })
   const teamRecipientSource = hasSavedTeams ? "Saved Supabase team assignments" : "Current auto-match preview";
 
   const recipients = React.useMemo(() => {
-    const studentRecipients = students.map((student) => ({ name: student.name, email: student.email, role: "student" }));
-    const honorsRecipients = students
+    const studentRecipients = emailStudents.map((student) => ({ name: student.name, email: student.email, role: "student" }));
+    const honorsRecipients = emailStudents
       .filter((student) => student.honorsProject)
       .map((student) => ({ name: student.name, email: student.email, role: "student" }));
     const mentorRecipients = projects.flatMap(mentorsForProject);
@@ -624,7 +681,7 @@ const EmailDraftView = ({ data, projects, responses, students, teamMemberRows })
     if (audience === "team_mentors") return uniqueRecipients(teamMentors);
     if (audience === "team") return uniqueRecipients([...teamStudents, ...teamMentors]);
     return uniqueRecipients([...studentRecipients, ...mentorRecipients]);
-  }, [audience, hasSavedTeams, project, projectId, projects, students, teamMemberRows, teams]);
+  }, [audience, emailStudents, hasSavedTeams, project, projectId, projects, teamMemberRows, teams]);
 
   const studentRecipients = recipients.filter((person) => person.role === "student");
   const mentorRecipients = recipients.filter((person) => person.role === "mentor");
@@ -836,33 +893,100 @@ const ArchiveView = ({ archive, currentYear, onSwitch }) => (
 
 const DashboardPage = ({ data, onNavigate }) => {
   const [tab, setTab] = React.useState("distribution");
+  const [responses, setResponses] = React.useState([]);
+  const [students, setStudents] = React.useState([]);
   const [teamMemberRows, setTeamMemberRows] = React.useState([]);
   const [teamRowsError, setTeamRowsError] = React.useState("");
-  const responses = data.responses;
+  const [dashboardError, setDashboardError] = React.useState("");
+  const [loadingDashboard, setLoadingDashboard] = React.useState(true);
+  const [refreshKey, setRefreshKey] = React.useState(0);
 
   React.useEffect(() => {
-    if (!isSupabaseConfigured) return undefined;
+    if (!isSupabaseConfigured) {
+      setLoadingDashboard(false);
+      return undefined;
+    }
 
     let alive = true;
-    supabase
-      .from("cohort_team_members")
-      .select("*")
-      .eq("cohort_year", data.currentYear)
-      .then(({ data: rows, error }) => {
+    const loadDashboard = async () => {
+      setLoadingDashboard(true);
+      setDashboardError("");
+      setTeamRowsError("");
+
+      let submissionResult;
+      let allowedResult;
+      let teamResult;
+
+      try {
+        [submissionResult, allowedResult, teamResult] = await Promise.all([
+          supabase
+            .from("ranking_submissions")
+            .select("*")
+            .eq("cohort_year", data.currentYear)
+            .order("created_at", { ascending: true }),
+          supabase
+            .from("ranking_allowed_students")
+            .select("*")
+            .eq("cohort_year", data.currentYear)
+            .order("student_name", { ascending: true }),
+          supabase
+            .from("cohort_team_members")
+            .select("*")
+            .eq("cohort_year", data.currentYear),
+        ]);
+      } catch (error) {
         if (!alive) return;
-        if (error) {
-          setTeamMemberRows([]);
-          setTeamRowsError(teamSaveErrorMessage(error));
-          return;
-        }
-        setTeamMemberRows(rows || []);
-        setTeamRowsError("");
-      });
+        setResponses([]);
+        setStudents([]);
+        setTeamMemberRows([]);
+        setDashboardError(`Supabase could not load dashboard data: ${error?.message || "unknown error"}`);
+        setLoadingDashboard(false);
+        return;
+      }
+
+      if (!alive) return;
+
+      if (submissionResult.error) {
+        setResponses([]);
+        setDashboardError(dashboardReadError("Ranking submissions", submissionResult.error));
+      } else {
+        setResponses((submissionResult.data || [])
+          .map((row) => normalizeSubmissionRow(row, data.projects))
+          .filter((row) => row.email));
+      }
+
+      if (allowedResult.error) {
+        setStudents([]);
+        setDashboardError((previous) => [
+          previous,
+          dashboardReadError("Private student allowlist", allowedResult.error),
+        ].filter(Boolean).join(" "));
+      } else {
+        setStudents((allowedResult.data || [])
+          .map((row) => normalizeAllowedStudentRow(row, data.projects))
+          .filter((student) => student.email));
+      }
+
+      if (teamResult.error) {
+        setTeamMemberRows([]);
+        setTeamRowsError(teamSaveErrorMessage(teamResult.error));
+      } else {
+        setTeamMemberRows(teamResult.data || []);
+      }
+
+      setLoadingDashboard(false);
+    };
+
+    loadDashboard();
 
     return () => {
       alive = false;
     };
-  }, [data.currentYear]);
+  }, [data.currentYear, data.projects, refreshKey]);
+
+  const coverage = students.length
+    ? `${Math.round((responses.length / students.length) * 100)}%`
+    : "—";
 
   return (
     <div className="page">
@@ -871,17 +995,28 @@ const DashboardPage = ({ data, onNavigate }) => {
           <p className="kicker"><span className="dot">●</span> &nbsp; Instructor view · <YangLink>Prof. Ran Yang</YangLink></p>
           <h1>Cohort dashboard <span style={{ color: "var(--muted)", fontStyle: "italic" }}>2026·27</span></h1>
           <p style={{ color: "var(--ink-soft)", fontSize: 16, maxWidth: 580 }}>
-            Live-feel preview using sample submissions. Switch tabs to see ranking distribution, individual responses,
-            a conflict heatmap, and the auto team-making preview with manual overrides.
+            Live Supabase submissions power the ranking distribution, individual responses, conflict heatmap,
+            auto team-making preview, saved final teams, and BCC email drafts.
           </p>
-          <p className="construction-note">Dashboard mockup · under construction · sample data only</p>
+          <p className="construction-note">Instructor-only · private student data stays in Supabase</p>
+          <button className="btn btn-ghost" onClick={() => setRefreshKey((key) => key + 1)} disabled={loadingDashboard} style={{ marginTop: 12 }}>
+            {loadingDashboard ? "Refreshing..." : "Refresh live data"}
+          </button>
         </div>
         <Reveal as="dl" className="stats">
-          <div><dt>Responses</dt><dd>{responses.length}</dd></div>
+          <div><dt>Responses</dt><dd>{loadingDashboard ? "…" : responses.length}</dd></div>
           <div><dt>Projects</dt><dd>{data.projects.length}</dd></div>
-          <div><dt>Coverage</dt><dd><span className="pink">100%</span></dd></div>
+          <div><dt>Coverage</dt><dd><span className="pink">{loadingDashboard ? "…" : coverage}</span></dd></div>
         </Reveal>
       </section>
+
+      {loadingDashboard && <div className="team-save-status">Loading live poll data from Supabase...</div>}
+      {dashboardError && <div className="team-save-status is-warning">{dashboardError}</div>}
+      {!loadingDashboard && !dashboardError && !responses.length && (
+        <div className="team-save-status">
+          No live ranking submissions yet. The public poll can still accept responses while this dashboard waits.
+        </div>
+      )}
 
       <div className="dash-tabs" role="tablist">
         {[
@@ -908,7 +1043,7 @@ const DashboardPage = ({ data, onNavigate }) => {
           currentYear={data.currentYear}
           projects={data.projects}
           responses={responses}
-          students={data.students || []}
+          students={students}
           teamMemberRows={teamMemberRows}
           setTeamMemberRows={setTeamMemberRows}
           teamRowsError={teamRowsError}
@@ -919,7 +1054,7 @@ const DashboardPage = ({ data, onNavigate }) => {
           data={data}
           projects={data.projects}
           responses={responses}
-          students={data.students || []}
+          students={students}
           teamMemberRows={teamMemberRows}
         />
       )}
