@@ -249,7 +249,7 @@ const RankingPage = ({ data, onNavigate }) => {
           <p className="kicker"><span className="dot">●</span> &nbsp; Step into your capstone year</p>
           <h1>Rank the projects that <span className="ital">pull&nbsp;you&nbsp;in.</span></h1>
           <p>Drag the slate into your preferred order. Top three carry the most weight, and the full ranking helps when teams need balancing.</p>
-          <p className="construction-note">{isSupabaseConfigured ? "Student polling live · Supabase allowlist enforced" : "Student polling mockup · under construction · submissions stay local for now"}</p>
+          <p className="construction-note">{isSupabaseConfigured ? "Student polling live" : "Student polling mockup · under construction · submissions stay local for now"}</p>
         </div>
         <Reveal as="aside">
           <PrivacyNotice />
