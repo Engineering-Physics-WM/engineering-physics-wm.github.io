@@ -291,8 +291,9 @@
 
 .hero-faculty {
   display: grid; grid-template-columns: 48px 1fr; gap: 14px; align-items: center;
-  margin-top: 20px;
-  padding-top: 18px; border-top: 1px solid var(--hairline);
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--hairline);
 }
 .hf-avatar {
   width: 48px; height: 48px; border-radius: 50%;
@@ -322,8 +323,14 @@
   text-wrap: balance;
 }
 .hero-pull footer {
-  margin-top: 12px;
+  margin-top: 18px;
   font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em; color: var(--muted);
+}
+.hero-pull .hero-faculty {
+  border-top-color: color-mix(in oklch, var(--pink-ink) 18%, transparent);
+}
+.hero-pull .hf-avatar {
+  background: white;
 }
 .hero-pull .hp-mark {
   position: absolute; top: 8px; left: 12px;

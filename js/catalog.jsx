@@ -243,20 +243,19 @@ const CatalogPage = ({ data, onNavigate }) => {
               announcements={(data.announcements || []).filter(item => item.cohortYear === data.currentYear)}
               onNavigate={onNavigate}
             />
-            <div className="hero-faculty">
+          </div>
+
+          <blockquote className="hero-pull">
+            <span className="hp-mark">"</span>
+            <p>You might already know why it works. This year, you find out whether you can build it and make it matter.</p>
+            <footer className="hero-faculty">
               <div className="hf-avatar" aria-hidden="true">RY</div>
               <div>
                 <div className="hf-name"><YangLink>Prof. Ran Yang</YangLink></div>
                 <div className="hf-role">Capstone director · Engineering Physics</div>
                 <a href="https://yangran.org" className="hf-link">yangran.org ↗</a>
               </div>
-            </div>
-          </div>
-
-          <blockquote className="hero-pull">
-            <span className="hp-mark">"</span>
-            <p>You might already know why it works. This year, you find out whether you can build it and make it matter.</p>
-            <footer>— <YangLink>Prof. Ran Yang</YangLink></footer>
+            </footer>
           </blockquote>
         </aside>
       </section>
