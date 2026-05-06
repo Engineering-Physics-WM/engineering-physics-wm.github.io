@@ -39,6 +39,9 @@
   /* Density */
   --pad: 24px;
   --gap: 16px;
+  --max: 1560px;
+  --max-half: 780px;
+  --gutter: clamp(24px, 4vw, 56px);
   --radius: 4px;        /* tight, editorial */
   --radius-lg: 8px;
 

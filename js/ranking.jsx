@@ -37,11 +37,49 @@ const RankItem = ({ project, idx, total, onMove, onDragStart, onDragOver, onDrop
   </li>
 );
 
+const PrivacyNotice = () => (
+  <details className="submit-card privacy-notice">
+    <summary>
+      <span>
+        <strong>Privacy and FERPA Notice</strong>
+        <em>Engineering Physics Capstone — Team-Matching Poll</em>
+      </span>
+      <span className="privacy-toggle" aria-hidden="true" />
+    </summary>
+    <div className="privacy-notice-body">
+      <h3>What this tool collects</h3>
+      <p>Student name, W&amp;M email address, and a ranked list of capstone project preferences. Nothing else. No grades, no GPA, no Banner ID, no other academic record content.</p>
+
+      <h3>Why this is permitted under W&amp;M policy and FERPA</h3>
+      <p>This poll is a routine course-administration tool used by the instructor of record to form project teams. Two provisions of W&amp;M&apos;s FERPA Policy support this internal course use:</p>
+      <ul>
+        <li><strong>Legitimate educational interest.</strong> W&amp;M&apos;s FERPA Policy provides that a faculty member, acting as a school official, may access student information when they need it to fulfill professional responsibilities for the university. This standard cross-references 34 CFR § 99.31(a)(1) of FERPA.</li>
+        <li><strong>Directory information.</strong> Section II.B.13 of W&amp;M&apos;s FERPA Policy designates student name and university email address as directory information. This tool uses those fields to identify eligible poll submissions; individual responses are not publicly disclosed.</li>
+      </ul>
+
+      <h3>What this tool does not do</h3>
+      <p>No third-party sharing. Individual responses are visible only to the instructor. Only the final team rosters are shared with the class, which is standard course practice. No advertising, no resale, no use outside team formation.</p>
+
+      <h3>Data security and retention</h3>
+      <p>The database uses Row-Level Security, so students cannot read each other&apos;s submissions. The administrative dashboard requires authenticated login. Poll data is retained for course administration and access remains limited to the instructor dashboard.</p>
+
+      <h3>References</h3>
+      <ul className="privacy-links">
+        <li><a href="https://www.wm.edu/offices/registrar/confidentiality-privacy/ferpa-policy/" target="_blank" rel="noopener">W&amp;M FERPA Policy</a></li>
+        <li><a href="https://www.wm.edu/offices/registrar/confidentiality-privacy/" target="_blank" rel="noopener">W&amp;M Confidentiality &amp; Privacy</a></li>
+        <li><a href="https://www.ecfr.gov/current/title-34/subtitle-A/part-99/subpart-D/section-99.31" target="_blank" rel="noopener">34 CFR § 99.31</a></li>
+        <li><a href="https://studentprivacy.ed.gov/ferpa" target="_blank" rel="noopener">U.S. Dept. of Education, Student Privacy</a></li>
+      </ul>
+
+      <p className="privacy-questions">Questions: <a href="mailto:rxyan2@wm.edu">rxyan2@wm.edu</a></p>
+    </div>
+  </details>
+);
+
 const RankingPage = ({ data, onNavigate }) => {
   const DRAFT_KEY = "ep-ranking-draft-2627";
   const [name, setName] = React.useState("");
   const [email, setEmail] = React.useState("");
-  const [notes, setNotes] = React.useState("");
   const [order, setOrder] = React.useState(() => data.projects.map(p => p.id));
   const [dragIdx, setDragIdx] = React.useState(null);
   const [status, setStatus] = React.useState("");
@@ -57,7 +95,6 @@ const RankingPage = ({ data, onNavigate }) => {
       const d = JSON.parse(raw);
       setName(d.name || "");
       setEmail(d.email || "");
-      setNotes(d.notes || "");
       if (Array.isArray(d.order)) {
         const ids = new Set(data.projects.map(p => p.id));
         const restored = d.order.filter(id => ids.has(id));
@@ -69,8 +106,8 @@ const RankingPage = ({ data, onNavigate }) => {
 
   // Persist draft
   React.useEffect(() => {
-    localStorage.setItem(DRAFT_KEY, JSON.stringify({ name, email, notes, order }));
-  }, [name, email, notes, order]);
+    localStorage.setItem(DRAFT_KEY, JSON.stringify({ name, email, order }));
+  }, [name, email, order]);
 
   // Update step
   React.useEffect(() => {
@@ -122,7 +159,6 @@ const RankingPage = ({ data, onNavigate }) => {
       ts: new Date().toISOString(),
       name: name.trim(),
       email: cleanEmail,
-      notes: notes.trim(),
       order,
       source: isSupabaseConfigured ? "supabase" : "local"
     };
@@ -135,7 +171,7 @@ const RankingPage = ({ data, onNavigate }) => {
         cohort_year: data.currentYear,
         student_name: receipt.name,
         student_email: receipt.email,
-        notes: receipt.notes || null,
+        notes: null,
         ranking: receipt.order,
         receipt_code: receiptCode,
       });
@@ -197,7 +233,7 @@ const RankingPage = ({ data, onNavigate }) => {
           <h3>What happens next</h3>
           <p style={{ color: "var(--ink-soft)", margin: "0 0 12px" }}>The form writes to Supabase when the project environment variables and ranking table are present. Local fallback remains available for development.</p>
           <div className="endpoints">
-            <div className="endpoint"><div><span className="ep-method">POST</span><span className="ep-path">/api/rankings</span></div><div className="ep-desc">Stores ranking + notes against a year + student.</div></div>
+            <div className="endpoint"><div><span className="ep-method">POST</span><span className="ep-path">/api/rankings</span></div><div className="ep-desc">Stores ranking against a year + student.</div></div>
             <div className="endpoint"><div><span className="ep-method">GET</span><span className="ep-path">/api/cohort/2026-2027</span></div><div className="ep-desc">Returns the live response set for the instructor view.</div></div>
             <div className="endpoint"><div><span className="ep-method">POST</span><span className="ep-path">/api/teams/auto</span></div><div className="ep-desc">Runs the matching algorithm and returns a team draft.</div></div>
           </div>
@@ -212,12 +248,11 @@ const RankingPage = ({ data, onNavigate }) => {
         <div>
           <p className="kicker"><span className="dot">●</span> &nbsp; Step into your capstone year</p>
           <h1>Rank the projects that <span className="ital">pull&nbsp;you&nbsp;in.</span></h1>
-          <p>Drag the slate into your preferred order. Top three carry the most weight. We use this to seed teams — your notes and constraints help us read between the lines.</p>
+          <p>Drag the slate into your preferred order. Top three carry the most weight, and the full ranking helps when teams need balancing.</p>
           <p className="construction-note">{isSupabaseConfigured ? "Student polling live · Supabase allowlist enforced" : "Student polling mockup · under construction · submissions stay local for now"}</p>
         </div>
-        <Reveal as="aside" className="submit-card">
-          <h2>How submission works</h2>
-          <p>Your ranking is sent to <YangLink style={{ color: "var(--olive-ink)" }}>Prof. Ran Yang</YangLink>{isSupabaseConfigured ? " through the Supabase-backed poll." : " via the local mock flow until Supabase is configured."} Drafts auto-save in this browser.</p>
+        <Reveal as="aside">
+          <PrivacyNotice />
         </Reveal>
       </section>
 
@@ -245,10 +280,6 @@ const RankingPage = ({ data, onNavigate }) => {
           <label className="field">
             <span className="helper">William &amp; Mary email</span>
             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="username@wm.edu" autoComplete="email" />
-          </label>
-          <label className="field">
-            <span className="helper">Notes for matching</span>
-            <textarea rows="4" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Schedule constraints, partners you'd like to work with, skills, project comments." />
           </label>
           <p className="status-line">{status}</p>
           <div className="button-row">

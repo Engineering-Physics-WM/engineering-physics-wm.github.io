@@ -29,6 +29,91 @@
   letter-spacing: -0.01em;
 }
 .submit-card p { font-size: 13px; color: var(--ink-soft); margin: 0; line-height: 1.5; }
+.privacy-notice {
+  align-self: start;
+  max-height: min(72vh, 680px);
+  overflow: auto;
+}
+.privacy-notice summary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  cursor: pointer;
+  color: var(--olive-ink);
+}
+.privacy-notice summary::-webkit-details-marker { display: none; }
+.privacy-notice summary strong {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+.privacy-notice summary em {
+  display: block;
+  margin-top: 3px;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-style: normal;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1.35;
+}
+.privacy-toggle {
+  flex: 0 0 28px;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border: 1px solid color-mix(in oklch, var(--olive) 30%, var(--hairline));
+  border-radius: 50%;
+  background: white;
+  color: var(--olive-ink);
+  font-family: var(--font-mono);
+  font-size: 16px;
+}
+.privacy-toggle::before { content: "+"; }
+.privacy-notice[open] .privacy-toggle::before { content: "-"; }
+.privacy-notice-body {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid color-mix(in oklch, var(--olive) 18%, transparent);
+}
+.privacy-notice-body h3 {
+  margin: 8px 0 0;
+  color: var(--olive-ink);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+.privacy-notice-body h3:first-child { margin-top: 0; }
+.privacy-notice-body p,
+.privacy-notice-body li {
+  font-size: 12.5px;
+  line-height: 1.48;
+}
+.privacy-notice-body ul {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--ink-soft);
+}
+.privacy-notice-body li + li { margin-top: 7px; }
+.privacy-links {
+  display: grid;
+  gap: 4px;
+}
+.privacy-questions {
+  padding-top: 4px;
+  font-family: var(--font-mono);
+  font-size: 11px !important;
+}
 
 /* steps */
 .ranking-steps {

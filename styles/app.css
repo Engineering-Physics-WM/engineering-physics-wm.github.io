@@ -28,7 +28,7 @@
   position: sticky; top: 0; z-index: 30;
   display: flex; align-items: center; justify-content: space-between;
   gap: 18px;
-  padding: 16px max(24px, calc(50% - 640px));
+  padding: 16px max(var(--gutter), calc(50% - var(--max-half)));
   background: color-mix(in oklch, var(--paper) 82%, transparent);
   backdrop-filter: blur(18px) saturate(1.1);
   -webkit-backdrop-filter: blur(18px) saturate(1.1);
@@ -138,9 +138,9 @@
 .page {
   position: relative;
   width: 100%;
-  max-width: 1280px;
+  max-width: var(--max);
   margin: 0 auto;
-  padding: 56px max(24px, calc(50% - 640px)) 96px;
+  padding: 56px var(--gutter) 96px;
   flex: 1;
   animation: page-in 500ms var(--ease) both;
 }
@@ -527,6 +527,7 @@ section.is-emph-soft .section-heading,
   border-radius: var(--radius-lg);
   overflow: hidden;
 }
+@media (min-width: 1440px) { .project-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 [data-density="compact"] .project-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 [data-density="spacious"] .project-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
@@ -758,7 +759,7 @@ section.is-emph-soft .section-heading,
 .site-footer {
   position: relative; z-index: 1;
   margin-top: auto;
-  padding: 72px max(24px, calc(50% - 640px)) 32px;
+  padding: 72px max(var(--gutter), calc(50% - var(--max-half))) 32px;
   border-top: 1px solid var(--hairline);
   background: color-mix(in oklch, var(--paper) 75%, white);
   display: flex; flex-direction: column; gap: 40px;
