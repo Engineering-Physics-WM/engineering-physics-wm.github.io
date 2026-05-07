@@ -18,13 +18,17 @@ const tieScore = (value, seed) => hashSeed(`${seed}:${value}`);
 
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 
-const chooseActiveProjectCount = (projectCount, responseCount, lockedProjectCount) => {
-  if (!responseCount || !projectCount) return 0;
+const activeProjectCountCandidates = (projectCount, responseCount, lockedProjectCount) => {
+  if (!responseCount || !projectCount) return [];
   const minimumViable = Math.ceil(responseCount / TEAM_MAX);
   const maximumViable = Math.floor(responseCount / TEAM_MIN);
-  if (lockedProjectCount > maximumViable) return lockedProjectCount;
-  const preferred = Math.min(projectCount, maximumViable);
-  return clamp(Math.max(lockedProjectCount, preferred), minimumViable, maximumViable);
+  if (lockedProjectCount > maximumViable) return [lockedProjectCount];
+
+  const first = Math.min(projectCount, maximumViable);
+  const last = clamp(Math.max(lockedProjectCount, minimumViable), 0, first);
+  const counts = [];
+  for (let count = first; count >= last; count--) counts.push(count);
+  return counts;
 };
 
 const prefRankFor = (response, projectId, projectCount) => {
@@ -317,32 +321,36 @@ export const buildTeams = ({ projects, responses, students = [], seed = 0 }) => 
     return summarizeTeams({ projects, responses, teams: emptyTeams, assigned, warnings });
   }
 
-  const targetActiveCount = chooseActiveProjectCount(projectIds.length, responses.length, lockedProjectIds.size);
   const { top3Demand, top1Demand } = buildDemandMap(projectIds, responses);
-  const activeSets = subsetsOfProjectIds(projectIds, targetActiveCount, lockedProjectIds)
-    .sort((a, b) => (
-      activeSetDemandScore(b, { top3Demand, top1Demand }, projectIds) -
-      activeSetDemandScore(a, { top3Demand, top1Demand }, projectIds)
-    ));
-
   let best = null;
-  activeSets.forEach((activeSet) => {
-    const activeProjectIds = projectIds.filter((id) => activeSet.has(id));
-    const lockedScore = activeProjectIds.flatMap((id) => lockedRosters[id] || [])
-      .reduce((total, student) => total + preferenceUtility(student.prefRank, projectCount), 0);
-    const result = optimizeForActiveSet({
-      activeProjectIds,
-      candidates,
-      lockedRosters,
-      projectCount,
-      seed,
+
+  for (const targetActiveCount of activeProjectCountCandidates(projectIds.length, responses.length, lockedProjectIds.size)) {
+    const activeSets = subsetsOfProjectIds(projectIds, targetActiveCount, lockedProjectIds)
+      .sort((a, b) => (
+        activeSetDemandScore(b, { top3Demand, top1Demand }, projectIds) -
+        activeSetDemandScore(a, { top3Demand, top1Demand }, projectIds)
+      ));
+
+    activeSets.forEach((activeSet) => {
+      const activeProjectIds = projectIds.filter((id) => activeSet.has(id));
+      const lockedScore = activeProjectIds.flatMap((id) => lockedRosters[id] || [])
+        .reduce((total, student) => total + preferenceUtility(student.prefRank, projectCount), 0);
+      const result = optimizeForActiveSet({
+        activeProjectIds,
+        candidates,
+        lockedRosters,
+        projectCount,
+        seed,
+      });
+
+      if (!result) return;
+      const demandScore = activeSetDemandScore(activeSet, { top3Demand, top1Demand }, projectIds);
+      const totalScore = result.score + lockedScore + demandScore / 1_000_000;
+      if (!best || totalScore > best.totalScore) best = { ...result, activeProjectIds, totalScore };
     });
 
-    if (!result) return;
-    const demandScore = activeSetDemandScore(activeSet, { top3Demand, top1Demand }, projectIds);
-    const totalScore = result.score + lockedScore + demandScore / 1_000_000;
-    if (!best || totalScore > best.totalScore) best = { ...result, activeProjectIds, totalScore };
-  });
+    if (best) break;
+  }
 
   if (!best) {
     warnings.push({ type: "optimizer-unassigned", size: candidates.length });
