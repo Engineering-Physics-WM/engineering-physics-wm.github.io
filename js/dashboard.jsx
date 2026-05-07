@@ -240,21 +240,16 @@ const draftFromAnnouncement = (announcement, cohortYear) => {
 };
 
 const buildMailtoUrl = ({ recipients, subject, body }) => {
-  const params = new URLSearchParams();
-  params.set("bcc", recipients.map((person) => person.email).join(","));
-  params.set("subject", subject);
-  params.set("body", body);
-  return `mailto:${INSTRUCTOR_EMAIL}?${params.toString()}`;
+  const params = [
+    ["bcc", recipients.map((person) => person.email).join(",")],
+    ["subject", subject],
+    ["body", body],
+  ];
+  const query = params
+    .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
+    .join("&");
+  return `mailto:${INSTRUCTOR_EMAIL}?${query}`;
 };
-
-const buildAiPrompt = ({ cohortYear, audienceLabel, project, subject, body }) => [
-  `Draft a concise, friendly Engineering Physics Capstone email for the ${cohortYear} cohort.`,
-  `Audience: ${audienceLabel}${project ? ` (${projectLabel(project)})` : ""}.`,
-  "Tone: clear, warm, direct, no hype. Keep it short enough that students will actually read it.",
-  `Current subject:\n${subject}`,
-  `Source text or draft:\n${body}`,
-  "Return only a polished subject line and email body.",
-].join("\n\n");
 
 const RecipientList = ({ title, people }) => (
   <section className="recipient-group">
@@ -897,12 +892,6 @@ const EmailDraftView = ({ data, projects, responses, students, teamMemberRows })
           </button>
           <button className="btn btn-ghost" onClick={() => copyText(body, "Message body")}>
             Copy body
-          </button>
-          <button
-            className="btn btn-pink"
-            onClick={() => copyText(buildAiPrompt({ cohortYear: data.currentYear, audienceLabel, project: TEAM_AUDIENCES.has(audience) ? project : null, subject, body }), "AI drafting prompt")}
-          >
-            Copy AI prompt
           </button>
         </div>
 

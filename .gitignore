@@ -25,4 +25,5 @@ data/*/*roster*.csv
 data/*/students*.json
 supabase/allowed-students-*.sql
 supabase/*.private.sql
+supabase/.temp/
 !supabase/allowed-students-template.sql
