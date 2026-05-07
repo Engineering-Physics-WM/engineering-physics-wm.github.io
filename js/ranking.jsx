@@ -6,6 +6,9 @@ import { isSupabaseConfigured, supabase } from "./supabaseClient.js";
 import { PersonLink, YangLink } from "./links.jsx";
 
 const WM_EMAIL_RE = /^[^@\s]+@wm\.edu$/i;
+const normalizeStudentEmail = (value) => (
+  value.replace(/[\u200B-\u200D\uFEFF]/g, "").trim().toLowerCase()
+);
 
 const createReceiptCode = () => {
   if (globalThis.crypto?.randomUUID) {
@@ -151,7 +154,7 @@ const RankingPage = ({ data, onNavigate }) => {
       setStatus("Add your name and W&M email before submitting.");
       return;
     }
-    const cleanEmail = email.trim().toLowerCase();
+    const cleanEmail = normalizeStudentEmail(email);
     if (!WM_EMAIL_RE.test(cleanEmail)) {
       setStatus("Use your William & Mary email address.");
       return;
