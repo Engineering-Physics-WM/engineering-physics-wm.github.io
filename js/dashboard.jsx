@@ -402,6 +402,7 @@ const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows,
   const [draggedStudent, setDraggedStudent] = React.useState(null);
   const [dropTarget, setDropTarget] = React.useState(null);
   const [teamSource, setTeamSource] = React.useState("auto");
+  const [showSavedRoster, setShowSavedRoster] = React.useState(false);
   const [dirty, setDirty] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
   const [saveStatus, setSaveStatus] = React.useState("");
@@ -410,7 +411,7 @@ const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows,
     const autoResult = buildTeams({ projects, responses, students, seed });
     const savedStudentRows = (teamMemberRows || []).filter((row) => row.member_type === "student");
 
-    if (savedStudentRows.length) {
+    if (savedStudentRows.length && showSavedRoster) {
       const savedTeams = rowsToTeamMap({ projects, rows: teamMemberRows, responses, students });
       setTeams(withTeamSummary({ ...autoResult, teams: savedTeams }, projects, responses));
       setTeamSource("saved");
@@ -421,13 +422,14 @@ const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows,
     setTeams(autoResult);
     setTeamSource("auto");
     setDirty(false);
-  }, [projects, responses, students, seed, teamMemberRows]);
+  }, [projects, responses, students, seed, teamMemberRows, showSavedRoster]);
 
   if (!teams) return null;
 
   const sizeErrors = activeTeamSizeErrors(teams.teams, teams.minTeamSize, teams.maxTeamSize);
   const activeStudentCount = Object.values(teams.teams).reduce((total, roster) => total + roster.length, 0);
   const canSave = activeStudentCount > 0 && !saving && sizeErrors.length === 0 && (dirty || teamSource !== "saved");
+  const hasSavedRoster = (teamMemberRows || []).some((row) => row.member_type === "student");
 
   const moveStudent = (email, fromProjectId, toProjectId) => {
     if (fromProjectId === toProjectId) return;
@@ -505,6 +507,7 @@ const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows,
 
     setTeams(withTeamSummary({ ...teams, teams: lockedTeams }, projects, responses));
     setTeamMemberRows(lockedRows);
+    setShowSavedRoster(true);
     setTeamSource("saved");
     setDirty(false);
     setSaveStatus(`Saved ${activeStudentCount} students and ${rows.filter((row) => row.member_type === "mentor" && row.person_email).length} mentors to Supabase.`);
@@ -525,6 +528,21 @@ const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows,
           <span className="field-label">Source</span>
           <div className="mono" style={{ fontSize: 13 }}>{teamSource === "saved" ? "Saved final roster" : teamSource === "manual" ? "Manual draft" : "Auto preview"}</div>
         </div>
+        {hasSavedRoster && (
+          <button
+            className="btn btn-ghost"
+            onClick={() => {
+              setShowSavedRoster((value) => !value);
+              setSaveStatus(showSavedRoster
+                ? "Showing live auto preview from current ranking submissions."
+                : "Showing saved final roster from Supabase.");
+            }}
+            disabled={saving}
+            data-spark
+          >
+            {showSavedRoster ? "Use live auto preview" : "View saved roster"}
+          </button>
+        )}
         <button className="btn btn-ghost" onClick={() => { setSaveStatus(""); setSeed(s => s + 1); }} disabled={teamSource === "saved" || saving} data-spark>
           {teamSource === "saved" ? "Roster locked" : "Re-roll"}
         </button>

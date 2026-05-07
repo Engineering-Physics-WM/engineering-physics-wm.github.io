@@ -319,7 +319,6 @@ const RankingPage = ({ data, onNavigate }) => {
           <label className="field">
             <span className="helper">William &amp; Mary email</span>
             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="username@wm.edu" autoComplete="email" />
-            <span className="field-hint">Use your W&amp;M @wm.edu email exactly. Edits are linked by email, not by name.</span>
           </label>
           <PrivacyNotice />
           <p className="status-line">{status}</p>
