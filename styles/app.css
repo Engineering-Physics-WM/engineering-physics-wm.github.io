@@ -209,6 +209,12 @@
 .hero-marquee .hm-num { font-family: var(--font-display); font-size: 32px; font-weight: 500; letter-spacing: -0.02em; color: var(--ink); line-height: 1; }
 .hero-marquee li:first-child .hm-num { color: var(--pink-ink); font-style: italic; }
 .hero-marquee .hm-lab { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.hero-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+  flex-wrap: wrap;
+}
 
 .hero-aside { display: flex; flex-direction: column; gap: 20px; }
 .hero-card {
@@ -314,6 +320,15 @@
   border-left: 2px solid var(--pink-ink);
   border-radius: 0 var(--radius) var(--radius) 0;
 }
+.hero-pull-banner {
+  max-width: 760px;
+  margin-top: 22px;
+  padding: 16px 18px 16px 28px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(205px, auto);
+  align-items: center;
+  gap: 18px;
+}
 .hero-pull p {
   margin: 0;
   font-family: var(--font-display);
@@ -322,6 +337,11 @@
   color: var(--ink);
   text-wrap: balance;
 }
+.hero-pull-banner p {
+  max-width: 56ch;
+  font-size: 16px;
+  line-height: 1.28;
+}
 .hero-pull footer {
   margin-top: 18px;
   font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em; color: var(--muted);
@@ -329,14 +349,41 @@
 .hero-pull .hero-faculty {
   border-top-color: color-mix(in oklch, var(--pink-ink) 18%, transparent);
 }
+.hero-pull-banner .hero-faculty {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+  grid-template-columns: 38px minmax(0, 1fr);
+  gap: 10px;
+}
 .hero-pull .hf-avatar {
   background: white;
+}
+.hero-pull-banner .hf-avatar {
+  width: 38px;
+  height: 38px;
+  font-size: 13px;
+}
+.hero-pull-banner .hf-name {
+  font-size: 14px;
+}
+.hero-pull-banner .hf-role {
+  font-size: 11px;
+  line-height: 1.25;
+}
+.hero-pull-banner .hf-link {
+  font-size: 10px;
 }
 .hero-pull .hp-mark {
   position: absolute; top: 8px; left: 12px;
   font-family: var(--font-display);
   font-style: italic; font-size: 48px;
   color: var(--pink-ink); line-height: 1; opacity: 0.55;
+}
+.hero-pull-banner .hp-mark {
+  top: 6px;
+  left: 10px;
+  font-size: 34px;
 }
 
 /* Emphasis sections — dark green panels */
@@ -370,6 +417,24 @@ section.is-emph-soft .section-heading,
 @media (max-width: 960px) {
   .hero { grid-template-columns: 1fr; gap: 32px; }
   .hero-marquee { grid-template-columns: repeat(2, 1fr); }
+  .hero-pull-banner {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 680px) {
+  .hero-pull-banner {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 16px 16px 16px 26px;
+  }
+  .hero-pull-banner p {
+    max-width: none;
+    font-size: 15px;
+  }
+  .hero-pull-banner .hero-faculty {
+    justify-self: start;
+  }
 }
 
 .hero h1 {

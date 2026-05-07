@@ -55,10 +55,10 @@ const AnnouncementItem = ({ item, onNavigate, compact = false, defaultOpen = fal
 );
 
 const AnnouncementPanel = ({ announcements, onNavigate }) => {
-  const items = sortAnnouncements(announcements).slice(0, 4);
+  const items = sortAnnouncements(announcements).slice(0, 5);
   return (
     <>
-      <div className="hero-timeline" aria-label="This week">
+      <div className="hero-timeline" aria-label="Cohort timeline">
         {items.map((item, index) => (
           <AnnouncementItem
             key={item.id}

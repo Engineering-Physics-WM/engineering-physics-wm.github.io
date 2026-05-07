@@ -82,6 +82,28 @@ with check (
   )
 );
 
+drop policy if exists "Students can edit rankings" on public.ranking_submissions;
+create policy "Students can edit rankings"
+on public.ranking_submissions
+for update
+to anon
+using (
+  student_email ~* '^[^@[:space:]]+@wm\.edu$'
+  and public.is_ranking_student_allowed(
+    ranking_submissions.cohort_year,
+    ranking_submissions.student_email
+  )
+)
+with check (
+  student_email ~* '^[^@[:space:]]+@wm\.edu$'
+  and jsonb_typeof(ranking) = 'array'
+  and jsonb_array_length(ranking) = 9
+  and public.is_ranking_student_allowed(
+    ranking_submissions.cohort_year,
+    ranking_submissions.student_email
+  )
+);
+
 drop policy if exists "Instructor can read rankings" on public.ranking_submissions;
 create policy "Instructor can read rankings"
 on public.ranking_submissions

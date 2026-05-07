@@ -14,6 +14,11 @@ const createReceiptCode = () => {
   return "EP-" + Math.random().toString(36).slice(2, 10).toUpperCase();
 };
 
+const isDuplicateSubmissionError = (error) => (
+  error?.code === "23505" ||
+  /ranking_one_response_per_student|duplicate key/i.test(error?.message || "")
+);
+
 const RankItem = ({ project, idx, total, onMove, onDragStart, onDragOver, onDrop, onDragEnd, dragging }) => (
   <li
     className={"ranking-item" + (dragging ? " dragging" : "")}
@@ -38,11 +43,11 @@ const RankItem = ({ project, idx, total, onMove, onDragStart, onDragOver, onDrop
 );
 
 const PrivacyNotice = () => (
-  <details className="submit-card privacy-notice">
+  <details className="privacy-notice">
     <summary>
       <span>
-        <strong>Privacy and FERPA Notice</strong>
-        <em>Engineering Physics Capstone — Team-Matching Poll</em>
+        <strong>Privacy and FERPA notice</strong>
+        <em>Team-matching poll</em>
       </span>
       <span className="privacy-toggle" aria-hidden="true" />
     </summary>
@@ -160,32 +165,60 @@ const RankingPage = ({ data, onNavigate }) => {
       name: name.trim(),
       email: cleanEmail,
       order,
-      source: isSupabaseConfigured ? "supabase" : "local"
+      source: isSupabaseConfigured ? "supabase" : "local",
+      mode: "created",
     };
 
     setSubmitting(true);
     setStatus(isSupabaseConfigured ? "Saving to Supabase…" : "Saving local mock submission…");
 
     if (isSupabaseConfigured) {
-      const { error } = await supabase.from("ranking_submissions").insert({
+      const payload = {
         cohort_year: data.currentYear,
         student_name: receipt.name,
         student_email: receipt.email,
         notes: null,
         ranking: receipt.order,
         receipt_code: receiptCode,
-      });
+      };
+
+      const { error } = await supabase.from("ranking_submissions").insert(payload);
 
       if (error) {
-        setSubmitting(false);
-        if (error.code === "23505") {
-          setStatus("A response from this email already exists for this cohort.");
+        if (isDuplicateSubmissionError(error)) {
+          setStatus("Updating your existing response...");
+          const { error: updateError } = await supabase
+            .from("ranking_submissions")
+            .update({
+              student_name: payload.student_name,
+              notes: payload.notes,
+              ranking: payload.ranking,
+              receipt_code: payload.receipt_code,
+            })
+            .eq("cohort_year", data.currentYear)
+            .eq("student_email", cleanEmail);
+
+          if (!updateError) {
+            setSubmitted({ ...receipt, mode: "updated" });
+            setStatus("");
+            setSubmitting(false);
+            return;
+          }
+
+          setSubmitting(false);
+          if (updateError.code === "42501") {
+            setStatus("Your first response is saved, but edits need the updated Supabase policy in supabase/schema.sql.");
+            return;
+          }
+          setStatus("Could not update your existing response yet. Check the Supabase edit policy.");
           return;
         }
         if (error.code === "42501") {
+          setSubmitting(false);
           setStatus("This email is not on the allowed student list for this cohort.");
           return;
         }
+        setSubmitting(false);
         setStatus("Supabase could not save yet. Check the table, allowlist, and RLS policy.");
         return;
       }
@@ -197,11 +230,20 @@ const RankingPage = ({ data, onNavigate }) => {
     }
 
     setTimeout(() => {
-      setSubmitted(receipt);
       setStatus("");
       const all = JSON.parse(localStorage.getItem("ep-mock-submissions") || "[]");
-      all.push(receipt);
+      const existingIndex = all.findIndex((item) => (
+        item.email === receipt.email && (item.cohortYear || data.currentYear) === data.currentYear
+      ));
+      const localReceipt = { ...receipt, cohortYear: data.currentYear };
+      if (existingIndex >= 0) {
+        localReceipt.mode = "updated";
+        all[existingIndex] = localReceipt;
+      } else {
+        all.push(localReceipt);
+      }
       localStorage.setItem("ep-mock-submissions", JSON.stringify(all));
+      setSubmitted(localReceipt);
       setSubmitting(false);
     }, 900);
   };
@@ -213,7 +255,7 @@ const RankingPage = ({ data, onNavigate }) => {
           <div>
             <p className="kicker"><span className="dot">●</span> &nbsp; Submission received</p>
             <h1>Your ranking is <span className="ital">in.</span></h1>
-            <p>{submitted.source === "supabase" ? "Your preferences are saved to the live poll database." : "This local mock receipt stays in your browser until the live database is enabled."} You'll hear back as teams are formed.</p>
+            <p>{submitted.source === "supabase" ? (submitted.mode === "updated" ? "Your existing saved response has been updated." : "Your preferences are saved to the live poll database.") : "This local mock receipt stays in your browser until the live database is enabled."} You'll hear back as teams are formed.</p>
           </div>
         </section>
         <Reveal as="div" className="submitted-card">
@@ -231,9 +273,9 @@ const RankingPage = ({ data, onNavigate }) => {
         </Reveal>
         <Reveal as="div" className="submission-mock" style={{ marginTop: 32 }}>
           <h3>What happens next</h3>
-          <p style={{ color: "var(--ink-soft)", margin: "0 0 12px" }}>The form writes to Supabase when the project environment variables and ranking table are present. Local fallback remains available for development.</p>
+          <p style={{ color: "var(--ink-soft)", margin: "0 0 12px" }}>The form keeps one saved response per student email. Submitting again with the same email updates that response.</p>
           <div className="endpoints">
-            <div className="endpoint"><div><span className="ep-method">POST</span><span className="ep-path">/api/rankings</span></div><div className="ep-desc">Stores ranking against a year + student.</div></div>
+            <div className="endpoint"><div><span className="ep-method">POST</span><span className="ep-path">/api/rankings</span></div><div className="ep-desc">Stores or updates ranking against a year + student.</div></div>
             <div className="endpoint"><div><span className="ep-method">GET</span><span className="ep-path">/api/cohort/2026-2027</span></div><div className="ep-desc">Returns the live response set for the instructor view.</div></div>
             <div className="endpoint"><div><span className="ep-method">POST</span><span className="ep-path">/api/teams/auto</span></div><div className="ep-desc">Runs the matching algorithm and returns a team draft.</div></div>
           </div>
@@ -249,11 +291,8 @@ const RankingPage = ({ data, onNavigate }) => {
           <p className="kicker"><span className="dot">●</span> &nbsp; Step into your capstone year</p>
           <h1>Rank the projects that <span className="ital">pull&nbsp;you&nbsp;in.</span></h1>
           <p>Drag the slate into your preferred order. Top three carry the most weight, and the full ranking helps when teams need balancing.</p>
-          <p className="construction-note">{isSupabaseConfigured ? "Student polling live" : "Student polling mockup · under construction · submissions stay local for now"}</p>
+          <p className="construction-note">{isSupabaseConfigured ? "Student polling live · one saved response per W&M email" : "Student polling mockup · under construction · submissions stay local for now"}</p>
         </div>
-        <Reveal as="aside">
-          <PrivacyNotice />
-        </Reveal>
       </section>
 
       <div className="ranking-steps">
@@ -280,7 +319,9 @@ const RankingPage = ({ data, onNavigate }) => {
           <label className="field">
             <span className="helper">William &amp; Mary email</span>
             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="username@wm.edu" autoComplete="email" />
+            <span className="field-hint">Use your W&amp;M @wm.edu email exactly. Edits are linked by email, not by name.</span>
           </label>
+          <PrivacyNotice />
           <p className="status-line">{status}</p>
           <div className="button-row">
             <button className="btn btn-primary" data-spark onClick={submit} disabled={submitting}>

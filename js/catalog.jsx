@@ -181,6 +181,21 @@ const ThemeMap = ({ projects, activeArea, onPick }) => {
   );
 };
 
+const DirectorQuote = ({ className = "" }) => (
+  <blockquote className={"hero-pull" + (className ? ` ${className}` : "")}>
+    <span className="hp-mark">"</span>
+    <p>You might already know why it works. This year, you find out whether you can build it and make it matter.</p>
+    <footer className="hero-faculty">
+      <div className="hf-avatar" aria-hidden="true">RY</div>
+      <div>
+        <div className="hf-name"><YangLink>Prof. Ran Yang</YangLink></div>
+        <div className="hf-role">Capstone director · Engineering Physics</div>
+        <a href="https://yangran.org" className="hf-link">yangran.org ↗</a>
+      </div>
+    </footer>
+  </blockquote>
+);
+
 const CatalogPage = ({ data, onNavigate }) => {
   const [search, setSearch] = React.useState("");
   const [areaFilter, setAreaFilter] = React.useState("");
@@ -223,10 +238,7 @@ const CatalogPage = ({ data, onNavigate }) => {
             A capstone home for nine projects, the students who pick them, and the faculty who advise.
             Browse the slate, rank your favorites, and watch the cohort take shape.
           </p>
-          <div style={{ display: "flex", gap: 12, marginTop: 28, flexWrap: "wrap" }}>
-            <button className="btn btn-primary" data-spark onClick={() => onNavigate("ranking")}>Take the ranking poll</button>
-            <button className="btn btn-ghost" onClick={() => document.getElementById("themes")?.scrollIntoView({ behavior: "smooth" })}>See the idea map</button>
-          </div>
+          <DirectorQuote className="hero-pull-banner" />
 
           <ul className="hero-marquee" aria-label="At a glance">
             <li><span className="hm-num">09</span><span className="hm-lab">projects</span></li>
@@ -234,29 +246,20 @@ const CatalogPage = ({ data, onNavigate }) => {
             <li><span className="hm-num">2 – 3</span><span className="hm-lab">per team</span></li>
             <li><span className="hm-num">1</span><span className="hm-lab">academic year</span></li>
           </ul>
+          <div className="hero-actions">
+            <button className="btn btn-primary" data-spark onClick={() => onNavigate("ranking")}>Take the ranking poll</button>
+            <button className="btn btn-ghost" onClick={() => document.getElementById("themes")?.scrollIntoView({ behavior: "smooth" })}>See the idea map</button>
+          </div>
         </div>
 
         <aside className="hero-aside" style={{ position: "relative", zIndex: 1 }}>
           <div className="hero-card">
-            <p className="kicker" style={{ marginBottom: 14 }}><span className="dot">●</span> &nbsp; This week</p>
+            <p className="kicker" style={{ marginBottom: 14 }}><span className="dot">●</span> &nbsp; Timeline</p>
             <AnnouncementPanel
               announcements={(data.announcements || []).filter(item => item.cohortYear === data.currentYear)}
               onNavigate={onNavigate}
             />
           </div>
-
-          <blockquote className="hero-pull">
-            <span className="hp-mark">"</span>
-            <p>You might already know why it works. This year, you find out whether you can build it and make it matter.</p>
-            <footer className="hero-faculty">
-              <div className="hf-avatar" aria-hidden="true">RY</div>
-              <div>
-                <div className="hf-name"><YangLink>Prof. Ran Yang</YangLink></div>
-                <div className="hf-role">Capstone director · Engineering Physics</div>
-                <a href="https://yangran.org" className="hf-link">yangran.org ↗</a>
-              </div>
-            </footer>
-          </blockquote>
         </aside>
       </section>
 

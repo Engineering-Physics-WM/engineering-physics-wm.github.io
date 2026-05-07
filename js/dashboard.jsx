@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { Reveal } from "./motion.jsx";
-import { buildTeams } from "./teamMatching.js";
+import { buildTeams, rankSatisfaction } from "./teamMatching.js";
 import { PersonLink, YangLink } from "./links.jsx";
 import { sortAnnouncements } from "./news.jsx";
 import { isSupabaseConfigured, supabase } from "./supabaseClient.js";
@@ -162,11 +162,7 @@ const summarizeTeamSnapshot = ({ projects, responses, teams, minTeamSize, maxTea
 
   const satisfactionScores = responses.map((response) => {
     const result = assigned[response.email];
-    if (!result) return 0;
-    if (result.prefRank === 0) return 1;
-    if (result.prefRank === 1) return 0.8;
-    if (result.prefRank === 2) return 0.6;
-    return 0.25;
+    return result ? rankSatisfaction(result.prefRank, projects.length) : 0;
   });
   const avg = satisfactionScores.length
     ? satisfactionScores.reduce((total, score) => total + score, 0) / satisfactionScores.length
@@ -523,7 +519,7 @@ const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows,
         </div>
         <div className="field">
           <span className="field-label">Preference window</span>
-          <div className="mono" style={{ fontSize: 13 }}>Top 3 first</div>
+          <div className="mono" style={{ fontSize: 13 }}>Top 3 priority + full ranking</div>
         </div>
         <div className="field">
           <span className="field-label">Source</span>
@@ -585,25 +581,24 @@ const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows,
                 }}
               >
                 {roster.length === 0 && <li className="team-empty">Inactive · no team this pass</li>}
-                {roster.map(s => (
-                  <li
-                    key={s.email}
-                    draggable
-                    className={(draggedStudent?.email === s.email ? "dragging" : "") + (s.locked ? " is-locked" : "")}
-                    onDragStart={() => setDraggedStudent({ email: s.email, fromProject: p.id })}
-                    onDragEnd={() => setDraggedStudent(null)}
-                    title={s.honorsProject ? "Honors default; drag to override manually" : s.locked ? "Saved final assignment; drag to revise" : "Drag for manual override"}
-                  >
-                    <span>{s.name}</span>
-                    <span className="pref-marker">
-                      {s.honorsProject
-                        ? `Honors P${String(s.honorsProject.number).padStart(2, "0")}`
-                        : s.locked
-                          ? "Saved"
-                          : s.prefRank >= 0 ? `#${s.prefRank + 1}` : "Unranked"}
-                    </span>
-                  </li>
-                ))}
+                {roster.map(s => {
+                  const preferenceLabel = s.prefRank >= 0 ? `#${s.prefRank + 1}` : "Unranked";
+                  const markerLabel = s.honorsProject ? `${preferenceLabel} · Honors` : preferenceLabel;
+
+                  return (
+                    <li
+                      key={s.email}
+                      draggable
+                      className={(draggedStudent?.email === s.email ? "dragging" : "") + (s.locked ? " is-locked" : "")}
+                      onDragStart={() => setDraggedStudent({ email: s.email, fromProject: p.id })}
+                      onDragEnd={() => setDraggedStudent(null)}
+                      title={s.honorsProject ? "Honors default; drag to override manually" : s.locked ? "Saved final assignment; drag to revise" : "Drag for manual override"}
+                    >
+                      <span>{s.name}</span>
+                      <span className="pref-marker">{markerLabel}</span>
+                    </li>
+                  );
+                })}
               </ul>
             </Reveal>
           );
@@ -946,14 +941,8 @@ const DashboardPage = ({ data, onNavigate }) => {
 
       if (!alive) return;
 
-      if (submissionResult.error) {
-        setResponses([]);
-        setDashboardError(dashboardReadError("Ranking submissions", submissionResult.error));
-      } else {
-        setResponses((submissionResult.data || [])
-          .map((row) => normalizeSubmissionRow(row, data.projects))
-          .filter((row) => row.email));
-      }
+      let normalizedResponses = [];
+      let normalizedStudents = [];
 
       if (allowedResult.error) {
         setStudents([]);
@@ -962,16 +951,42 @@ const DashboardPage = ({ data, onNavigate }) => {
           dashboardReadError("Private student allowlist", allowedResult.error),
         ].filter(Boolean).join(" "));
       } else {
-        setStudents((allowedResult.data || [])
+        normalizedStudents = (allowedResult.data || [])
           .map((row) => normalizeAllowedStudentRow(row, data.projects))
-          .filter((student) => student.email));
+          .filter((student) => student.email);
+        setStudents(normalizedStudents);
+      }
+
+      if (submissionResult.error) {
+        setResponses([]);
+        setDashboardError(dashboardReadError("Ranking submissions", submissionResult.error));
+      } else {
+        normalizedResponses = (submissionResult.data || [])
+          .map((row) => normalizeSubmissionRow(row, data.projects))
+          .filter((row) => row.email);
+
+        if (!allowedResult.error && normalizedStudents.length) {
+          const rosterEmails = new Set(normalizedStudents.map((student) => student.email));
+          normalizedResponses = normalizedResponses.filter((response) => rosterEmails.has(response.email));
+        }
+
+        setResponses(normalizedResponses);
       }
 
       if (teamResult.error) {
         setTeamMemberRows([]);
         setTeamRowsError(teamSaveErrorMessage(teamResult.error));
       } else {
-        setTeamMemberRows(teamResult.data || []);
+        const activeResponseEmails = new Set(normalizedResponses.map((response) => response.email));
+        const rows = (teamResult.data || []).filter((row) => (
+          row.member_type !== "student" || activeResponseEmails.has(normalizeEmail(row.person_email))
+        ));
+        const hiddenRows = (teamResult.data || []).length - rows.length;
+
+        setTeamMemberRows(rows);
+        if (hiddenRows > 0) {
+          setTeamRowsError(`Hidden ${hiddenRows} saved team row${hiddenRows === 1 ? "" : "s"} for student${hiddenRows === 1 ? "" : "s"} no longer in the active ranking roster.`);
+        }
       }
 
       setLoadingDashboard(false);
@@ -1072,6 +1087,7 @@ const ArchivePage = ({ data, onNavigate, currentYear, setYear }) => (
           A growing record of EP capstones at William &amp; Mary. The current year is live; past years archive
           themselves once teams ship; future years are placeholders waiting for a slate.
         </p>
+        <p className="archive-dev-note">Archive records are under development while earlier cohort details are being cleaned up.</p>
       </div>
     </section>
     <ArchiveView archive={data.archive} currentYear={currentYear} onSwitch={(y) => { setYear(y); onNavigate("catalog"); }} />

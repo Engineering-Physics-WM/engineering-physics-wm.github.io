@@ -1,9 +1,8 @@
 /* Ranking page */
 .ranking-hero {
   display: grid;
-  grid-template-columns: minmax(0, 1.18fr) minmax(380px, 0.82fr);
-  gap: clamp(28px, 3vw, 44px);
-  padding: 56px 0 64px;
+  grid-template-columns: minmax(0, 1fr);
+  padding: 56px 0 42px;
   align-items: start;
 }
 .ranking-hero h1 {
@@ -17,88 +16,71 @@
 }
 .ranking-hero h1 .ital { font-style: italic; color: var(--pink-ink); font-weight: 400; }
 .ranking-hero p { color: var(--ink-soft); font-size: 17px; max-width: 560px; line-height: 1.55; }
-.ranking-hero > .reveal {
-  align-self: stretch;
-  display: flex;
-  margin-top: calc(1.55em + 16px);
-  translate: -28px 0;
-}
 
-.submit-card {
-  padding: 24px;
-  background: color-mix(in oklch, var(--olive) 8%, white);
-  border: 1px solid color-mix(in oklch, var(--olive) 25%, transparent);
-  border-radius: var(--radius-lg);
-}
-.submit-card h2 {
-  font-family: var(--font-display); font-weight: 500;
-  font-size: 18px; margin: 0 0 8px; color: var(--olive-ink);
-  letter-spacing: -0.01em;
-}
-.submit-card p { font-size: 13px; color: var(--ink-soft); margin: 0; line-height: 1.5; }
 .privacy-notice {
   box-sizing: border-box;
-  flex: 1;
-  align-self: stretch;
-  width: min(100%, 680px);
-  min-height: 220px;
-  padding: 28px;
-  max-height: min(72vh, 680px);
-  overflow: auto;
+  border: 1px solid color-mix(in oklch, var(--pink-ink) 22%, var(--hairline));
+  border-radius: var(--radius);
+  background: color-mix(in oklch, var(--pink-soft) 68%, white);
+  overflow: hidden;
 }
 .privacy-notice summary {
   list-style: none;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 12px;
+  padding: 10px 12px;
   cursor: pointer;
-  color: var(--olive-ink);
+  color: var(--pink-ink);
 }
 .privacy-notice summary::-webkit-details-marker { display: none; }
 .privacy-notice summary strong {
   display: block;
-  font-family: var(--font-display);
-  font-size: 18px;
-  font-weight: 500;
-  letter-spacing: -0.01em;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
 }
 .privacy-notice summary em {
   display: block;
-  margin-top: 3px;
+  margin-top: 2px;
   color: var(--muted);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 9px;
   font-style: normal;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   line-height: 1.35;
 }
 .privacy-toggle {
-  flex: 0 0 28px;
-  width: 28px;
-  height: 28px;
+  flex: 0 0 22px;
+  width: 22px;
+  height: 22px;
   display: grid;
   place-items: center;
-  border: 1px solid color-mix(in oklch, var(--olive) 30%, var(--hairline));
+  border: 1px solid color-mix(in oklch, var(--pink-ink) 30%, var(--hairline));
   border-radius: 50%;
   background: white;
-  color: var(--olive-ink);
+  color: var(--pink-ink);
   font-family: var(--font-mono);
-  font-size: 16px;
+  font-size: 13px;
 }
 .privacy-toggle::before { content: "+"; }
 .privacy-notice[open] .privacy-toggle::before { content: "-"; }
 .privacy-notice-body {
   display: grid;
-  gap: 10px;
-  margin-top: 18px;
-  padding-top: 16px;
-  border-top: 1px solid color-mix(in oklch, var(--olive) 18%, transparent);
+  gap: 9px;
+  max-height: 320px;
+  overflow: auto;
+  padding: 12px;
+  border-top: 1px solid color-mix(in oklch, var(--pink-ink) 18%, transparent);
+  background: white;
 }
 .privacy-notice-body h3 {
-  margin: 8px 0 0;
-  color: var(--olive-ink);
+  margin: 6px 0 0;
+  color: var(--pink-ink);
   font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 600;
@@ -108,8 +90,8 @@
 .privacy-notice-body h3:first-child { margin-top: 0; }
 .privacy-notice-body p,
 .privacy-notice-body li {
-  font-size: 12.5px;
-  line-height: 1.48;
+  font-size: 12px;
+  line-height: 1.45;
 }
 .privacy-notice-body ul {
   margin: 0;
@@ -124,20 +106,7 @@
 .privacy-questions {
   padding-top: 4px;
   font-family: var(--font-mono);
-  font-size: 11px !important;
-}
-@media (max-width: 980px) {
-  .ranking-hero {
-    grid-template-columns: 1fr;
-  }
-  .ranking-hero > .reveal {
-    margin-top: 0;
-    translate: none;
-  }
-  .privacy-notice {
-    width: 100%;
-    min-height: 0;
-  }
+  font-size: 10.5px !important;
 }
 
 /* steps */
@@ -191,6 +160,11 @@
 .student-form-card .helper {
   font-family: var(--font-mono); font-size: 10px;
   letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);
+}
+.student-form-card .field-hint {
+  color: var(--ink-soft);
+  font-size: 11.5px;
+  line-height: 1.35;
 }
 .button-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
 

@@ -527,6 +527,18 @@
 }
 
 /* archive view */
+.archive-dev-note {
+  width: fit-content;
+  margin: 14px 0 0 !important;
+  padding: 8px 12px;
+  border-left: 2px solid var(--pink-ink);
+  background: var(--pink-soft);
+  color: var(--pink-ink) !important;
+  font-family: var(--font-mono);
+  font-size: 11px !important;
+  line-height: 1.45;
+  letter-spacing: 0.04em;
+}
 .archive-wrap { display: grid; gap: 20px; }
 .archive-year {
   padding: 24px;
