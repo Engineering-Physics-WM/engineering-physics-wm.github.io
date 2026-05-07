@@ -24,6 +24,57 @@ const isDuplicateSubmissionError = (error) => (
 
 const isPolicyError = (error) => error?.code === "42501";
 
+const isMissingSubmitFunctionError = (error) => (
+  error?.code === "PGRST202" ||
+  /submit_ranking_submission|could not find the function|function .* does not exist/i.test(error?.message || "")
+);
+
+const submitRankingViaRows = async ({ payload, cohortYear, cleanEmail }) => {
+  const { error } = await supabase.from("ranking_submissions").insert(payload);
+
+  if (!error) return { mode: "created" };
+  if (!isDuplicateSubmissionError(error) && !isPolicyError(error)) return { error };
+
+  const { error: updateError, count } = await supabase
+    .from("ranking_submissions")
+    .update({
+      student_name: payload.student_name,
+      notes: payload.notes,
+      ranking: payload.ranking,
+      receipt_code: payload.receipt_code,
+    }, { count: "exact" })
+    .eq("cohort_year", cohortYear)
+    .ilike("student_email", cleanEmail);
+
+  if (!updateError && count > 0) return { mode: "updated" };
+  if (!updateError) {
+    return { error: { message: "No existing response was updated. Please ask Prof. Yang to run the latest poll database update." } };
+  }
+  return { error: updateError };
+};
+
+const submitRankingLive = async ({ payload, cohortYear, cleanEmail }) => {
+  const { data, error } = await supabase.rpc("submit_ranking_submission", {
+    submit_cohort_year: cohortYear,
+    submit_student_name: payload.student_name,
+    submit_student_email: cleanEmail,
+    submit_ranking: payload.ranking,
+    submit_receipt_code: payload.receipt_code,
+  });
+
+  if (!error) {
+    return {
+      mode: data?.[0]?.submission_mode === "updated" ? "updated" : "created",
+    };
+  }
+
+  if (isMissingSubmitFunctionError(error)) {
+    return submitRankingViaRows({ payload, cohortYear, cleanEmail });
+  }
+
+  return { error };
+};
+
 const RankItem = ({ project, idx, total, onMove, onDragStart, onDragOver, onDrop, onDragEnd, dragging }) => (
   <li
     className={"ranking-item" + (dragging ? " dragging" : "")}
@@ -198,43 +249,21 @@ const RankingPage = ({ data, onNavigate }) => {
         receipt_code: receiptCode,
       };
 
-      const { error } = await supabase.from("ranking_submissions").insert(payload);
+      const result = await submitRankingLive({ payload, cohortYear: data.currentYear, cleanEmail });
 
-      if (error) {
-        if (isDuplicateSubmissionError(error) || isPolicyError(error)) {
-          setStatus("Submitting...");
-          const { error: updateError } = await supabase
-            .from("ranking_submissions")
-            .update({
-              student_name: payload.student_name,
-              notes: payload.notes,
-              ranking: payload.ranking,
-              receipt_code: payload.receipt_code,
-            })
-            .eq("cohort_year", data.currentYear)
-            .eq("student_email", cleanEmail);
-
-          if (!updateError) {
-            setSubmitted({ ...receipt, mode: "updated" });
-            setStatus("");
-            setSubmitting(false);
-            return;
-          }
-
-          setSubmitting(false);
-          if (isPolicyError(updateError)) {
-            setStatus("Your first response is saved, but edits are not available yet. Please contact Prof. Yang.");
-            return;
-          }
-          setStatus(`Could not update your existing response yet: ${updateError?.message || "unknown error"}`);
+      if (result.error) {
+        setSubmitting(false);
+        if (isPolicyError(result.error)) {
+          setStatus(/allowed student list/i.test(result.error.message || "")
+            ? "This email is not on the allowed student list for this cohort."
+            : "The live database needs the latest poll update before this can save. Please contact Prof. Yang.");
           return;
         }
-        setSubmitting(false);
-        setStatus(`The live database could not save yet: ${error.message || "unknown error"}`);
+        setStatus(`The live database could not save yet: ${result.error.message || "unknown error"}`);
         return;
       }
 
-      setSubmitted(receipt);
+      setSubmitted({ ...receipt, mode: result.mode });
       setStatus("");
       setSubmitting(false);
       return;
@@ -342,7 +371,7 @@ const RankingPage = ({ data, onNavigate }) => {
         </aside>
 
         <div>
-          <p className="kicker" style={{ marginBottom: 12 }}>Drag to reorder · Top 3 are weighted</p>
+          <p className="kicker" style={{ marginBottom: 12 }}>Drag or use arrows to reorder · all choices matter</p>
           <ol className="ranking-list">
             {order.map((id, idx) => (
               <RankItem

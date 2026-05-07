@@ -225,7 +225,7 @@ const CatalogPage = ({ data, onNavigate }) => {
 
 
   return (
-    <div className="page">
+    <div className="page catalog-page">
       <section className="hero" style={{ position: "relative" }}>
         <HeroParticles count={18} intensity={window.__epTweakSparks ?? 1} />
         <div style={{ position: "relative", zIndex: 1 }}>

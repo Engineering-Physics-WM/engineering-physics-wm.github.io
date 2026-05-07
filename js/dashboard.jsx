@@ -47,7 +47,7 @@ const normalizeSubmissionRow = (row, projects) => {
     email: normalizeEmail(row.student_email),
     notes: row.notes || "",
     ranking: [...ranking, ...missing],
-    submittedAt: row.created_at,
+    submittedAt: row.updated_at || row.created_at,
     receiptCode: row.receipt_code,
   };
 };
