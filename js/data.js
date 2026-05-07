@@ -227,7 +227,7 @@ const EP_DATA = {
 
   archive: [
     { year: "2025-2026", title: "Previous cohort", projects: 8, teams: 3, students: 8, summary: "Archive details for this cohort are being organized and will be expanded as records are cleaned up.", status: "past" },
-    { year: "2026-2027", title: "Current cohort — you are here", projects: 9, teams: null, students: 17, summary: "Ranking poll + first auto team-making preview running this year. Quantum Forge industry track joins the slate.", status: "current" },
+    { year: "2026-2027", title: "Current cohort — you are here", projects: 9, teams: null, students: 18, summary: "Ranking poll + first auto team-making preview running this year. Quantum Forge industry track joins the slate.", status: "current" },
     { year: "2027-2028", title: "Reserved", projects: null, teams: null, students: null, summary: "Placeholder for next year. Ranking and team data will land here once the cohort starts.", status: "future" },
   ],
 };
