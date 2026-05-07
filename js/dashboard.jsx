@@ -6,7 +6,7 @@ import { buildTeams, rankSatisfaction } from "./teamMatching.js";
 import { PersonLink, YangLink } from "./links.jsx";
 import { sortAnnouncements } from "./news.jsx";
 import { isSupabaseConfigured, supabase } from "./supabaseClient.js";
-import { postDraftAsNowAnnouncement } from "./announcements.js";
+import { announcementFromRow, postDraftAsNowAnnouncement, staticAnnouncementToRow } from "./announcements.js";
 
 const INSTRUCTOR_EMAIL = "rxyan2@wm.edu";
 const CUSTOM_DRAFT_ID = "custom-draft";
@@ -1029,6 +1029,333 @@ const ArchiveView = ({ archive, currentYear, onSwitch }) => (
   </div>
 );
 
+/* ── Announcements (Updates tab) ─────────────────────────────────── */
+
+const ANN_COLUMNS = "id,cohort_year,slug,title,summary,body,resources,audience_label,label,pinned,display_order,event_date,publish_at,status,created_at,updated_at";
+
+const BLANK = (cohortYear) => ({
+  cohortYear,
+  slug: "",
+  title: "",
+  summary: "",
+  body: [],
+  resources: [],
+  audience: "",
+  label: "",
+  pinned: false,
+  order: null,
+  date: new Date().toISOString().slice(0, 10),
+  status: "published",
+});
+
+const annToRow = (ann, instructorEmail) => ({
+  cohort_year: ann.cohortYear,
+  slug: ann.slug || ann.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || `update-${Date.now()}`,
+  title: ann.title,
+  summary: ann.summary,
+  body: ann.body,
+  resources: ann.resources,
+  audience_label: ann.audience || null,
+  label: ann.label || null,
+  pinned: Boolean(ann.pinned),
+  display_order: ann.order != null ? Number(ann.order) : null,
+  event_date: ann.date || null,
+  publish_at: new Date().toISOString(),
+  status: ann.status || "published",
+  created_by_email: instructorEmail || null,
+});
+
+const bodyText = (body) => (Array.isArray(body) ? body.join("\n\n") : (body || ""));
+const textToBody = (text) => text.split(/\n{2,}/).map(s => s.trim()).filter(Boolean);
+
+const ResourcesEditor = ({ value, onChange }) => {
+  const add = () => onChange([...value, { label: "", kind: "Link", href: "" }]);
+  const remove = (i) => onChange(value.filter((_, idx) => idx !== i));
+  const set = (i, field, val) => onChange(value.map((r, idx) => idx === i ? { ...r, [field]: val } : r));
+  return (
+    <div className="ann-resources-editor">
+      {value.map((r, i) => (
+        <div key={i} className="ann-resource-row">
+          <input placeholder="Label" value={r.label} onChange={e => set(i, "label", e.target.value)} />
+          <input placeholder="URL (https://...)" value={r.href || ""} onChange={e => set(i, "href", e.target.value)} />
+          <button className="ann-res-remove" onClick={() => remove(i)} title="Remove">×</button>
+        </div>
+      ))}
+      <button className="btn btn-ghost" style={{ fontSize: 12, padding: "4px 10px" }} onClick={add}>+ Add resource</button>
+    </div>
+  );
+};
+
+const AnnForm = ({ value, onChange, onSave, onCancel, saving }) => {
+  const set = (field, val) => onChange({ ...value, [field]: val });
+  return (
+    <div className="ann-form">
+      <div className="ann-form-grid">
+        <label className="ann-label">
+          Title
+          <input value={value.title} onChange={e => set("title", e.target.value)} placeholder="Update title" />
+        </label>
+        <label className="ann-label">
+          Label <span className="ann-hint">(e.g. "Now", "May 13")</span>
+          <input value={value.label} onChange={e => set("label", e.target.value)} placeholder="Short date/label" />
+        </label>
+        <label className="ann-label">
+          Date
+          <input type="date" value={value.date || ""} onChange={e => set("date", e.target.value)} />
+        </label>
+        <label className="ann-label">
+          Status
+          <select value={value.status} onChange={e => set("status", e.target.value)}>
+            <option value="published">Published</option>
+            <option value="draft">Draft</option>
+            <option value="archived">Archived</option>
+          </select>
+        </label>
+      </div>
+      <label className="ann-label">
+        Summary <span className="ann-hint">(first sentence shown in card)</span>
+        <input value={value.summary} onChange={e => set("summary", e.target.value)} placeholder="One sentence summary" />
+      </label>
+      <label className="ann-label">
+        Body paragraphs <span className="ann-hint">(separate paragraphs with a blank line)</span>
+        <textarea
+          className="ann-body-input"
+          rows={6}
+          value={bodyText(value.body)}
+          onChange={e => set("body", textToBody(e.target.value))}
+          placeholder={"First paragraph.\n\nSecond paragraph."}
+        />
+      </label>
+      <label className="ann-label">
+        Audience <span className="ann-hint">(optional)</span>
+        <input value={value.audience} onChange={e => set("audience", e.target.value)} placeholder="e.g. All students" />
+      </label>
+      <div className="ann-form-row">
+        <label className="ann-checkbox-label">
+          <input type="checkbox" checked={value.pinned} onChange={e => set("pinned", e.target.checked)} />
+          Pinned
+        </label>
+        <label className="ann-label" style={{ flex: 1 }}>
+          Display order <span className="ann-hint">(lower = first, blank = auto)</span>
+          <input
+            type="number"
+            value={value.order ?? ""}
+            onChange={e => set("order", e.target.value === "" ? null : Number(e.target.value))}
+            placeholder="e.g. 1"
+            style={{ width: 80 }}
+          />
+        </label>
+      </div>
+      <div className="ann-label">
+        Resources
+        <ResourcesEditor value={value.resources || []} onChange={v => set("resources", v)} />
+      </div>
+      <div className="ann-form-actions">
+        <button className="btn btn-primary" onClick={onSave} disabled={saving || !value.title.trim()}>
+          {saving ? "Saving…" : "Save"}
+        </button>
+        <button className="btn btn-ghost" onClick={onCancel} disabled={saving}>Cancel</button>
+      </div>
+    </div>
+  );
+};
+
+const AnnouncementsView = ({ data, onAnnouncementsChange }) => {
+  const cohortYear = data.currentYear;
+  const [items, setItems] = React.useState(null);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState("");
+  const [editingId, setEditingId] = React.useState(null);
+  const [editDraft, setEditDraft] = React.useState(null);
+  const [creating, setCreating] = React.useState(false);
+  const [newDraft, setNewDraft] = React.useState(null);
+  const [saving, setSaving] = React.useState(false);
+  const [confirmDelete, setConfirmDelete] = React.useState(null);
+  const [importing, setImporting] = React.useState(false);
+
+  const load = React.useCallback(async () => {
+    if (!isSupabaseConfigured) { setLoading(false); return; }
+    setLoading(true); setError("");
+    const { data: rows, error: err } = await supabase
+      .from("cohort_announcements")
+      .select(ANN_COLUMNS)
+      .eq("cohort_year", cohortYear)
+      .order("display_order", { ascending: true, nullsFirst: false });
+    if (err) { setError(err.message); setLoading(false); return; }
+    setItems((rows || []).map(announcementFromRow));
+    setLoading(false);
+  }, [cohortYear]);
+
+  React.useEffect(() => { load(); }, [load]);
+
+  const handleSave = async (ann, isNew) => {
+    setSaving(true); setError("");
+    try {
+      const row = annToRow(ann, INSTRUCTOR_EMAIL);
+      let result;
+      if (isNew) {
+        result = await supabase.from("cohort_announcements").insert(row).select(ANN_COLUMNS).single();
+      } else {
+        result = await supabase.from("cohort_announcements").update(row).eq("id", ann.id).select(ANN_COLUMNS).single();
+      }
+      if (result.error) throw result.error;
+      await load();
+      onAnnouncementsChange?.();
+      setEditingId(null); setEditDraft(null);
+      setCreating(false); setNewDraft(null);
+    } catch (err) {
+      setError(err.message || "Save failed");
+    }
+    setSaving(false);
+  };
+
+  const handleDelete = async (id) => {
+    setSaving(true); setError("");
+    const { error: err } = await supabase.from("cohort_announcements").delete().eq("id", id);
+    if (err) { setError(err.message); setSaving(false); return; }
+    setConfirmDelete(null);
+    await load();
+    onAnnouncementsChange?.();
+    setSaving(false);
+  };
+
+  const handleImport = async () => {
+    if (!isSupabaseConfigured) return;
+    setImporting(true); setError("");
+    const staticItems = (data.announcements || []).filter(a => a.cohortYear === cohortYear);
+    try {
+      for (const item of staticItems) {
+        const row = staticAnnouncementToRow(item);
+        await supabase.from("cohort_announcements").upsert(row, { onConflict: "cohort_year,slug" });
+      }
+      await load();
+      onAnnouncementsChange?.();
+    } catch (err) {
+      setError(err.message || "Import failed");
+    }
+    setImporting(false);
+  };
+
+  const startEdit = (item) => {
+    setEditingId(item.id);
+    setEditDraft({ ...item });
+    setCreating(false); setNewDraft(null);
+  };
+  const startCreate = () => {
+    setCreating(true);
+    setNewDraft(BLANK(cohortYear));
+    setEditingId(null); setEditDraft(null);
+  };
+  const cancelEdit = () => { setEditingId(null); setEditDraft(null); };
+  const cancelCreate = () => { setCreating(false); setNewDraft(null); };
+
+  if (!isSupabaseConfigured) {
+    return (
+      <div className="ann-empty">
+        <p>Supabase is not configured — announcements editing is only available with a live database.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="ann-view">
+      <div className="ann-toolbar">
+        <span className="ann-count">{items ? `${items.length} update${items.length !== 1 ? "s" : ""}` : "Loading…"}</span>
+        <div className="ann-toolbar-actions">
+          {items != null && items.length === 0 && (
+            <button className="btn btn-ghost" onClick={handleImport} disabled={importing}>
+              {importing ? "Importing…" : "Import from static data"}
+            </button>
+          )}
+          <button className="btn btn-primary" onClick={startCreate} disabled={creating}>+ New update</button>
+        </div>
+      </div>
+
+      {error && <div className="team-save-status is-warning">{error}</div>}
+
+      {creating && newDraft && (
+        <div className="ann-card ann-card-new">
+          <div className="ann-card-head"><span className="ann-pill ann-pill-new">New</span></div>
+          <AnnForm
+            value={newDraft}
+            onChange={setNewDraft}
+            onSave={() => handleSave(newDraft, true)}
+            onCancel={cancelCreate}
+            saving={saving}
+          />
+        </div>
+      )}
+
+      {loading && <div className="team-save-status">Loading updates…</div>}
+
+      {!loading && items && items.length === 0 && !creating && (
+        <div className="ann-empty">
+          <p>No updates in Supabase yet for <strong>{cohortYear}</strong>.</p>
+          <p>Create one above, or import from the static data in data.js.</p>
+        </div>
+      )}
+
+      {(items || []).map(item => (
+        <div key={item.id} className={"ann-card" + (item.status !== "published" ? " ann-card-dim" : "") + (item.pinned ? " ann-card-pinned" : "")}>
+          {editingId === item.id && editDraft ? (
+            <>
+              <div className="ann-card-head">
+                <span className="ann-pill">{item.status}</span>
+                {item.pinned && <span className="ann-pill ann-pill-pin">Pinned</span>}
+                <span className="ann-editing-label">Editing</span>
+              </div>
+              <AnnForm
+                value={editDraft}
+                onChange={setEditDraft}
+                onSave={() => handleSave(editDraft, false)}
+                onCancel={cancelEdit}
+                saving={saving}
+              />
+            </>
+          ) : (
+            <>
+              <div className="ann-card-head">
+                <span className="ann-pill">{item.status}</span>
+                {item.pinned && <span className="ann-pill ann-pill-pin">Pinned</span>}
+                {item.label && <span className="ann-date-label">{item.label}</span>}
+                <span className="ann-date">{item.date}</span>
+                <div className="ann-card-btns">
+                  <button className="ann-btn" onClick={() => startEdit(item)}>Edit</button>
+                  <button
+                    className={"ann-btn ann-btn-del" + (confirmDelete === item.id ? " is-confirm" : "")}
+                    onClick={() => confirmDelete === item.id ? handleDelete(item.id) : setConfirmDelete(item.id)}
+                    onBlur={() => setConfirmDelete(null)}
+                    disabled={saving}
+                  >
+                    {confirmDelete === item.id ? "Confirm delete" : "Delete"}
+                  </button>
+                </div>
+              </div>
+              <h3 className="ann-title">{item.title}</h3>
+              <p className="ann-summary">{item.summary}</p>
+              {item.body?.length > 0 && (
+                <details className="ann-body-details">
+                  <summary>Body ({item.body.length} paragraph{item.body.length !== 1 ? "s" : ""})</summary>
+                  {item.body.map((p, i) => <p key={i}>{p}</p>)}
+                </details>
+              )}
+              {item.resources?.length > 0 && (
+                <div className="ann-resources">
+                  {item.resources.map((r, i) => (
+                    <span key={i} className="ann-resource-chip">
+                      {r.href ? <a href={r.href} target="_blank" rel="noopener">{r.label}</a> : r.label}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+};
+
 const DashboardPage = ({ data, onNavigate, onAnnouncementsChange }) => {
   const [tab, setTab] = React.useState("distribution");
   const [responses, setResponses] = React.useState([]);
@@ -1202,6 +1529,7 @@ const DashboardPage = ({ data, onNavigate, onAnnouncementsChange }) => {
           ["students", "Student responses"],
           ["teams", "Auto team-making"],
           ["email", "Email drafts"],
+          ["updates", "Updates"],
         ].map(([k, label]) => (
           <button
             key={k}
@@ -1236,6 +1564,9 @@ const DashboardPage = ({ data, onNavigate, onAnnouncementsChange }) => {
           teamMemberRows={teamMemberRows}
           onAnnouncementsChange={onAnnouncementsChange}
         />
+      )}
+      {tab === "updates" && (
+        <AnnouncementsView data={data} onAnnouncementsChange={onAnnouncementsChange} />
       )}
     </div>
   );
