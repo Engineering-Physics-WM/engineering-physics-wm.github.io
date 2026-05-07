@@ -22,6 +22,8 @@ const isDuplicateSubmissionError = (error) => (
   /ranking_one_response_per_student|duplicate key/i.test(error?.message || "")
 );
 
+const isPolicyError = (error) => error?.code === "42501";
+
 const RankItem = ({ project, idx, total, onMove, onDragStart, onDragOver, onDrop, onDragEnd, dragging }) => (
   <li
     className={"ranking-item" + (dragging ? " dragging" : "")}
@@ -176,6 +178,17 @@ const RankingPage = ({ data, onNavigate }) => {
     setStatus(isSupabaseConfigured ? "Saving to Supabase…" : "Saving local mock submission…");
 
     if (isSupabaseConfigured) {
+      const { data: allowed, error: allowError } = await supabase.rpc("is_ranking_student_allowed", {
+        check_cohort_year: data.currentYear,
+        check_student_email: cleanEmail,
+      });
+
+      if (allowError || !allowed) {
+        setSubmitting(false);
+        setStatus("This email is not on the allowed student list for this cohort.");
+        return;
+      }
+
       const payload = {
         cohort_year: data.currentYear,
         student_name: receipt.name,
@@ -188,7 +201,7 @@ const RankingPage = ({ data, onNavigate }) => {
       const { error } = await supabase.from("ranking_submissions").insert(payload);
 
       if (error) {
-        if (isDuplicateSubmissionError(error)) {
+        if (isDuplicateSubmissionError(error) || isPolicyError(error)) {
           setStatus("Updating your existing response...");
           const { error: updateError } = await supabase
             .from("ranking_submissions")
@@ -209,20 +222,15 @@ const RankingPage = ({ data, onNavigate }) => {
           }
 
           setSubmitting(false);
-          if (updateError.code === "42501") {
+          if (isPolicyError(updateError)) {
             setStatus("Your first response is saved, but edits need the updated Supabase policy in supabase/schema.sql.");
             return;
           }
-          setStatus("Could not update your existing response yet. Check the Supabase edit policy.");
-          return;
-        }
-        if (error.code === "42501") {
-          setSubmitting(false);
-          setStatus("This email is not on the allowed student list for this cohort.");
+          setStatus(`Could not update your existing response yet. Supabase said: ${updateError?.message || "unknown error"}`);
           return;
         }
         setSubmitting(false);
-        setStatus("Supabase could not save yet. Check the table, allowlist, and RLS policy.");
+        setStatus(`Supabase could not save yet: ${error.message || "unknown error"}`);
         return;
       }
 
