@@ -697,6 +697,7 @@ const EmailDraftView = ({ data, projects, responses, students, teamMemberRows })
   const [body, setBody] = React.useState(initialDraft.body);
   const [status, setStatus] = React.useState("");
   const [recipientFilter, setRecipientFilter] = React.useState("all");
+  const [rewriting, setRewriting] = React.useState(false);
 
   const teams = React.useMemo(
     () => buildTeams({ projects, responses, students, seed: 0 }),
@@ -790,6 +791,47 @@ const EmailDraftView = ({ data, projects, responses, students, teamMemberRows })
     setStatus(`Opening your mail composer with ${recipients.length} BCC recipients. Review, choose the W&M account, then send.`);
   };
 
+  const rewriteDraft = async () => {
+    if (!isSupabaseConfigured) {
+      setStatus("AI rewrite needs the live dashboard connection.");
+      return;
+    }
+    if (!subject.trim() && !body.trim()) {
+      setStatus("Write or select a draft before asking AI to rewrite it.");
+      return;
+    }
+
+    setRewriting(true);
+    setStatus("Rewriting draft...");
+    const { data: rewrittenDraft, error } = await supabase.functions.invoke("rewrite-email", {
+      body: {
+        cohortYear: data.currentYear,
+        audienceLabel,
+        projectLabel: isTeamAudience ? projectLabel(project) : null,
+        recipientCounts: {
+          students: studentCount,
+          mentors: mentorCount,
+        },
+        subject,
+        body,
+      },
+    });
+    setRewriting(false);
+
+    if (error || rewrittenDraft?.error) {
+      setStatus(rewrittenDraft?.error || error?.message || "AI rewrite failed.");
+      return;
+    }
+    if (!rewrittenDraft?.subject || !rewrittenDraft?.body) {
+      setStatus("AI rewrite returned an incomplete draft.");
+      return;
+    }
+
+    setSubject(rewrittenDraft.subject);
+    setBody(rewrittenDraft.body);
+    setStatus("AI rewrote the draft. Review it before opening Mail.");
+  };
+
   return (
     <div className="email-draft-grid">
       <section className="email-composer">
@@ -844,6 +886,9 @@ const EmailDraftView = ({ data, projects, responses, students, teamMemberRows })
         </label>
 
         <div className="email-actions">
+          <button className="btn btn-pink" onClick={rewriteDraft} disabled={rewriting || (!subject.trim() && !body.trim())} data-spark>
+            {rewriting ? "Rewriting..." : "Rewrite with AI"}
+          </button>
           <button className="btn btn-primary" onClick={openMailDraft} disabled={!recipients.length} data-spark>
             Open in Mail
           </button>

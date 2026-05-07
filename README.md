@@ -47,6 +47,23 @@ Public cohort updates currently live in `js/data.js` as `announcements2026`. Fil
 
 The protected dashboard has an **Email drafts** tab that can turn a news item or custom note into a `mailto:` draft for selected groups: all students + mentors, all students, Honors students, all mentors, selected team students + mentors, selected team students, or selected team mentors. Student recipients come from the private Supabase allowlist or saved teams, never from a checked-in public roster. This opens the default mail app with BCC recipients filled in; the instructor still reviews and sends the message manually.
 
+The **Rewrite with AI** button is backed by `supabase/functions/rewrite-email`, so provider keys stay server-side. Deploy the function and set exactly one provider path:
+
+```sh
+supabase functions deploy rewrite-email
+
+# OpenAI / ChatGPT option
+supabase secrets set AI_EMAIL_PROVIDER=openai AI_EMAIL_MODEL=gpt-5 OPENAI_API_KEY=...
+
+# Claude option
+supabase secrets set AI_EMAIL_PROVIDER=anthropic AI_EMAIL_MODEL=claude-sonnet-4-20250514 ANTHROPIC_API_KEY=...
+
+# Gemini option
+supabase secrets set AI_EMAIL_PROVIDER=gemini AI_EMAIL_MODEL=gemini-2.5-flash GEMINI_API_KEY=...
+```
+
+Optional secrets: `AI_EMAIL_ALLOWED_USERS` defaults to `rxyan2@wm.edu`, and `AI_EMAIL_MAX_OUTPUT_TOKENS` defaults to `1200`.
+
 ## Supabase Polling
 
 Copy `.env.example` to `.env.local` and add the Supabase publishable key for local development.
