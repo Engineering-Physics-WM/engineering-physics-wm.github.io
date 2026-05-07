@@ -333,6 +333,14 @@ const DistributionView = ({ projects, responses }) => {
 
 const StudentsView = ({ projects, responses }) => {
   const map = Object.fromEntries(projects.map(p => [p.id, p]));
+  const [expanded, setExpanded] = React.useState(new Set());
+
+  const toggle = (email) => setExpanded(prev => {
+    const next = new Set(prev);
+    next.has(email) ? next.delete(email) : next.add(email);
+    return next;
+  });
+
   if (!responses.length) {
     return <div className="recipient-empty">No submitted rankings yet. This tab will fill as students complete the poll.</div>;
   }
@@ -344,23 +352,39 @@ const StudentsView = ({ projects, responses }) => {
         <div>Top picks</div>
         <div>Notes</div>
       </div>
-      {responses.map((r, i) => (
-        <Reveal as="div" key={r.email} className="student-row" delay={i * 20}>
-          <div>
-            <div className="name">{r.name}</div>
-            <div className="email">{r.email}</div>
-          </div>
-          <div className="pref-list">
-            {r.ranking.slice(0, 4).map((pid, idx) => {
-              const p = map[pid];
-              return p ? (
-                <span key={pid} className="pref-chip"><span className="n">#{idx+1}</span> {p.title.split(":")[0].split("(")[0].slice(0, 28)}{p.title.length > 28 ? "…" : ""}</span>
-              ) : null;
-            })}
-          </div>
-          <div style={{ fontSize: 12, color: "var(--muted)", maxWidth: 220, textAlign: "right" }}>{r.notes || "—"}</div>
-        </Reveal>
-      ))}
+      {responses.map((r, i) => {
+        const isExpanded = expanded.has(r.email);
+        const visible = isExpanded ? r.ranking : r.ranking.slice(0, 4);
+        return (
+          <Reveal as="div" key={r.email} className="student-row" delay={i * 20}>
+            <div>
+              <div className="name">{r.name}</div>
+              <div className="email">{r.email}</div>
+            </div>
+            <div className="pref-list">
+              {visible.map((pid, idx) => {
+                const p = map[pid];
+                return p ? (
+                  <span key={pid} className={"pref-chip" + (idx >= 4 ? " pref-chip-lower" : "")}>
+                    <span className="n">#{idx + 1}</span>{" "}
+                    {p.title.split(":")[0].split("(")[0].slice(0, 28)}{p.title.length > 28 ? "…" : ""}
+                  </span>
+                ) : null;
+              })}
+              {r.ranking.length > 4 && (
+                <button
+                  className={"pref-expand" + (isExpanded ? " is-open" : "")}
+                  onClick={() => toggle(r.email)}
+                  title={isExpanded ? "Show fewer" : "Show full ranking"}
+                >
+                  {isExpanded ? "−" : `+${r.ranking.length - 4}`}
+                </button>
+              )}
+            </div>
+            <div style={{ fontSize: 12, color: "var(--muted)", maxWidth: 220, textAlign: "right" }}>{r.notes || "—"}</div>
+          </Reveal>
+        );
+      })}
     </div>
   );
 };

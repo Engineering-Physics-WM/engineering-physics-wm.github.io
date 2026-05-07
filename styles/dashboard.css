@@ -225,6 +225,22 @@
   color: var(--ink-soft);
 }
 .pref-chip .n { font-family: var(--font-mono); font-size: 9px; color: var(--pink-ink); font-weight: 500; }
+.pref-chip-lower { opacity: 0.6; }
+.pref-chip-lower .n { color: var(--muted); }
+.pref-expand {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 2px 7px;
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  background: var(--paper-3);
+  color: var(--muted);
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.04em;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 160ms, border-color 160ms, color 160ms;
+}
+.pref-expand:hover { background: white; border-color: var(--ink); color: var(--ink); }
+.pref-expand.is-open { background: var(--ink); border-color: var(--ink); color: var(--paper); }
 
 /* teams view */
 .teams-controls {
