@@ -6,6 +6,7 @@ import { buildTeams, rankSatisfaction } from "./teamMatching.js";
 import { PersonLink, YangLink } from "./links.jsx";
 import { sortAnnouncements } from "./news.jsx";
 import { isSupabaseConfigured, supabase } from "./supabaseClient.js";
+import { postDraftAsNowAnnouncement } from "./announcements.js";
 
 const INSTRUCTOR_EMAIL = "rxyan2@wm.edu";
 const CUSTOM_DRAFT_ID = "custom-draft";
@@ -668,7 +669,7 @@ const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows,
   );
 };
 
-const EmailDraftView = ({ data, projects, responses, students, teamMemberRows }) => {
+const EmailDraftView = ({ data, projects, responses, students, teamMemberRows, onAnnouncementsChange }) => {
   const announcements = React.useMemo(
     () => sortAnnouncements((data.announcements || []).filter(item => item.cohortYear === data.currentYear)),
     [data.announcements, data.currentYear]
@@ -693,6 +694,7 @@ const EmailDraftView = ({ data, projects, responses, students, teamMemberRows })
   const [status, setStatus] = React.useState("");
   const [recipientFilter, setRecipientFilter] = React.useState("all");
   const [rewriting, setRewriting] = React.useState(false);
+  const [postingNews, setPostingNews] = React.useState(false);
 
   const teams = React.useMemo(
     () => buildTeams({ projects, responses, students, seed: 0 }),
@@ -832,6 +834,40 @@ const EmailDraftView = ({ data, projects, responses, students, teamMemberRows })
     setStatus("AI rewrote the draft. Review it before opening Mail.");
   };
 
+  const postAsNowNews = async () => {
+    if (!isSupabaseConfigured) {
+      setStatus("Live announcement posting is not configured.");
+      return;
+    }
+    if (!subject.trim() || !body.trim()) {
+      setStatus("Add a subject and message before posting a news update.");
+      return;
+    }
+    if (!window.confirm("Post this draft as the public Now update? It will replace the current pinned Now item.")) {
+      return;
+    }
+
+    setPostingNews(true);
+    setStatus("Posting Now update...");
+    const { data: userData } = await supabase.auth.getUser();
+
+    try {
+      await postDraftAsNowAnnouncement({
+        cohortYear: data.currentYear,
+        subject,
+        body,
+        audienceLabel,
+        createdByEmail: userData?.user?.email,
+      });
+      onAnnouncementsChange?.();
+      setStatus("Posted as the Now update. The front page, Updates page, and news source list will refresh from the live announcement.");
+    } catch (error) {
+      setStatus(error?.message || "Could not post the Now update.");
+    } finally {
+      setPostingNews(false);
+    }
+  };
+
   return (
     <div className="email-draft-grid">
       <section className="email-composer">
@@ -888,6 +924,9 @@ const EmailDraftView = ({ data, projects, responses, students, teamMemberRows })
         <div className="email-actions">
           <button className="btn btn-pink" onClick={rewriteDraft} disabled={rewriting || (!subject.trim() && !body.trim())} data-spark>
             {rewriting ? "Rewriting..." : "Rewrite with AI"}
+          </button>
+          <button className="btn btn-primary" onClick={postAsNowNews} disabled={postingNews || (!subject.trim() || !body.trim())} data-spark>
+            {postingNews ? "Posting..." : "Post as Now news"}
           </button>
           <button className="btn btn-primary" onClick={openMailDraft} disabled={!recipients.length} data-spark>
             Open in Mail
@@ -990,7 +1029,7 @@ const ArchiveView = ({ archive, currentYear, onSwitch }) => (
   </div>
 );
 
-const DashboardPage = ({ data, onNavigate }) => {
+const DashboardPage = ({ data, onNavigate, onAnnouncementsChange }) => {
   const [tab, setTab] = React.useState("distribution");
   const [responses, setResponses] = React.useState([]);
   const [students, setStudents] = React.useState([]);
@@ -1195,6 +1234,7 @@ const DashboardPage = ({ data, onNavigate }) => {
           responses={responses}
           students={students}
           teamMemberRows={teamMemberRows}
+          onAnnouncementsChange={onAnnouncementsChange}
         />
       )}
     </div>

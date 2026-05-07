@@ -12,6 +12,7 @@ import { AuthGate } from "./auth.jsx";
 import { YangLink } from "./links.jsx";
 import { NewsPage } from "./news.jsx";
 import { TweakPanelInline } from "./tweaks.jsx";
+import { loadPublishedAnnouncements } from "./announcements.js";
 
 const Header = ({ page, onNavigate, year, setYear, years }) => {
   const [mobileOpen, setMobileOpen] = React.useState(false);
@@ -144,10 +145,24 @@ const Footer = ({ onNavigate }) => (
 );
 
 const App = () => {
-  const data = EP_DATA;
+  const [liveAnnouncements, setLiveAnnouncements] = React.useState(null);
+  const [announcementRefreshKey, setAnnouncementRefreshKey] = React.useState(0);
   const [page, setPage] = React.useState("catalog");
-  const [year, setYear] = React.useState(data.currentYear);
+  const [year, setYear] = React.useState(EP_DATA.currentYear);
   const [sparks, setSparks] = React.useState(1);
+
+  React.useEffect(() => {
+    let active = true;
+    loadPublishedAnnouncements().then(({ announcements }) => {
+      if (active && announcements?.length) setLiveAnnouncements(announcements);
+    });
+    return () => { active = false; };
+  }, [announcementRefreshKey]);
+
+  const data = React.useMemo(() => ({
+    ...EP_DATA,
+    announcements: liveAnnouncements?.length ? liveAnnouncements : EP_DATA.announcements,
+  }), [liveAnnouncements]);
 
   React.useEffect(() => {
     const h = (e) => setSparks(e.detail);
@@ -160,6 +175,9 @@ const App = () => {
   }, [page, year]);
 
   const onNavigate = (p) => setPage(p);
+  const refreshAnnouncements = React.useCallback(() => {
+    setAnnouncementRefreshKey((key) => key + 1);
+  }, []);
 
   return (
     <div className="app">
@@ -173,7 +191,7 @@ const App = () => {
         {page === "ranking" && <RankingPage data={data} onNavigate={onNavigate} />}
         {page === "dashboard" && (
           <AuthGate>
-            <DashboardPage data={data} onNavigate={onNavigate} />
+            <DashboardPage data={data} onNavigate={onNavigate} onAnnouncementsChange={refreshAnnouncements} />
           </AuthGate>
         )}
         {page === "archive" && <ArchivePage data={data} onNavigate={onNavigate} currentYear={year} setYear={setYear} />}
