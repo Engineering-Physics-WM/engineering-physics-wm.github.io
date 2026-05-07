@@ -71,7 +71,7 @@ const normalizeAllowedStudentRow = (row, projects) => {
 };
 
 const dashboardReadError = (label, error) => (
-  `${label} could not load: ${error?.message || "unknown Supabase error"}`
+  `${label} could not load: ${error?.message || "unknown live data error"}`
 );
 
 const mentorsForProject = (project) => {
@@ -391,9 +391,9 @@ const HeatmapView = ({ projects, responses }) => {
 
 const teamSaveErrorMessage = (error) => {
   if (error?.code === "42P01" || /cohort_team_members/i.test(error?.message || "")) {
-    return "Could not save yet. Run supabase/team-assignments-schema.sql in Supabase, then try again.";
+    return "Could not save yet. The team assignments table is not ready in the live database.";
   }
-  return `Could not save teams: ${error?.message || "unknown Supabase error"}`;
+  return `Could not save teams: ${error?.message || "unknown live data error"}`;
 };
 
 const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows, setTeamMemberRows, teamRowsError }) => {
@@ -452,7 +452,7 @@ const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows,
 
   const saveFinalTeams = async () => {
     if (!isSupabaseConfigured) {
-      setSaveStatus("Supabase is not configured for this build, so the final teams cannot be saved yet.");
+      setSaveStatus("The live database is not configured for this build, so the final teams cannot be saved yet.");
       return;
     }
     if (sizeErrors.length) {
@@ -510,7 +510,7 @@ const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows,
     setShowSavedRoster(true);
     setTeamSource("saved");
     setDirty(false);
-    setSaveStatus(`Saved ${activeStudentCount} students and ${rows.filter((row) => row.member_type === "mentor" && row.person_email).length} mentors to Supabase.`);
+    setSaveStatus(`Saved ${activeStudentCount} students and ${rows.filter((row) => row.member_type === "mentor" && row.person_email).length} mentors to the live database.`);
   };
 
   return (
@@ -535,7 +535,7 @@ const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows,
               setShowSavedRoster((value) => !value);
               setSaveStatus(showSavedRoster
                 ? "Showing live auto preview from current ranking submissions."
-                : "Showing saved final roster from Supabase.");
+                : "Showing saved final roster from the live database.");
             }}
             disabled={saving}
             data-spark
@@ -668,7 +668,7 @@ const EmailDraftView = ({ data, projects, responses, students, teamMemberRows })
   const project = projects.find((p) => p.id === projectId);
   const audienceLabel = audienceOptions.find((option) => option.id === audience)?.label || "Selected group";
   const hasSavedTeams = (teamMemberRows || []).some((row) => row.member_type === "student");
-  const teamRecipientSource = hasSavedTeams ? "Saved Supabase team assignments" : "Current auto-match preview";
+  const teamRecipientSource = hasSavedTeams ? "Saved team assignments" : "Current auto-match preview";
 
   const recipients = React.useMemo(() => {
     const studentRecipients = emailStudents.map((student) => ({ name: student.name, email: student.email, role: "student" }));
@@ -952,7 +952,7 @@ const DashboardPage = ({ data, onNavigate }) => {
         setResponses([]);
         setStudents([]);
         setTeamMemberRows([]);
-        setDashboardError(`Supabase could not load dashboard data: ${error?.message || "unknown error"}`);
+        setDashboardError(`Live dashboard data could not load: ${error?.message || "unknown error"}`);
         setLoadingDashboard(false);
         return;
       }
@@ -1028,10 +1028,10 @@ const DashboardPage = ({ data, onNavigate }) => {
           <p className="kicker"><span className="dot">●</span> &nbsp; Instructor view · <YangLink>Prof. Ran Yang</YangLink></p>
           <h1>Cohort dashboard <span style={{ color: "var(--muted)", fontStyle: "italic" }}>2026·27</span></h1>
           <p style={{ color: "var(--ink-soft)", fontSize: 16, maxWidth: 580 }}>
-            Live Supabase submissions power the ranking distribution, individual responses, conflict heatmap,
+            Live poll submissions power the ranking distribution, individual responses, conflict heatmap,
             auto team-making preview, saved final teams, and BCC email drafts.
           </p>
-          <p className="construction-note">Instructor-only · private student data stays in Supabase</p>
+          <p className="construction-note">Instructor-only · private student data stays in the live database</p>
           <button className="btn btn-ghost" onClick={() => setRefreshKey((key) => key + 1)} disabled={loadingDashboard} style={{ marginTop: 12 }}>
             {loadingDashboard ? "Refreshing..." : "Refresh live data"}
           </button>
@@ -1043,7 +1043,7 @@ const DashboardPage = ({ data, onNavigate }) => {
         </Reveal>
       </section>
 
-      {loadingDashboard && <div className="team-save-status">Loading live poll data from Supabase...</div>}
+      {loadingDashboard && <div className="team-save-status">Loading live poll data...</div>}
       {dashboardError && <div className="team-save-status is-warning">{dashboardError}</div>}
       {!loadingDashboard && !dashboardError && !responses.length && (
         <div className="team-save-status">

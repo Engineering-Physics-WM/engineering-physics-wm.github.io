@@ -6,4 +6,4 @@ Example URLs after deploy:
 - /announcements/2026-2027/team-matching-notes.pptx
 
 Reference those URLs from `announcements2026` in `js/data.js`, or from
-the future Supabase `cohort_announcements.resources` JSON field.
+the future announcement resources JSON field.

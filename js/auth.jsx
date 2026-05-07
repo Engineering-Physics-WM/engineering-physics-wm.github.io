@@ -103,7 +103,7 @@ const AuthGate = ({ children }) => {
         <section className="auth-panel">
           <p className="kicker"><span className="dot">●</span> &nbsp; Instructor dashboard</p>
           <h1>Dashboard login is not configured</h1>
-          <p>Add the Supabase URL and publishable key to the Vite environment before viewing this page.</p>
+          <p>Add the live database URL and publishable key to the Vite environment before viewing this page.</p>
         </section>
       </div>
     );

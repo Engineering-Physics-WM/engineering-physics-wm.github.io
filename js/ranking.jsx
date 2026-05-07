@@ -170,12 +170,12 @@ const RankingPage = ({ data, onNavigate }) => {
       name: name.trim(),
       email: cleanEmail,
       order,
-      source: isSupabaseConfigured ? "supabase" : "local",
+      source: isSupabaseConfigured ? "live" : "local",
       mode: "created",
     };
 
     setSubmitting(true);
-    setStatus(isSupabaseConfigured ? "Saving to Supabase…" : "Saving local mock submission…");
+    setStatus("Submitting...");
 
     if (isSupabaseConfigured) {
       const { data: allowed, error: allowError } = await supabase.rpc("is_ranking_student_allowed", {
@@ -202,7 +202,7 @@ const RankingPage = ({ data, onNavigate }) => {
 
       if (error) {
         if (isDuplicateSubmissionError(error) || isPolicyError(error)) {
-          setStatus("Updating your existing response...");
+          setStatus("Submitting...");
           const { error: updateError } = await supabase
             .from("ranking_submissions")
             .update({
@@ -223,14 +223,14 @@ const RankingPage = ({ data, onNavigate }) => {
 
           setSubmitting(false);
           if (isPolicyError(updateError)) {
-            setStatus("Your first response is saved, but edits need the updated Supabase policy in supabase/schema.sql.");
+            setStatus("Your first response is saved, but edits are not available yet. Please contact Prof. Yang.");
             return;
           }
-          setStatus(`Could not update your existing response yet. Supabase said: ${updateError?.message || "unknown error"}`);
+          setStatus(`Could not update your existing response yet: ${updateError?.message || "unknown error"}`);
           return;
         }
         setSubmitting(false);
-        setStatus(`Supabase could not save yet: ${error.message || "unknown error"}`);
+        setStatus(`The live database could not save yet: ${error.message || "unknown error"}`);
         return;
       }
 
@@ -266,7 +266,7 @@ const RankingPage = ({ data, onNavigate }) => {
           <div>
             <p className="kicker"><span className="dot">●</span> &nbsp; Submission received</p>
             <h1>Your ranking is <span className="ital">in.</span></h1>
-            <p>{submitted.source === "supabase" ? (submitted.mode === "updated" ? "Your existing saved response has been updated." : "Your preferences are saved to the live poll database.") : "This local mock receipt stays in your browser until the live database is enabled."} You'll hear back as teams are formed.</p>
+            <p>{submitted.source === "live" ? (submitted.mode === "updated" ? "Your existing saved response has been updated." : "Your preferences are saved to the live poll database.") : "This local mock receipt stays in your browser until the live database is enabled."} You'll hear back as teams are formed.</p>
           </div>
         </section>
         <Reveal as="div" className="submitted-card">
