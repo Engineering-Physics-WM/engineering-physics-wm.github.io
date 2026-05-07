@@ -141,7 +141,14 @@ const RankingPage = ({ data, onNavigate }) => {
   const DRAFT_KEY = "ep-ranking-draft-2627";
   const [name, setName] = React.useState("");
   const [email, setEmail] = React.useState("");
-  const [order, setOrder] = React.useState(() => data.projects.map(p => p.id));
+  const [order, setOrder] = React.useState(() => {
+    const ids = data.projects.map(p => p.id);
+    for (let i = ids.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [ids[i], ids[j]] = [ids[j], ids[i]];
+    }
+    return ids;
+  });
   const [dragIdx, setDragIdx] = React.useState(null);
   const [status, setStatus] = React.useState("");
   const [submitted, setSubmitted] = React.useState(null);
@@ -200,7 +207,15 @@ const RankingPage = ({ data, onNavigate }) => {
   };
   const handleDragEnd = () => setDragIdx(null);
 
-  const reset = () => { setOrder(data.projects.map(p => p.id)); setStatus("Order reset."); };
+  const reset = () => {
+    const ids = data.projects.map(p => p.id);
+    for (let i = ids.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [ids[i], ids[j]] = [ids[j], ids[i]];
+    }
+    setOrder(ids);
+    setStatus("Order shuffled.");
+  };
 
   const submit = async () => {
     if (!name.trim() || !email.trim()) {
