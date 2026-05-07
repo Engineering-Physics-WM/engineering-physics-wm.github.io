@@ -193,6 +193,13 @@ const withTeamSummary = (snapshot, projects, responses) => ({
   }),
 });
 
+const responseSignature = (responses) => (
+  responses
+    .map((response) => `${normalizeEmail(response.email)}:${(response.ranking || []).join(">")}`)
+    .sort()
+    .join("|")
+);
+
 const peopleFromTeamRows = (rows, projectId, memberType) => uniqueRecipients(
   rows
     .filter((row) => row.project_id === projectId && row.member_type === memberType)
@@ -396,7 +403,7 @@ const teamSaveErrorMessage = (error) => {
   return `Could not save teams: ${error?.message || "unknown live data error"}`;
 };
 
-const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows, setTeamMemberRows, teamRowsError }) => {
+const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows, setTeamMemberRows, teamRowsError, onDraftStateChange }) => {
   const [seed, setSeed] = React.useState(0);
   const [teams, setTeams] = React.useState(null);
   const [draggedStudent, setDraggedStudent] = React.useState(null);
@@ -406,6 +413,22 @@ const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows,
   const [dirty, setDirty] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
   const [saveStatus, setSaveStatus] = React.useState("");
+  const liveResponseSignature = React.useMemo(() => responseSignature(responses), [responses]);
+  const previousResponseSignatureRef = React.useRef(null);
+
+  React.useEffect(() => {
+    const previousSignature = previousResponseSignatureRef.current;
+    if (previousSignature && previousSignature !== liveResponseSignature && showSavedRoster) {
+      setShowSavedRoster(false);
+      setSaveStatus("New rankings loaded; showing live auto preview.");
+    }
+    previousResponseSignatureRef.current = liveResponseSignature;
+  }, [liveResponseSignature, showSavedRoster]);
+
+  React.useEffect(() => {
+    onDraftStateChange?.(dirty || saving);
+    return () => onDraftStateChange?.(false);
+  }, [dirty, saving, onDraftStateChange]);
 
   React.useEffect(() => {
     const autoResult = buildTeams({ projects, responses, students, seed });
@@ -912,17 +935,24 @@ const DashboardPage = ({ data, onNavigate }) => {
   const [teamRowsError, setTeamRowsError] = React.useState("");
   const [dashboardError, setDashboardError] = React.useState("");
   const [loadingDashboard, setLoadingDashboard] = React.useState(true);
+  const [syncingDashboard, setSyncingDashboard] = React.useState(false);
+  const [autoRefreshPaused, setAutoRefreshPaused] = React.useState(false);
   const [refreshKey, setRefreshKey] = React.useState(0);
+  const hasLoadedDashboardRef = React.useRef(false);
 
   React.useEffect(() => {
     if (!isSupabaseConfigured) {
+      hasLoadedDashboardRef.current = true;
       setLoadingDashboard(false);
+      setSyncingDashboard(false);
       return undefined;
     }
 
     let alive = true;
     const loadDashboard = async () => {
-      setLoadingDashboard(true);
+      const firstLoad = !hasLoadedDashboardRef.current;
+      setLoadingDashboard(firstLoad);
+      setSyncingDashboard(!firstLoad);
       setDashboardError("");
       setTeamRowsError("");
 
@@ -953,7 +983,9 @@ const DashboardPage = ({ data, onNavigate }) => {
         setStudents([]);
         setTeamMemberRows([]);
         setDashboardError(`Live dashboard data could not load: ${error?.message || "unknown error"}`);
+        hasLoadedDashboardRef.current = true;
         setLoadingDashboard(false);
+        setSyncingDashboard(false);
         return;
       }
 
@@ -1007,7 +1039,9 @@ const DashboardPage = ({ data, onNavigate }) => {
         }
       }
 
+      hasLoadedDashboardRef.current = true;
       setLoadingDashboard(false);
+      setSyncingDashboard(false);
     };
 
     loadDashboard();
@@ -1016,6 +1050,14 @@ const DashboardPage = ({ data, onNavigate }) => {
       alive = false;
     };
   }, [data.currentYear, data.projects, refreshKey]);
+
+  React.useEffect(() => {
+    if (!isSupabaseConfigured || autoRefreshPaused) return undefined;
+    const refreshTimer = window.setInterval(() => {
+      setRefreshKey((key) => key + 1);
+    }, 8000);
+    return () => window.clearInterval(refreshTimer);
+  }, [autoRefreshPaused]);
 
   const coverage = students.length
     ? `${Math.round((responses.length / students.length) * 100)}%`
@@ -1032,8 +1074,8 @@ const DashboardPage = ({ data, onNavigate }) => {
             auto team-making preview, saved final teams, and BCC email drafts.
           </p>
           <p className="construction-note">Instructor-only · private student data stays in the live database</p>
-          <button className="btn btn-ghost" onClick={() => setRefreshKey((key) => key + 1)} disabled={loadingDashboard} style={{ marginTop: 12 }}>
-            {loadingDashboard ? "Refreshing..." : "Refresh live data"}
+          <button className="btn btn-ghost" onClick={() => setRefreshKey((key) => key + 1)} disabled={loadingDashboard || syncingDashboard} style={{ marginTop: 12 }}>
+            {loadingDashboard || syncingDashboard ? "Refreshing..." : "Refresh live data"}
           </button>
         </div>
         <Reveal as="dl" className="stats">
@@ -1080,6 +1122,7 @@ const DashboardPage = ({ data, onNavigate }) => {
           teamMemberRows={teamMemberRows}
           setTeamMemberRows={setTeamMemberRows}
           teamRowsError={teamRowsError}
+          onDraftStateChange={setAutoRefreshPaused}
         />
       )}
       {tab === "email" && (
