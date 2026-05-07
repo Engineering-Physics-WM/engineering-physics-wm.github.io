@@ -77,26 +77,60 @@ const AnnouncementPanel = ({ announcements, onNavigate }) => {
 
 const NewsPage = ({ data, currentYear, onNavigate }) => {
   const announcements = sortAnnouncements((data.announcements || []).filter(item => item.cohortYear === currentYear));
+  const shortYear = currentYear.split("-").map(y => `'${y.slice(-2)}`).join("·");
+
   return (
     <div className="page news-page">
       <section className="news-hero">
-        <p className="kicker"><span className="dot">●</span> &nbsp; Cohort updates · {currentYear}</p>
-        <h1>News, files, and weekly notes.</h1>
-        <p>
-          Public announcements for the Engineering Physics cohort. Each item can hold links, PDFs, slides,
-          forms, recordings, and longer context without cluttering the front page.
-        </p>
+        <div>
+          <p className="kicker"><span className="dot">●</span> &nbsp; Cohort updates · {currentYear}</p>
+          <h1>News, files,<br />and weekly notes.</h1>
+          <p>
+            Public announcements for the Engineering Physics cohort. Each item can hold links, PDFs, slides,
+            forms, recordings, and longer context without cluttering the front page.
+          </p>
+        </div>
+        <Reveal as="dl" className="news-hero-stats">
+          <div><dt>Updates</dt><dd>{announcements.length || "—"}</dd></div>
+          <div><dt>Cohort</dt><dd className="pink">{shortYear}</dd></div>
+        </Reveal>
       </section>
 
-      <section className="news-layout">
-        <div className="news-feed">
+      <div className="news-layout">
+        <section className="news-feed" aria-label="All updates">
+          {announcements.length === 0 && (
+            <div className="news-empty">No updates for this cohort yet. Check back soon.</div>
+          )}
           {announcements.map((item, index) => (
             <Reveal as="div" key={item.id} delay={index * 35}>
               <AnnouncementItem item={item} onNavigate={onNavigate} defaultOpen={index === 0} />
             </Reveal>
           ))}
-        </div>
-      </section>
+        </section>
+
+        <aside className="news-side">
+          <h2>{announcements.length} <span className="ital" style={{ color: "var(--pink-ink)", fontWeight: 400 }}>updates</span></h2>
+          <p>Announcements and files for the {currentYear} Engineering Physics cohort.</p>
+          {announcements.length > 0 && (
+            <ul>
+              {announcements.map((item) => (
+                <li key={item.id}>
+                  <span className="news-side-date">{item.label || formatDate(item.date)}</span>
+                  {item.title}
+                </li>
+              ))}
+            </ul>
+          )}
+          <div className="news-side-actions">
+            <button className="btn btn-primary" data-spark style={{ width: "100%" }} onClick={() => onNavigate("ranking")}>
+              Take the poll
+            </button>
+            <button className="btn btn-ghost" style={{ width: "100%" }} onClick={() => onNavigate("catalog")}>
+              Browse projects
+            </button>
+          </div>
+        </aside>
+      </div>
     </div>
   );
 };

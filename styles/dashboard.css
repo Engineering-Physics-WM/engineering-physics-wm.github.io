@@ -54,7 +54,7 @@
   display: grid;
   grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.6fr);
   gap: 32px;
-  padding: 48px 0 32px;
+  padding: 20px 0 32px;
   align-items: end;
 }
 .dashboard-hero h1 {
@@ -98,7 +98,9 @@
 
 /* distribution view */
 .dist-grid {
-  display: grid; gap: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 520px), 1fr));
+  gap: 12px;
 }
 .dist-row {
   display: grid;

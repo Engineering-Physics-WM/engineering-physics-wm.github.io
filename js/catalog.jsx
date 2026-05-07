@@ -248,6 +248,7 @@ const CatalogPage = ({ data, onNavigate }) => {
           </ul>
           <div className="hero-actions">
             <button className="btn btn-primary" data-spark onClick={() => onNavigate("ranking")}>Take the ranking poll</button>
+            <button className="btn btn-ghost" onClick={() => document.getElementById("projects")?.scrollIntoView({ behavior: "smooth" })}>Read all projects</button>
             <button className="btn btn-ghost" onClick={() => document.getElementById("themes")?.scrollIntoView({ behavior: "smooth" })}>See the idea map</button>
           </div>
         </div>

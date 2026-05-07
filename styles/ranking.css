@@ -2,7 +2,7 @@
 .ranking-hero {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  padding: 56px 0 42px;
+  padding: 20px 0 42px;
   align-items: start;
 }
 .ranking-hero h1 {
