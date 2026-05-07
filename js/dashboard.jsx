@@ -782,7 +782,12 @@ const EmailDraftView = ({ data, projects, responses, students, teamMemberRows })
       setStatus("No recipients found for this group yet.");
       return;
     }
-    window.location.href = mailtoUrl;
+    const link = document.createElement("a");
+    link.href = mailtoUrl;
+    link.style.display = "none";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
     setStatus(`Opening your mail composer with ${recipients.length} BCC recipients. Review, choose the W&M account, then send.`);
   };
 
