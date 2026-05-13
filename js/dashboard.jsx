@@ -491,29 +491,91 @@ const HeatmapView = ({ projects, responses }) => {
   const idx = Object.fromEntries(projects.map((p, i) => [p.id, i]));
   // matrix[project][rank] = count
   const matrix = projects.map(() => Array(projects.length).fill(0));
+  const studentsByCell = projects.map(() => projects.map(() => []));
+  const [selectedCell, setSelectedCell] = React.useState(null);
+
   responses.forEach(r => r.ranking.forEach((pid, rank) => {
     const i = idx[pid];
-    if (i !== undefined) matrix[i][rank]++;
+    if (i !== undefined) {
+      matrix[i][rank]++;
+      studentsByCell[i][rank].push({
+        name: r.name,
+        email: r.email,
+        submittedAt: r.submittedAt,
+      });
+    }
   }));
   const max = Math.max(1, ...matrix.flat());
+  const selectedProject = selectedCell ? projects[selectedCell.projectIndex] : null;
+  const selectedStudents = selectedCell
+    ? studentsByCell[selectedCell.projectIndex][selectedCell.rankIndex]
+    : [];
 
   return (
-    <div className="heatmap-wrap">
-      <div className="heatmap" style={{ "--cols": projects.length }}>
-        <div className="h-corner">PROJECT \ RANK</div>
-        {projects.map((_, c) => <div key={c} className="h-label" style={{ textAlign: "center" }}>#{c+1}</div>)}
-        {projects.map((p, r) => (
-          <React.Fragment key={p.id}>
-            <div className="h-row-label" title={p.title}>{p.title.split(":")[0].split("(")[0].slice(0, 32)}</div>
-            {projects.map((_, c) => {
-              const v = matrix[r][c];
-              const t = v / max;
-              const bg = `color-mix(in oklch, var(--pink) ${Math.round(t * 70)}%, var(--paper-3))`;
-              return <div key={c} className="h-cell" data-v={v} style={{ background: bg, color: t > 0.5 ? "white" : "var(--ink-soft)" }} title={`${p.title} → rank #${c+1}: ${v}`}>{v || ""}</div>;
-            })}
-          </React.Fragment>
-        ))}
+    <div className="heatmap-layout">
+      <div className="heatmap-wrap">
+        <div className="heatmap" style={{ "--cols": projects.length }}>
+          <div className="h-corner">PROJECT \ RANK</div>
+          {projects.map((_, c) => <div key={c} className="h-label" style={{ textAlign: "center" }}>#{c+1}</div>)}
+          {projects.map((p, r) => (
+            <React.Fragment key={p.id}>
+              <div className="h-row-label" title={p.title}>{p.title.split(":")[0].split("(")[0].slice(0, 32)}</div>
+              {projects.map((_, c) => {
+                const v = matrix[r][c];
+                const t = v / max;
+                const bg = `color-mix(in oklch, var(--pink) ${Math.round(t * 70)}%, var(--paper-3))`;
+                const isSelected = selectedCell?.projectIndex === r && selectedCell?.rankIndex === c;
+                return (
+                  <button
+                    key={c}
+                    className={"h-cell" + (isSelected ? " is-selected" : "")}
+                    data-v={v}
+                    type="button"
+                    style={{ background: bg, color: t > 0.5 ? "white" : "var(--ink-soft)" }}
+                    title={`${p.title} -> rank #${c + 1}: ${v}`}
+                    aria-pressed={isSelected}
+                    aria-label={`${v} student${v === 1 ? "" : "s"} ranked ${p.title} number ${c + 1}`}
+                    onClick={() => setSelectedCell(isSelected ? null : { projectIndex: r, rankIndex: c })}
+                  >
+                    {v || ""}
+                  </button>
+                );
+              })}
+            </React.Fragment>
+          ))}
+        </div>
       </div>
+
+      <aside className="heatmap-detail" aria-live="polite">
+        {selectedCell ? (
+          <>
+            <div className="heatmap-detail-head">
+              <div>
+                <p className="field-label">Selected square</p>
+                <h3>Rank #{selectedCell.rankIndex + 1}</h3>
+              </div>
+              <button className="ann-btn" onClick={() => setSelectedCell(null)}>Clear</button>
+            </div>
+            <p className="heatmap-project-title">{selectedProject?.title}</p>
+            <div className="heatmap-student-list">
+              {selectedStudents.length > 0 ? selectedStudents.map((student) => (
+                <div key={student.email} className="heatmap-student-card">
+                  <strong>{student.name || student.email}</strong>
+                  <span className="mono">{student.email}</span>
+                </div>
+              )) : (
+                <div className="recipient-empty">No students selected this project at rank #{selectedCell.rankIndex + 1}.</div>
+              )}
+            </div>
+          </>
+        ) : (
+          <div className="heatmap-detail-empty">
+            <p className="field-label">Cell details</p>
+            <h3>Click a square</h3>
+            <p>Student names and emails for that project/rank combination will appear here.</p>
+          </div>
+        )}
+      </aside>
     </div>
   );
 };

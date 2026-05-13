@@ -164,6 +164,12 @@
 .dist-legend .sw { width: 12px; height: 12px; border-radius: 3px; }
 
 /* heatmap view */
+.heatmap-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+  gap: 16px;
+  align-items: start;
+}
 .heatmap-wrap { padding: 20px; background: white; border: 1px solid var(--hairline); border-radius: var(--radius-lg); overflow-x: auto; }
 .heatmap {
   display: grid;
@@ -187,13 +193,96 @@
   display: grid; place-items: center;
   background: var(--paper-3);
   color: var(--ink);
+  border: 0;
   border-radius: 2px;
-  cursor: default;
+  cursor: pointer;
   position: relative;
   transition: transform 160ms;
+  font: inherit;
+  padding: 0;
 }
-.heatmap .h-cell:hover { transform: scale(1.15); z-index: 2; }
+.heatmap .h-cell:hover,
+.heatmap .h-cell:focus-visible {
+  transform: scale(1.15);
+  z-index: 2;
+  outline: 2px solid var(--ink);
+  outline-offset: 1px;
+}
+.heatmap .h-cell.is-selected {
+  box-shadow: inset 0 0 0 2px var(--ink), 0 0 0 2px white;
+  z-index: 1;
+}
 .heatmap .h-cell[data-v="0"] { background: var(--paper-3); color: transparent; }
+.heatmap-detail {
+  position: sticky;
+  top: 96px;
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  background: white;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-lg);
+}
+.heatmap-detail-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.heatmap-detail h3,
+.heatmap-detail-empty h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 24px;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+.heatmap-project-title {
+  margin: 0;
+  padding-top: 10px;
+  border-top: 1px dashed var(--hairline);
+  color: var(--ink-soft);
+  font-size: 13px;
+  line-height: 1.4;
+}
+.heatmap-student-list {
+  display: grid;
+  gap: 6px;
+}
+.heatmap-student-card {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+  padding: 10px;
+  background: var(--paper-3);
+  border-radius: var(--radius);
+  font-size: 12px;
+}
+.heatmap-student-card strong,
+.heatmap-student-card .mono {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.heatmap-student-card strong {
+  font-family: var(--font-display);
+  font-weight: 500;
+  color: var(--ink);
+}
+.heatmap-student-card .mono {
+  color: var(--muted);
+  font-size: 10.5px;
+}
+.heatmap-detail-empty {
+  display: grid;
+  gap: 8px;
+}
+.heatmap-detail-empty p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.45;
+}
 
 /* students view */
 .student-response-view {
@@ -637,6 +726,8 @@
 @media (max-width: 860px) {
   .dashboard-hero { grid-template-columns: 1fr; }
   .dashboard-hero .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .heatmap-layout { grid-template-columns: 1fr; }
+  .heatmap-detail { position: static; }
   .email-draft-grid { grid-template-columns: 1fr; }
   .recipient-panel { position: static; }
 }
