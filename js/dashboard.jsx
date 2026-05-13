@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { Reveal } from "./motion.jsx";
-import { buildTeams, rankSatisfaction } from "./teamMatching.js";
+import { DEFAULT_MATCHING_MODE, MATCHING_MODE_OPTIONS, buildTeams, rankSatisfaction } from "./teamMatching.js";
 import { PersonLink, YangLink } from "./links.jsx";
 import { sortAnnouncements } from "./news.jsx";
 import { isSupabaseConfigured, supabase } from "./supabaseClient.js";
@@ -210,6 +210,11 @@ const responseSignature = (responses) => (
     .map((response) => `${normalizeEmail(response.email)}:${(response.ranking || []).join(">")}`)
     .sort()
     .join("|")
+);
+
+const matchingOptionFor = (mode) => (
+  MATCHING_MODE_OPTIONS.find((option) => option.id === mode) ||
+  MATCHING_MODE_OPTIONS.find((option) => option.id === DEFAULT_MATCHING_MODE)
 );
 
 const peopleFromTeamRows = (rows, projectId, memberType) => uniqueRecipients(
@@ -592,6 +597,7 @@ const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows,
   const [teams, setTeams] = React.useState(null);
   const [draggedStudent, setDraggedStudent] = React.useState(null);
   const [dropTarget, setDropTarget] = React.useState(null);
+  const [matchingMode, setMatchingMode] = React.useState(DEFAULT_MATCHING_MODE);
   const [teamSource, setTeamSource] = React.useState("auto");
   const [showSavedRoster, setShowSavedRoster] = React.useState(false);
   const [dirty, setDirty] = React.useState(false);
@@ -615,7 +621,7 @@ const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows,
   }, [dirty, saving, onDraftStateChange]);
 
   React.useEffect(() => {
-    const autoResult = buildTeams({ projects, responses, students, seed });
+    const autoResult = buildTeams({ projects, responses, students, seed, mode: matchingMode });
     const savedStudentRows = (teamMemberRows || []).filter((row) => row.member_type === "student");
 
     if (savedStudentRows.length && showSavedRoster) {
@@ -629,14 +635,24 @@ const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows,
     setTeams(autoResult);
     setTeamSource("auto");
     setDirty(false);
-  }, [projects, responses, students, seed, teamMemberRows, showSavedRoster]);
+  }, [projects, responses, students, seed, teamMemberRows, showSavedRoster, matchingMode]);
 
   if (!teams) return null;
 
+  const matchingOption = matchingOptionFor(matchingMode);
+  const missLabel = teams.topChoiceWindow === 1 ? "Missed top choice" : `Moved below top-${teams.topChoiceWindow}`;
   const sizeErrors = activeTeamSizeErrors(teams.teams, teams.minTeamSize, teams.maxTeamSize);
   const activeStudentCount = Object.values(teams.teams).reduce((total, roster) => total + roster.length, 0);
   const canSave = activeStudentCount > 0 && !saving && sizeErrors.length === 0 && (dirty || teamSource !== "saved");
   const hasSavedRoster = (teamMemberRows || []).some((row) => row.member_type === "student");
+
+  const selectMatchingMode = (nextMode) => {
+    if (nextMode === matchingMode || saving) return;
+    const nextOption = matchingOptionFor(nextMode);
+    setMatchingMode(nextMode);
+    setShowSavedRoster(false);
+    setSaveStatus(`Showing ${nextOption.label} auto preview.`);
+  };
 
   const moveStudent = (email, fromProjectId, toProjectId) => {
     if (fromProjectId === toProjectId) return;
@@ -727,13 +743,32 @@ const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows,
           <span className="field-label">Team size</span>
           <div className="mono" style={{ fontSize: 13 }}>2–3 students</div>
         </div>
+        <div className="field matching-field">
+          <span className="field-label">Matching logic</span>
+          <div className="matching-segments" role="radiogroup" aria-label="Matching logic">
+            {MATCHING_MODE_OPTIONS.map((option) => (
+              <button
+                key={option.id}
+                type="button"
+                role="radio"
+                aria-checked={matchingMode === option.id}
+                className={"matching-segment" + (matchingMode === option.id ? " is-active" : "")}
+                onClick={() => selectMatchingMode(option.id)}
+                disabled={saving}
+                data-spark
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </div>
         <div className="field">
-          <span className="field-label">Preference window</span>
-          <div className="mono" style={{ fontSize: 13 }}>Top 3 priority + full ranking</div>
+          <span className="field-label">Preference rule</span>
+          <div className="mono" style={{ fontSize: 13 }}>{matchingOption.description}</div>
         </div>
         <div className="field">
           <span className="field-label">Source</span>
-          <div className="mono" style={{ fontSize: 13 }}>{teamSource === "saved" ? "Saved final roster" : teamSource === "manual" ? "Manual draft" : "Auto preview"}</div>
+          <div className="mono" style={{ fontSize: 13 }}>{teamSource === "saved" ? "Saved final roster" : teamSource === "manual" ? "Manual draft" : `${matchingOption.label} auto preview`}</div>
         </div>
         {hasSavedRoster && (
           <button
@@ -762,7 +797,7 @@ const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows,
             <div className="big">{teams.satisfaction}%</div>
           </div>
           <div>
-            <div style={{ fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase" }}>Moved below top-3</div>
+            <div style={{ fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase" }}>{missLabel}</div>
             <div className="big" style={{ color: teams.unhappyCount > 4 ? "var(--pink-ink)" : "var(--olive-ink)" }}>{teams.unhappyCount}</div>
           </div>
           <div>

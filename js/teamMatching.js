@@ -2,6 +2,26 @@ const TEAM_MIN = 2;
 const TEAM_MAX = 3;
 const TOP_CHOICE_WINDOW = 3;
 const SECONDARY_CHOICE_WINDOW = 5;
+const DEFAULT_MATCHING_MODE = "top3";
+const MATCHING_MODE_OPTIONS = [
+  {
+    id: "top3",
+    label: "Top 3 balance",
+    description: "Prioritize top 3 choices, then full ranking",
+    topChoiceWindow: TOP_CHOICE_WINDOW,
+  },
+  {
+    id: "top1",
+    label: "Top 1 first",
+    description: "Prioritize first choices, then ranking order",
+    topChoiceWindow: 1,
+  },
+];
+
+const matchingModeConfig = (mode) => (
+  MATCHING_MODE_OPTIONS.find((option) => option.id === mode) ||
+  MATCHING_MODE_OPTIONS.find((option) => option.id === DEFAULT_MATCHING_MODE)
+);
 
 const normalizeEmail = (email) => (email || "").trim().toLowerCase();
 
@@ -36,12 +56,22 @@ const prefRankFor = (response, projectId, projectCount) => {
   return rank >= 0 ? rank : projectCount;
 };
 
-const preferenceUtility = (rank, projectCount) => {
+const preferenceUtility = (rank, projectCount, mode = DEFAULT_MATCHING_MODE) => {
   const normalizedRank = rank >= 0 ? rank : projectCount;
+  const fullRanking = Math.max(0, projectCount - normalizedRank);
+
+  if (matchingModeConfig(mode).id === "top1") {
+    const first = normalizedRank === 0 ? 1 : 0;
+    return (
+      first * 10_000_000 +
+      fullRanking * 1_000 -
+      normalizedRank
+    );
+  }
+
   const top3 = normalizedRank < TOP_CHOICE_WINDOW ? 1 : 0;
   const first = normalizedRank === 0 ? 1 : 0;
   const top5 = normalizedRank < SECONDARY_CHOICE_WINDOW ? 1 : 0;
-  const fullRanking = Math.max(0, projectCount - normalizedRank);
 
   return (
     top3 * 1_000_000 +
@@ -85,25 +115,31 @@ const subsetsOfProjectIds = (projectIds, count, lockedProjectIds) => {
 const buildDemandMap = (projectIds, responses) => {
   const top3Demand = Object.fromEntries(projectIds.map((id) => [id, 0]));
   const top1Demand = Object.fromEntries(projectIds.map((id) => [id, 0]));
+  const rankedDemand = Object.fromEntries(projectIds.map((id) => [id, 0]));
 
   responses.forEach((response) => {
+    response.ranking.forEach((projectId, rank) => {
+      if (projectId in rankedDemand) rankedDemand[projectId] += Math.max(0, projectIds.length - rank);
+    });
     response.ranking.slice(0, TOP_CHOICE_WINDOW).forEach((projectId, index) => {
       if (projectId in top3Demand) top3Demand[projectId]++;
       if (index === 0 && projectId in top1Demand) top1Demand[projectId]++;
     });
   });
 
-  return { top3Demand, top1Demand };
+  return { top3Demand, top1Demand, rankedDemand };
 };
 
-const activeSetDemandScore = (activeSet, { top3Demand, top1Demand }, projectIds) => (
-  [...activeSet].reduce((total, id) => (
+const activeSetDemandScore = (activeSet, { top3Demand, top1Demand, rankedDemand }, projectIds, mode = DEFAULT_MATCHING_MODE) => {
+  const isTop1Mode = matchingModeConfig(mode).id === "top1";
+  return [...activeSet].reduce((total, id) => (
     total +
-    (top3Demand[id] || 0) * 1000 +
-    (top1Demand[id] || 0) * 50 -
+    (isTop1Mode
+      ? (top1Demand[id] || 0) * 10_000 + (rankedDemand[id] || 0) * 10
+      : (top3Demand[id] || 0) * 1000 + (top1Demand[id] || 0) * 50) -
     projectIds.indexOf(id)
-  ), 0)
-);
+  ), 0);
+};
 
 const addFlowEdge = (graph, from, to, cap, cost) => {
   const forward = { to, rev: graph[to].length, cap, cost, originalCap: cap };
@@ -119,28 +155,25 @@ const minCostMaxFlow = (graph, source, sink, targetFlow) => {
 
   while (flow < targetFlow) {
     const dist = Array(graph.length).fill(Infinity);
-    const inQueue = Array(graph.length).fill(false);
     const parentNode = Array(graph.length).fill(-1);
     const parentEdge = Array(graph.length).fill(-1);
-    const queue = [source];
     dist[source] = 0;
-    inQueue[source] = true;
 
-    for (let head = 0; head < queue.length; head++) {
-      const node = queue[head];
-      inQueue[node] = false;
-      graph[node].forEach((edge, edgeIndex) => {
-        if (edge.cap <= 0) return;
-        const nextDist = dist[node] + edge.cost;
-        if (nextDist >= dist[edge.to]) return;
-        dist[edge.to] = nextDist;
-        parentNode[edge.to] = node;
-        parentEdge[edge.to] = edgeIndex;
-        if (!inQueue[edge.to]) {
-          queue.push(edge.to);
-          inQueue[edge.to] = true;
-        }
+    for (let pass = 0; pass < graph.length - 1; pass++) {
+      let changed = false;
+      graph.forEach((edges, node) => {
+        if (!Number.isFinite(dist[node])) return;
+        edges.forEach((edge, edgeIndex) => {
+          if (edge.cap <= 0) return;
+          const nextDist = dist[node] + edge.cost;
+          if (nextDist >= dist[edge.to] - 1e-9) return;
+          dist[edge.to] = nextDist;
+          parentNode[edge.to] = node;
+          parentEdge[edge.to] = edgeIndex;
+          changed = true;
+        });
       });
+      if (!changed) break;
     }
 
     if (parentNode[sink] === -1) break;
@@ -167,6 +200,7 @@ const optimizeForActiveSet = ({
   lockedRosters,
   projectCount,
   seed,
+  mode,
 }) => {
   const seatPlan = [];
   const projectNeeds = activeProjectIds.map((projectId) => {
@@ -206,7 +240,7 @@ const optimizeForActiveSet = ({
   candidates.forEach((response, studentIndex) => {
     seatPlan.forEach((seat, seatIndex) => {
       const rank = prefRankFor(response, seat.projectId, projectCount);
-      const utility = preferenceUtility(rank, projectCount) +
+      const utility = preferenceUtility(rank, projectCount, mode) +
         (seat.required ? requiredSeatBonus : 0) -
         tieScore(`${response.email}:${seat.projectId}:${seatIndex}`, seed) / 1_000_000_000;
       const edge = addFlowEdge(
@@ -241,12 +275,13 @@ const optimizeForActiveSet = ({
 
   if (seatPlan.some((seat, index) => seat.required && !filledRequiredSeats.has(index))) return null;
 
-  return { teams, score: -result.cost };
+  return { teams, score: -result.cost - filledRequiredSeats.size * requiredSeatBonus };
 };
 
-const summarizeTeams = ({ projects, responses, teams, assigned, warnings }) => {
+const summarizeTeams = ({ projects, responses, teams, assigned, warnings, mode = DEFAULT_MATCHING_MODE }) => {
   const projectIds = projects.map((project) => project.id);
   const projectCount = projects.length;
+  const modeConfig = matchingModeConfig(mode);
   const satisfactionScores = responses.map((response) => {
     const result = assigned[response.email];
     return result ? rankSatisfaction(result.prefRank, projectCount) : 0;
@@ -263,17 +298,20 @@ const summarizeTeams = ({ projects, responses, teams, assigned, warnings }) => {
     teams,
     assigned,
     satisfaction: Math.round(avg * 100),
-    unhappyCount: responses.filter((response) => assigned[response.email]?.prefRank >= TOP_CHOICE_WINDOW).length,
+    unhappyCount: responses.filter((response) => assigned[response.email]?.prefRank >= modeConfig.topChoiceWindow).length,
     activeProjectIds: activeTeamIds,
     inactiveProjectIds: projectIds.filter((id) => (teams[id] || []).length === 0),
     warnings: [...warnings, ...sizeWarnings],
     minTeamSize: TEAM_MIN,
     maxTeamSize: TEAM_MAX,
-    topChoiceWindow: TOP_CHOICE_WINDOW,
+    topChoiceWindow: modeConfig.topChoiceWindow,
+    matchingMode: modeConfig.id,
+    matchingLabel: modeConfig.label,
   };
 };
 
-export const buildTeams = ({ projects, responses, students = [], seed = 0 }) => {
+export const buildTeams = ({ projects, responses, students = [], seed = 0, mode = DEFAULT_MATCHING_MODE }) => {
+  const modeConfig = matchingModeConfig(mode);
   const projectIds = projects.map((project) => project.id);
   const emptyTeams = Object.fromEntries(projects.map((project) => [project.id, []]));
   const assigned = {};
@@ -318,43 +356,45 @@ export const buildTeams = ({ projects, responses, students = [], seed = 0 }) => 
   });
 
   if (!responses.length) {
-    return summarizeTeams({ projects, responses, teams: emptyTeams, assigned, warnings });
+    return summarizeTeams({ projects, responses, teams: emptyTeams, assigned, warnings, mode: modeConfig.id });
   }
 
-  const { top3Demand, top1Demand } = buildDemandMap(projectIds, responses);
+  const demand = buildDemandMap(projectIds, responses);
+  const stopAfterFirstViableTeamCount = modeConfig.id === DEFAULT_MATCHING_MODE;
   let best = null;
 
   for (const targetActiveCount of activeProjectCountCandidates(projectIds.length, responses.length, lockedProjectIds.size)) {
     const activeSets = subsetsOfProjectIds(projectIds, targetActiveCount, lockedProjectIds)
       .sort((a, b) => (
-        activeSetDemandScore(b, { top3Demand, top1Demand }, projectIds) -
-        activeSetDemandScore(a, { top3Demand, top1Demand }, projectIds)
+        activeSetDemandScore(b, demand, projectIds, modeConfig.id) -
+        activeSetDemandScore(a, demand, projectIds, modeConfig.id)
       ));
 
     activeSets.forEach((activeSet) => {
       const activeProjectIds = projectIds.filter((id) => activeSet.has(id));
       const lockedScore = activeProjectIds.flatMap((id) => lockedRosters[id] || [])
-        .reduce((total, student) => total + preferenceUtility(student.prefRank, projectCount), 0);
+        .reduce((total, student) => total + preferenceUtility(student.prefRank, projectCount, modeConfig.id), 0);
       const result = optimizeForActiveSet({
         activeProjectIds,
         candidates,
         lockedRosters,
         projectCount,
         seed,
+        mode: modeConfig.id,
       });
 
       if (!result) return;
-      const demandScore = activeSetDemandScore(activeSet, { top3Demand, top1Demand }, projectIds);
+      const demandScore = activeSetDemandScore(activeSet, demand, projectIds, modeConfig.id);
       const totalScore = result.score + lockedScore + demandScore / 1_000_000;
       if (!best || totalScore > best.totalScore) best = { ...result, activeProjectIds, totalScore };
     });
 
-    if (best) break;
+    if (best && stopAfterFirstViableTeamCount) break;
   }
 
   if (!best) {
     warnings.push({ type: "optimizer-unassigned", size: candidates.length });
-    return summarizeTeams({ projects, responses, teams: emptyTeams, assigned, warnings });
+    return summarizeTeams({ projects, responses, teams: emptyTeams, assigned, warnings, mode: modeConfig.id });
   }
 
   const teams = Object.fromEntries(projects.map((project) => [project.id, best.teams[project.id] || []]));
@@ -368,7 +408,7 @@ export const buildTeams = ({ projects, responses, students = [], seed = 0 }) => 
     });
   });
 
-  return summarizeTeams({ projects, responses, teams, assigned, warnings });
+  return summarizeTeams({ projects, responses, teams, assigned, warnings, mode: modeConfig.id });
 };
 
-export { rankSatisfaction, TEAM_MAX, TEAM_MIN, TOP_CHOICE_WINDOW };
+export { rankSatisfaction, TEAM_MAX, TEAM_MIN, TOP_CHOICE_WINDOW, DEFAULT_MATCHING_MODE, MATCHING_MODE_OPTIONS };

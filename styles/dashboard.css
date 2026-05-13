@@ -443,6 +443,37 @@
   margin-bottom: 20px;
 }
 .teams-controls .field { min-width: 0; }
+.teams-controls .matching-field {
+  min-width: 230px;
+}
+.matching-segments {
+  display: inline-flex;
+  gap: 3px;
+  padding: 3px;
+  background: var(--paper-3);
+  border-radius: 999px;
+}
+.matching-segment {
+  border: 0;
+  border-radius: 999px;
+  padding: 6px 10px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.matching-segment:hover,
+.matching-segment.is-active {
+  background: white;
+  color: var(--ink);
+  box-shadow: var(--shadow-1);
+}
+.matching-segment:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
 .teams-controls .satisfaction {
   margin-left: auto;
   display: flex; gap: 12px; align-items: center;
