@@ -321,9 +321,18 @@ const DistributionView = ({ projects, responses }) => {
               </div>
               <div className="dist-bar" title={`${row.title} ranking distribution`}>
                 {row.ranks.map((c, r) => {
-                  if (c === 0) return null;
                   const cls = r < 5 ? `r${r+1}` : "rN";
-                  return <span key={r} className={"dist-seg " + cls} style={{ flex: c }}>{c}</span>;
+                  return (
+                    <span
+                      key={r}
+                      className={"dist-seg " + cls}
+                      data-count={c}
+                      style={{ flexGrow: c + 1 }}
+                      title={`Rank #${r + 1}: ${c}`}
+                    >
+                      {c}
+                    </span>
+                  );
                 })}
               </div>
             </Reveal>

@@ -132,9 +132,14 @@
   display: grid; place-items: center;
   font-family: var(--font-mono); font-size: 9px; color: white;
   transition: filter 200ms;
-  min-width: 1px;
+  min-width: 18px;
+  flex-basis: 0;
 }
 .dist-seg:hover { filter: brightness(1.1); }
+.dist-seg[data-count="0"] {
+  color: color-mix(in oklch, var(--muted) 72%, white);
+  opacity: 0.72;
+}
 .dist-seg.r1 { background: oklch(46% 0.075 18); }
 .dist-seg.r2 { background: oklch(56% 0.065 25); }
 .dist-seg.r3 { background: oklch(64% 0.05 40); }
