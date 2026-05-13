@@ -61,13 +61,40 @@ const modelName = (provider: string) => (
 );
 
 const maxOutputTokens = () => {
-  const raw = Number(Deno.env.get("AI_EMAIL_MAX_OUTPUT_TOKENS") || 1200);
-  return Number.isFinite(raw) ? Math.max(300, Math.min(2000, raw)) : 1200;
+  const raw = Number(Deno.env.get("AI_EMAIL_MAX_OUTPUT_TOKENS") || 2400);
+  return Number.isFinite(raw) ? Math.max(500, Math.min(4096, raw)) : 2400;
 };
 
 const normalizeDraft = (value: unknown) => (
   typeof value === "string" ? value.trim() : ""
 );
+
+const decodeLooseJsonString = (value: string) => {
+  const normalized = value
+    .replace(/\r?\n/g, "\\n")
+    .replace(/\t/g, "\\t");
+  try {
+    return JSON.parse(`"${normalized}"`);
+  } catch {
+    return value
+      .replace(/\\n/g, "\n")
+      .replace(/\\t/g, "\t")
+      .replace(/\\"/g, "\"")
+      .trim();
+  }
+};
+
+const parseLooseRewriteJson = (text: string): RewriteResult | null => {
+  const jsonText = text.match(/\{[\s\S]*\}/)?.[0] || text;
+  const subjectMatch = jsonText.match(/"subject"\s*:\s*"([\s\S]*?)"\s*,\s*"body"\s*:/);
+  const bodyMatch = jsonText.match(/"body"\s*:\s*"([\s\S]*)"\s*\}$/);
+  if (!subjectMatch || !bodyMatch) return null;
+
+  const subject = normalizeDraft(decodeLooseJsonString(subjectMatch[1]));
+  const body = normalizeDraft(decodeLooseJsonString(bodyMatch[1]));
+  if (!subject || !body) return null;
+  return { subject, body };
+};
 
 const parseRewriteJson = (text: string): RewriteResult => {
   const withoutFence = text
@@ -76,7 +103,14 @@ const parseRewriteJson = (text: string): RewriteResult => {
     .replace(/```$/i, "")
     .trim();
   const jsonText = withoutFence.match(/\{[\s\S]*\}/)?.[0] || withoutFence;
-  const parsed = JSON.parse(jsonText);
+  let parsed: any;
+  try {
+    parsed = JSON.parse(jsonText);
+  } catch {
+    const loose = parseLooseRewriteJson(jsonText);
+    if (loose) return loose;
+    throw new Error("AI returned malformed JSON. Please try Rewrite with AI again.");
+  }
   const subject = normalizeDraft(parsed.subject);
   const body = normalizeDraft(parsed.body);
   if (!subject || !body) throw new Error("AI response did not include a subject and body.");
@@ -179,8 +213,17 @@ const rewriteWithGemini = async (prompt: string, model: string) => {
         contents: [{ role: "user", parts: [{ text: prompt }] }],
         generationConfig: {
           maxOutputTokens: maxOutputTokens(),
-          temperature: 0.35,
+          temperature: 0.2,
           responseMimeType: "application/json",
+          responseSchema: {
+            type: "OBJECT",
+            properties: {
+              subject: { type: "STRING" },
+              body: { type: "STRING" },
+            },
+            required: ["subject", "body"],
+            propertyOrdering: ["subject", "body"],
+          },
         },
       }),
     }
