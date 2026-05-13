@@ -48,3 +48,11 @@ The instructor dashboard (protected by Supabase auth) includes:
 Push to `main` to trigger the Vite build workflow and deploy to GitHub Pages. The workflow reads `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` from repository variables.
 
 Pages should be configured to deploy from **GitHub Actions** in the repository settings.
+
+The dashboard email rewrite helper runs as the Supabase Edge Function `rewrite-email`. For Gemini, set these Supabase secrets:
+
+```sh
+supabase secrets set AI_EMAIL_PROVIDER=gemini GEMINI_API_KEY=...
+```
+
+Optional: set `AI_EMAIL_MODEL` to override the default `gemini-2.5-flash`.

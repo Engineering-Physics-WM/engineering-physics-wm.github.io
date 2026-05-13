@@ -75,6 +75,17 @@ const dashboardReadError = (label, error) => (
   `${label} could not load: ${error?.message || "unknown live data error"}`
 );
 
+const functionErrorMessage = async (error, fallback) => {
+  const response = error?.context;
+  if (response && typeof response.json === "function") {
+    try {
+      const payload = await response.json();
+      if (payload?.error) return payload.error;
+    } catch {}
+  }
+  return error?.message || fallback;
+};
+
 const mentorsForProject = (project) => {
   if (!project) return [];
   return uniqueRecipients([
@@ -931,7 +942,7 @@ const EmailDraftView = ({ data, projects, responses, students, teamMemberRows, o
     setRewriting(false);
 
     if (error || rewrittenDraft?.error) {
-      setStatus(rewrittenDraft?.error || error?.message || "AI rewrite failed.");
+      setStatus(rewrittenDraft?.error || await functionErrorMessage(error, "AI rewrite failed."));
       return;
     }
     if (!rewrittenDraft?.subject || !rewrittenDraft?.body) {

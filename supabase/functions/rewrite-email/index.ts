@@ -48,9 +48,9 @@ const cleanModelName = (model: string) => model.replace(/^models\//, "");
 const providerName = () => {
   const configured = Deno.env.get("AI_EMAIL_PROVIDER")?.trim().toLowerCase();
   if (configured) return configured === "claude" ? "anthropic" : configured;
-  if (Deno.env.get("OPENAI_API_KEY")) return "openai";
-  if (Deno.env.get("ANTHROPIC_API_KEY")) return "anthropic";
   if (Deno.env.get("GEMINI_API_KEY")) return "gemini";
+  if (Deno.env.get("ANTHROPIC_API_KEY")) return "anthropic";
+  if (Deno.env.get("OPENAI_API_KEY")) return "openai";
   throw new Error("Set AI_EMAIL_PROVIDER and the matching provider API key.");
 };
 
