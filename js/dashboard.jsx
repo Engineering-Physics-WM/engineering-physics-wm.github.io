@@ -327,9 +327,26 @@ const DistributionView = ({ projects, responses }) => {
   );
 };
 
-const StudentsView = ({ projects, responses }) => {
+const StudentsView = ({ currentYear, projects, responses, students }) => {
   const map = Object.fromEntries(projects.map(p => [p.id, p]));
   const [expanded, setExpanded] = React.useState(new Set());
+  const [reminderStatus, setReminderStatus] = React.useState("");
+  const responseEmails = React.useMemo(
+    () => new Set(responses.map((response) => normalizeEmail(response.email))),
+    [responses]
+  );
+  const missingStudents = React.useMemo(
+    () => students.filter((student) => student.email && !responseEmails.has(normalizeEmail(student.email))),
+    [responseEmails, students]
+  );
+  const missingRecipients = React.useMemo(
+    () => uniqueRecipients(missingStudents.map((student) => ({
+      name: student.name,
+      email: student.email,
+      role: student.honorsProject ? "honors student" : "student",
+    }))),
+    [missingStudents]
+  );
 
   const toggle = (email) => setExpanded(prev => {
     const next = new Set(prev);
@@ -337,50 +354,124 @@ const StudentsView = ({ projects, responses }) => {
     return next;
   });
 
-  if (!responses.length) {
-    return <div className="recipient-empty">No submitted rankings yet. This tab will fill as students complete the poll.</div>;
-  }
+  const copyMissingEmails = async () => {
+    if (!missingRecipients.length) return;
+    try {
+      await navigator.clipboard.writeText(missingRecipients.map((person) => person.email).join(", "));
+      setReminderStatus(`Copied ${missingRecipients.length} email${missingRecipients.length === 1 ? "" : "s"}.`);
+    } catch {
+      setReminderStatus("Copy failed. Select the emails manually.");
+    }
+  };
+
+  const openMissingReminder = () => {
+    if (!missingRecipients.length) return;
+    const url = buildMailtoUrl({
+      recipients: missingRecipients,
+      subject: `[EP ${currentYear}] Ranking poll reminder`,
+      body: "Hello,\n\nA quick reminder to submit your Engineering Physics project ranking poll response when you have a moment.\n\nBest,\nRan",
+    });
+    const link = document.createElement("a");
+    link.href = url;
+    link.style.display = "none";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setReminderStatus(`Opening a reminder draft for ${missingRecipients.length} student${missingRecipients.length === 1 ? "" : "s"}.`);
+  };
 
   return (
-    <div className="students-grid">
-      <div className="student-row head">
-        <div>Student</div>
-        <div>Top picks</div>
-        <div>Notes</div>
-      </div>
-      {responses.map((r, i) => {
-        const isExpanded = expanded.has(r.email);
-        const visible = isExpanded ? r.ranking : r.ranking.slice(0, 4);
-        return (
-          <Reveal as="div" key={r.email} className="student-row" delay={i * 20}>
+    <div className="student-response-view">
+      {students.length > 0 ? (
+        <section className={"response-roster-card" + (missingStudents.length === 0 ? " is-complete" : "")}>
+          <div className="response-roster-head">
             <div>
-              <div className="name">{r.name}</div>
-              <div className="email">{r.email}</div>
+              <p className="field-label">Poll roster</p>
+              <h3>{missingStudents.length ? `${missingStudents.length} awaiting response` : "All students responded"}</h3>
             </div>
-            <div className="pref-list">
-              {visible.map((pid, idx) => {
-                const p = map[pid];
-                return p ? (
-                  <span key={pid} className={"pref-chip" + (idx >= 4 ? " pref-chip-lower" : "")}>
-                    <span className="n">#{idx + 1}</span>{" "}
-                    {p.title.split(":")[0].split("(")[0].slice(0, 28)}{p.title.length > 28 ? "…" : ""}
-                  </span>
-                ) : null;
-              })}
-              {r.ranking.length > 4 && (
-                <button
-                  className={"pref-expand" + (isExpanded ? " is-open" : "")}
-                  onClick={() => toggle(r.email)}
-                  title={isExpanded ? "Show fewer" : "Show full ranking"}
-                >
-                  {isExpanded ? "−" : `+${r.ranking.length - 4}`}
+            <div className="response-roster-metrics">
+              <span><strong>{responses.length}</strong> answered</span>
+              <span><strong>{students.length}</strong> expected</span>
+            </div>
+          </div>
+
+          {missingStudents.length > 0 ? (
+            <>
+              <div className="missing-actions">
+                <button className="btn btn-ghost" onClick={copyMissingEmails} data-spark>
+                  Copy emails
                 </button>
-              )}
-            </div>
-            <div style={{ fontSize: 12, color: "var(--muted)", maxWidth: 220, textAlign: "right" }}>{r.notes || "—"}</div>
-          </Reveal>
-        );
-      })}
+                <button className="btn btn-primary" onClick={openMissingReminder} data-spark>
+                  Open reminder
+                </button>
+                {reminderStatus && <span className="response-action-status">{reminderStatus}</span>}
+              </div>
+              <div className="missing-student-list">
+                {missingStudents.map((student, i) => (
+                  <Reveal as="div" key={student.email} className="missing-student-card" delay={i * 20}>
+                    <strong>{student.name || student.email}</strong>
+                    <span className="mono">{student.email}</span>
+                    {student.honorsProject && (
+                      <em>Honors · P{String(student.honorsProject.number).padStart(2, "0")}</em>
+                    )}
+                  </Reveal>
+                ))}
+              </div>
+            </>
+          ) : (
+            <div className="recipient-empty">Every allowed student has a saved ranking.</div>
+          )}
+        </section>
+      ) : (
+        <div className="team-save-status">
+          The private student allowlist is not loaded, so missing-response tracking is unavailable.
+        </div>
+      )}
+
+      {!responses.length ? (
+        <div className="recipient-empty">No submitted rankings yet. This tab will fill as students complete the poll.</div>
+      ) : (
+        <div className="students-grid">
+          <div className="student-row head">
+            <div>Student</div>
+            <div>Top picks</div>
+            <div>Notes</div>
+          </div>
+          {responses.map((r, i) => {
+            const isExpanded = expanded.has(r.email);
+            const visible = isExpanded ? r.ranking : r.ranking.slice(0, 4);
+            return (
+              <Reveal as="div" key={r.email} className="student-row" delay={i * 20}>
+                <div>
+                  <div className="name">{r.name}</div>
+                  <div className="email">{r.email}</div>
+                </div>
+                <div className="pref-list">
+                  {visible.map((pid, idx) => {
+                    const p = map[pid];
+                    return p ? (
+                      <span key={pid} className={"pref-chip" + (idx >= 4 ? " pref-chip-lower" : "")}>
+                        <span className="n">#{idx + 1}</span>{" "}
+                        {p.title.split(":")[0].split("(")[0].slice(0, 28)}{p.title.length > 28 ? "…" : ""}
+                      </span>
+                    ) : null;
+                  })}
+                  {r.ranking.length > 4 && (
+                    <button
+                      className={"pref-expand" + (isExpanded ? " is-open" : "")}
+                      onClick={() => toggle(r.email)}
+                      title={isExpanded ? "Show fewer" : "Show full ranking"}
+                    >
+                      {isExpanded ? "−" : `+${r.ranking.length - 4}`}
+                    </button>
+                  )}
+                </div>
+                <div style={{ fontSize: 12, color: "var(--muted)", maxWidth: 220, textAlign: "right" }}>{r.notes || "—"}</div>
+              </Reveal>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };
@@ -674,15 +765,26 @@ const EmailDraftView = ({ data, projects, responses, students, teamMemberRows, o
     () => sortAnnouncements((data.announcements || []).filter(item => item.cohortYear === data.currentYear)),
     [data.announcements, data.currentYear]
   );
-  const audienceOptions = data.announcementAudiences || [
-    { id: "all", label: "All students + mentors" },
-    { id: "students", label: "All students" },
-    { id: "honors_students", label: "Honors students" },
-    { id: "mentors", label: "All mentors" },
-    { id: "team", label: "Selected team: students + mentors" },
-    { id: "team_students", label: "Selected team students" },
-    { id: "team_mentors", label: "Selected team mentors" },
-  ];
+  const audienceOptions = React.useMemo(() => {
+    const baseOptions = data.announcementAudiences || [
+      { id: "all", label: "All students + mentors" },
+      { id: "students", label: "All students" },
+      { id: "honors_students", label: "Honors students" },
+      { id: "mentors", label: "All mentors" },
+      { id: "team", label: "Selected team: students + mentors" },
+      { id: "team_students", label: "Selected team students" },
+      { id: "team_mentors", label: "Selected team mentors" },
+    ];
+    if (baseOptions.some((option) => option.id === "missing_students")) return baseOptions;
+
+    const options = [...baseOptions];
+    const studentsIndex = options.findIndex((option) => option.id === "students");
+    options.splice(studentsIndex >= 0 ? studentsIndex + 1 : options.length, 0, {
+      id: "missing_students",
+      label: "Students missing poll response",
+    });
+    return options;
+  }, [data.announcementAudiences]);
   const defaultSource = announcements[0]?.id || CUSTOM_DRAFT_ID;
   const initialDraft = draftFromAnnouncement(announcements[0], data.currentYear);
 
@@ -709,6 +811,10 @@ const EmailDraftView = ({ data, projects, responses, students, teamMemberRows, o
     [responses]
   );
   const emailStudents = students.length ? students : fallbackStudentRecipients;
+  const responseEmailSet = React.useMemo(
+    () => new Set(responses.map((response) => normalizeEmail(response.email))),
+    [responses]
+  );
 
   const project = projects.find((p) => p.id === projectId);
   const audienceLabel = audienceOptions.find((option) => option.id === audience)?.label || "Selected group";
@@ -719,6 +825,9 @@ const EmailDraftView = ({ data, projects, responses, students, teamMemberRows, o
     const studentRecipients = emailStudents.map((student) => ({ name: student.name, email: student.email, role: "student" }));
     const honorsRecipients = emailStudents
       .filter((student) => student.honorsProject)
+      .map((student) => ({ name: student.name, email: student.email, role: "student" }));
+    const missingStudentRecipients = students
+      .filter((student) => student.email && !responseEmailSet.has(normalizeEmail(student.email)))
       .map((student) => ({ name: student.name, email: student.email, role: "student" }));
     const mentorRecipients = projects.flatMap(mentorsForProject);
     const teamStudents = hasSavedTeams
@@ -733,13 +842,14 @@ const EmailDraftView = ({ data, projects, responses, students, teamMemberRows, o
       : mentorsForProject(project);
 
     if (audience === "students") return uniqueRecipients(studentRecipients);
+    if (audience === "missing_students") return uniqueRecipients(missingStudentRecipients);
     if (audience === "honors_students") return uniqueRecipients(honorsRecipients);
     if (audience === "mentors") return uniqueRecipients(mentorRecipients);
     if (audience === "team_students") return uniqueRecipients(teamStudents);
     if (audience === "team_mentors") return uniqueRecipients(teamMentors);
     if (audience === "team") return uniqueRecipients([...teamStudents, ...teamMentors]);
     return uniqueRecipients([...studentRecipients, ...mentorRecipients]);
-  }, [audience, emailStudents, hasSavedTeams, project, projectId, projects, teamMemberRows, teams]);
+  }, [audience, emailStudents, hasSavedTeams, project, projectId, projects, responseEmailSet, students, teamMemberRows, teams]);
 
   const studentRecipients = recipients.filter((person) => person.role === "student");
   const mentorRecipients = recipients.filter((person) => person.role === "mentor");
@@ -1509,6 +1619,7 @@ const DashboardPage = ({ data, onNavigate, onAnnouncementsChange }) => {
         </div>
         <Reveal as="dl" className="stats">
           <div><dt>Responses</dt><dd>{loadingDashboard ? "…" : responses.length}</dd></div>
+          <div><dt>Awaiting</dt><dd>{loadingDashboard ? "…" : students.length ? Math.max(students.length - responses.length, 0) : "—"}</dd></div>
           <div><dt>Projects</dt><dd>{data.projects.length}</dd></div>
           <div><dt>Coverage</dt><dd><span className="pink">{loadingDashboard ? "…" : coverage}</span></dd></div>
         </Reveal>
@@ -1542,7 +1653,14 @@ const DashboardPage = ({ data, onNavigate, onAnnouncementsChange }) => {
 
       {tab === "distribution" && <DistributionView projects={data.projects} responses={responses} />}
       {tab === "heatmap" && <HeatmapView projects={data.projects} responses={responses} />}
-      {tab === "students" && <StudentsView projects={data.projects} responses={responses} />}
+      {tab === "students" && (
+        <StudentsView
+          currentYear={data.currentYear}
+          projects={data.projects}
+          responses={responses}
+          students={students}
+        />
+      )}
       {tab === "teams" && (
         <TeamsView
           currentYear={data.currentYear}
