@@ -319,11 +319,11 @@ const DistributionView = ({ projects, responses }) => {
                 <div className="dist-title" title={row.title}>{row.title}</div>
                 <div className="dist-advisor"><PersonLink name={row.advisor}>{row.advisor}</PersonLink></div>
               </div>
-              <div className="dist-bar" title={`Top-3 picks: ${top3}`}>
+              <div className="dist-bar" title={`${row.title} ranking distribution`}>
                 {row.ranks.map((c, r) => {
                   if (c === 0) return null;
                   const cls = r < 5 ? `r${r+1}` : "rN";
-                  return <span key={r} className={"dist-seg " + cls} style={{ flex: c }}>{c > 1 ? c : ""}</span>;
+                  return <span key={r} className={"dist-seg " + cls} style={{ flex: c }}>{c}</span>;
                 })}
               </div>
             </Reveal>
