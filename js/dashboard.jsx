@@ -312,11 +312,6 @@ const DistributionView = ({ projects, responses }) => {
       </div>
       <div className="dist-grid">
         {dist.map((row, i) => {
-          const top3 = row.ranks.slice(0, 3).reduce((a, b) => a + b, 0);
-          const cap = 6;
-          let flag = "balanced", flagText = "BALANCED";
-          if (top3 > cap) { flag = "over"; flagText = "OVER"; }
-          else if (top3 < 2) { flag = "under"; flagText = "UNDER"; }
           return (
             <Reveal as="div" key={row.id} className="dist-row" delay={i * 30}>
               <span className="dist-num">{String(row.num).padStart(2, "0")}</span>
@@ -330,10 +325,6 @@ const DistributionView = ({ projects, responses }) => {
                   const cls = r < 5 ? `r${r+1}` : "rN";
                   return <span key={r} className={"dist-seg " + cls} style={{ flex: c }}>{c > 1 ? c : ""}</span>;
                 })}
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
-                <span className="dist-total mono">{top3} top-3</span>
-                <span className={"dist-flag " + flag}>{flagText}</span>
               </div>
             </Reveal>
           );

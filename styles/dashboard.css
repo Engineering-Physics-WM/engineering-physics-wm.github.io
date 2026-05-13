@@ -104,7 +104,7 @@
 }
 .dist-row {
   display: grid;
-  grid-template-columns: 32px minmax(0, 1.6fr) minmax(0, 2fr) auto;
+  grid-template-columns: 32px minmax(0, 1.6fr) minmax(0, 2.2fr);
   gap: 18px; align-items: center;
   padding: 14px 18px;
   background: white;
@@ -141,18 +141,6 @@
 .dist-seg.r4 { background: oklch(72% 0.04 60); }
 .dist-seg.r5 { background: oklch(78% 0.03 80); }
 .dist-seg.rN { background: oklch(82% 0.02 100); color: var(--muted); }
-
-.dist-row .dist-total {
-  font-family: var(--font-mono); font-size: 11px; color: var(--ink); white-space: nowrap;
-}
-.dist-row .dist-flag {
-  display: inline-block; padding: 3px 7px; border-radius: 999px;
-  font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-.dist-flag.over   { background: var(--pink-soft); color: var(--pink-ink); }
-.dist-flag.balanced { background: var(--olive-soft); color: var(--olive-ink); }
-.dist-flag.under  { background: var(--paper-3); color: var(--muted); }
 
 .dist-legend {
   display: flex; gap: 12px; flex-wrap: wrap;
