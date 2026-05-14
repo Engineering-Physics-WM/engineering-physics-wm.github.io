@@ -6,6 +6,8 @@ import { isSupabaseConfigured, supabase } from "./supabaseClient.js";
 import { PersonLink, YangLink } from "./links.jsx";
 
 const WM_EMAIL_RE = /^[^@\s]+@wm\.edu$/i;
+const POLL_CLOSED = true;
+const POLL_CLOSED_MESSAGE = "The ranking poll closed on Wednesday, May 13 at 4:00 PM.";
 const normalizeStudentEmail = (value) => (
   value.replace(/[\u200B-\u200D\uFEFF]/g, "").trim().toLowerCase()
 );
@@ -218,6 +220,10 @@ const RankingPage = ({ data, onNavigate }) => {
   };
 
   const submit = async () => {
+    if (POLL_CLOSED) {
+      setStatus(POLL_CLOSED_MESSAGE);
+      return;
+    }
     if (!name.trim() || !email.trim()) {
       setStatus("Add your name and W&M email before submitting.");
       return;
@@ -346,7 +352,7 @@ const RankingPage = ({ data, onNavigate }) => {
           <p className="kicker"><span className="dot">●</span> &nbsp; Step into your capstone year</p>
           <h1>Rank the projects that <span className="ital">pull&nbsp;you&nbsp;in.</span></h1>
           <p>Drag the slate into your preferred order. Top three carry the most weight, and the full ranking helps when teams need balancing.</p>
-          <p className="construction-note">{isSupabaseConfigured ? "Student polling live · one saved response per W&M email" : "Student polling mockup · under construction · submissions stay local for now"}</p>
+          <p className="construction-note">{POLL_CLOSED ? POLL_CLOSED_MESSAGE : isSupabaseConfigured ? "Student polling live · one saved response per W&M email" : "Student polling mockup · under construction · submissions stay local for now"}</p>
         </div>
       </section>
 
@@ -376,10 +382,10 @@ const RankingPage = ({ data, onNavigate }) => {
             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="username@wm.edu" autoComplete="email" />
           </label>
           <PrivacyNotice />
-          <p className="status-line">{status}</p>
+          <p className="status-line">{POLL_CLOSED ? POLL_CLOSED_MESSAGE : status}</p>
           <div className="button-row">
-            <button className="btn btn-primary" data-spark onClick={submit} disabled={submitting}>
-              {submitting ? "Submitting…" : "Submit ranking"}
+            <button className="btn btn-primary" data-spark onClick={submit} disabled={POLL_CLOSED || submitting}>
+              {POLL_CLOSED ? "Poll closed" : submitting ? "Submitting…" : "Submit ranking"}
             </button>
             <button className="btn btn-ghost" onClick={reset}>Reset order</button>
           </div>
