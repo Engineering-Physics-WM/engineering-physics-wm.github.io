@@ -598,6 +598,8 @@ const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows,
   const [draggedStudent, setDraggedStudent] = React.useState(null);
   const [dropTarget, setDropTarget] = React.useState(null);
   const [matchingMode, setMatchingMode] = React.useState(DEFAULT_MATCHING_MODE);
+  const [activeMatchingMode, setActiveMatchingMode] = React.useState(DEFAULT_MATCHING_MODE);
+  const [computingTeams, setComputingTeams] = React.useState(false);
   const [teamSource, setTeamSource] = React.useState("auto");
   const [showSavedRoster, setShowSavedRoster] = React.useState(false);
   const [dirty, setDirty] = React.useState(false);
@@ -621,7 +623,16 @@ const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows,
   }, [dirty, saving, onDraftStateChange]);
 
   React.useEffect(() => {
-    const autoResult = buildTeams({ projects, responses, students, seed, mode: matchingMode });
+    if (matchingMode === activeMatchingMode) return undefined;
+    setComputingTeams(true);
+    const timer = window.setTimeout(() => {
+      setActiveMatchingMode(matchingMode);
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [activeMatchingMode, matchingMode]);
+
+  React.useEffect(() => {
+    const autoResult = buildTeams({ projects, responses, students, seed, mode: activeMatchingMode });
     const savedStudentRows = (teamMemberRows || []).filter((row) => row.member_type === "student");
 
     if (savedStudentRows.length && showSavedRoster) {
@@ -629,13 +640,15 @@ const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows,
       setTeams(withTeamSummary({ ...autoResult, teams: savedTeams }, projects, responses));
       setTeamSource("saved");
       setDirty(false);
+      setComputingTeams(false);
       return;
     }
 
     setTeams(autoResult);
     setTeamSource("auto");
     setDirty(false);
-  }, [projects, responses, students, seed, teamMemberRows, showSavedRoster, matchingMode]);
+    setComputingTeams(false);
+  }, [projects, responses, students, seed, teamMemberRows, showSavedRoster, activeMatchingMode]);
 
   if (!teams) return null;
 
@@ -647,8 +660,9 @@ const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows,
   const hasSavedRoster = (teamMemberRows || []).some((row) => row.member_type === "student");
 
   const selectMatchingMode = (nextMode) => {
-    if (nextMode === matchingMode || saving) return;
+    if (nextMode === matchingMode || saving || computingTeams) return;
     const nextOption = matchingOptionFor(nextMode);
+    setComputingTeams(true);
     setMatchingMode(nextMode);
     setShowSavedRoster(false);
     setSaveStatus(`Showing ${nextOption.label} auto preview.`);
@@ -754,7 +768,7 @@ const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows,
                 aria-checked={matchingMode === option.id}
                 className={"matching-segment" + (matchingMode === option.id ? " is-active" : "")}
                 onClick={() => selectMatchingMode(option.id)}
-                disabled={saving}
+                disabled={saving || computingTeams}
                 data-spark
               >
                 {option.label}
@@ -768,7 +782,7 @@ const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows,
         </div>
         <div className="field">
           <span className="field-label">Source</span>
-          <div className="mono" style={{ fontSize: 13 }}>{teamSource === "saved" ? "Saved final roster" : teamSource === "manual" ? "Manual draft" : `${matchingOption.label} auto preview`}</div>
+          <div className="mono" style={{ fontSize: 13 }}>{computingTeams ? "Computing preview..." : teamSource === "saved" ? "Saved final roster" : teamSource === "manual" ? "Manual draft" : `${matchingOption.label} auto preview`}</div>
         </div>
         {hasSavedRoster && (
           <button
@@ -785,10 +799,10 @@ const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows,
             {showSavedRoster ? "Use live auto preview" : "View saved roster"}
           </button>
         )}
-        <button className="btn btn-ghost" onClick={() => { setSaveStatus(""); setSeed(s => s + 1); }} disabled={teamSource === "saved" || saving} data-spark>
+        <button className="btn btn-ghost" onClick={() => { setSaveStatus(""); setSeed(s => s + 1); }} disabled={teamSource === "saved" || saving || computingTeams} data-spark>
           {teamSource === "saved" ? "Roster locked" : "Re-roll"}
         </button>
-        <button className="btn btn-primary" onClick={saveFinalTeams} disabled={!canSave} data-spark>
+        <button className="btn btn-primary" onClick={saveFinalTeams} disabled={!canSave || computingTeams} data-spark>
           {saving ? "Saving..." : dirty || teamSource !== "saved" ? "Save final teams" : "Saved"}
         </button>
         <div className="satisfaction">
