@@ -141,6 +141,22 @@ const activeSetDemandScore = (activeSet, { top3Demand, top1Demand, rankedDemand 
   ), 0);
 };
 
+const top1ActiveSetCandidates = (projectIds, count, lockedProjectIds, demand) => {
+  if (count < lockedProjectIds.size || count > projectIds.length) return [];
+  const locked = new Set(lockedProjectIds);
+  const need = count - locked.size;
+  const flexible = projectIds
+    .filter((id) => !locked.has(id))
+    .sort((a, b) => (
+      (demand.top1Demand[b] || 0) - (demand.top1Demand[a] || 0) ||
+      (demand.rankedDemand[b] || 0) - (demand.rankedDemand[a] || 0) ||
+      projectIds.indexOf(a) - projectIds.indexOf(b)
+    ));
+
+  if (need < 0 || need > flexible.length) return [];
+  return [new Set([...locked, ...flexible.slice(0, need)])];
+};
+
 const addFlowEdge = (graph, from, to, cap, cost) => {
   const forward = { to, rev: graph[to].length, cap, cost, originalCap: cap };
   const reverse = { to: from, rev: graph[from].length, cap: 0, cost: -cost, originalCap: 0 };
@@ -179,10 +195,12 @@ const minCostMaxFlow = (graph, source, sink, targetFlow) => {
     if (parentNode[sink] === -1) break;
 
     let add = targetFlow - flow;
-    for (let node = sink; node !== source; node = parentNode[node]) {
+    for (let node = sink, steps = 0; node !== source; node = parentNode[node], steps++) {
+      if (node < 0 || steps > graph.length) return { flow, cost, failed: true };
       add = Math.min(add, graph[parentNode[node]][parentEdge[node]].cap);
     }
-    for (let node = sink; node !== source; node = parentNode[node]) {
+    for (let node = sink, steps = 0; node !== source; node = parentNode[node], steps++) {
+      if (node < 0 || steps > graph.length) return { flow, cost, failed: true };
       const edge = graph[parentNode[node]][parentEdge[node]];
       edge.cap -= add;
       graph[edge.to][edge.rev].cap += add;
@@ -255,7 +273,7 @@ const optimizeForActiveSet = ({
   });
 
   const result = minCostMaxFlow(graph, source, sink, candidates.length);
-  if (result.flow !== candidates.length) return null;
+  if (result.failed || result.flow !== candidates.length) return null;
 
   const teams = Object.fromEntries(activeProjectIds.map((projectId) => [projectId, [...(lockedRosters[projectId] || [])]]));
   const filledRequiredSeats = new Set();
@@ -364,7 +382,9 @@ export const buildTeams = ({ projects, responses, students = [], seed = 0, mode 
   let best = null;
 
   for (const targetActiveCount of activeProjectCountCandidates(projectIds.length, responses.length, lockedProjectIds.size)) {
-    const activeSets = subsetsOfProjectIds(projectIds, targetActiveCount, lockedProjectIds)
+    const activeSets = (modeConfig.id === "top1"
+      ? top1ActiveSetCandidates(projectIds, targetActiveCount, lockedProjectIds, demand)
+      : subsetsOfProjectIds(projectIds, targetActiveCount, lockedProjectIds))
       .sort((a, b) => (
         activeSetDemandScore(b, demand, projectIds, modeConfig.id) -
         activeSetDemandScore(a, demand, projectIds, modeConfig.id)
