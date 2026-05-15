@@ -217,6 +217,140 @@ const matchingOptionFor = (mode) => (
   MATCHING_MODE_OPTIONS.find((option) => option.id === DEFAULT_MATCHING_MODE)
 );
 
+const shortProjectTitle = (project) => (
+  project?.title?.split(":")[0]?.split("(")[0]?.trim() || "Untitled project"
+);
+
+const preferenceText = (prefRank) => (
+  Number.isFinite(prefRank) && prefRank >= 0 ? `#${prefRank + 1}` : "unranked"
+);
+
+const assignmentStatsFor = (result, responseCount) => {
+  const assignments = Object.values(result?.assigned || {});
+  const top1 = assignments.filter((item) => item.prefRank === 0).length;
+  const top3 = assignments.filter((item) => item.prefRank >= 0 && item.prefRank < 3).length;
+  const top5 = assignments.filter((item) => item.prefRank >= 0 && item.prefRank < 5).length;
+  const lower = assignments.filter((item) => item.prefRank >= 5).length;
+  const unranked = assignments.filter((item) => !Number.isFinite(item.prefRank) || item.prefRank < 0).length;
+
+  return {
+    assigned: assignments.length,
+    unassigned: Math.max(0, responseCount - assignments.length),
+    top1,
+    top3,
+    top5,
+    lower,
+    unranked,
+  };
+};
+
+const warningLineFor = (warning, projectById) => {
+  if (warning.type === "team-size") {
+    return `${projectNumber(projectById[warning.projectId])} has ${warning.size} student${warning.size === 1 ? "" : "s"}`;
+  }
+  if (warning.type === "honors-over-capacity") {
+    return `${projectNumber(projectById[warning.projectId])} has ${warning.size} honors-locked students, above the team cap`;
+  }
+  if (warning.type === "honors-unassigned") {
+    return `${warning.email} has an honors project that is not in the current catalog`;
+  }
+  if (warning.type === "optimizer-unassigned") {
+    return `${warning.size} student${warning.size === 1 ? "" : "s"} could not be assigned by the optimizer`;
+  }
+  return warning.type || "Matching warning";
+};
+
+const modeExplanationLines = (option, stats, result) => {
+  if (option.id === "top1") {
+    return [
+      "Algorithm: constrained assignment optimizer with first-choice priority.",
+      "Logic: honors defaults stay locked; active projects are chosen by strongest first-choice demand, with total ranked demand as the tie-breaker. The solver then fills legal 2-3 student teams and gives first-choice matches a much larger score than every other ranking detail.",
+      `Why this is the best ${option.label} result: within that first-choice-first scoring system, this is the highest-scoring feasible roster the dashboard found. It puts ${stats.top1}/${stats.assigned} assigned students on their #1 project and ${stats.top3}/${stats.assigned} in their top 3, while leaving ${result.inactiveProjectIds.length} lower-demand project${result.inactiveProjectIds.length === 1 ? "" : "s"} inactive instead of filling them with lukewarm matches.`,
+    ];
+  }
+
+  return [
+    "Algorithm: constrained assignment optimizer with top-3/project-balance priority.",
+    "Logic: honors defaults stay locked; the dashboard starts with the largest viable number of active projects that can each support 2-3 students, evaluates project sets at that size, and then assigns students by strongly rewarding top-3 placements, with first choice, top 5, and full rank order used as tie-breakers.",
+    `Why this is the best ${option.label} result: within that balance-first scoring system, this is the highest-scoring feasible roster the dashboard found at the largest viable project count. It keeps ${result.activeProjectIds.length} project${result.activeProjectIds.length === 1 ? "" : "s"} active and places ${stats.top3}/${stats.assigned} assigned students in their top 3.`,
+  ];
+};
+
+const buildMethodText = ({ option, result, projects, projectById, responseCount }) => {
+  const stats = assignmentStatsFor(result, responseCount);
+  const inactive = (result.inactiveProjectIds || []).map((projectId) => projectNumber(projectById[projectId])).join(", ") || "none";
+  const warnings = (result.warnings || []).map((warning) => warningLineFor(warning, projectById));
+  const teams = [...projects]
+    .sort((a, b) => a.num - b.num)
+    .filter((project) => (result.teams[project.id] || []).length > 0)
+    .flatMap((project) => {
+      const roster = [...(result.teams[project.id] || [])].sort((a, b) => (
+        (a.prefRank ?? 999) - (b.prefRank ?? 999) ||
+        (a.name || a.email || "").localeCompare(b.name || b.email || "")
+      ));
+      return [
+        `${projectNumber(project)} - ${shortProjectTitle(project)} (${project.advisor})`,
+        ...roster.map((student) => {
+          const notes = [
+            preferenceText(student.prefRank),
+            student.honorsProject ? "Honors locked" : "",
+          ].filter(Boolean).join(", ");
+          return `  - ${student.name || student.email} (${notes})`;
+        }),
+      ];
+    });
+
+  return [
+    `${option.label.toUpperCase()}`,
+    "",
+    `Summary: ${result.satisfaction}% cohort satisfaction; ${stats.assigned}/${responseCount} students assigned; ${stats.top1} first-choice; ${stats.top3} top-3; ${stats.top5} top-5; ${stats.lower} ranked #6 or lower; ${stats.unranked} unranked; ${result.activeProjectIds.length} active projects; inactive projects: ${inactive}.`,
+    "",
+    ...modeExplanationLines(option, stats, result),
+    "",
+    "Teams:",
+    ...(teams.length ? teams : ["No teams generated yet."]),
+    ...(warnings.length ? ["", "Warnings:", ...warnings.map((line) => `- ${line}`)] : []),
+  ].join("\n");
+};
+
+const buildMatchingDiscussionText = ({ currentYear, projects, responses, resultsByMode }) => {
+  const projectById = Object.fromEntries(projects.map((project) => [project.id, project]));
+  const generatedAt = new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(new Date());
+  const modeTexts = MATCHING_MODE_OPTIONS
+    .map((option) => resultsByMode[option.id] ? buildMethodText({
+      option,
+      result: resultsByMode[option.id],
+      projects,
+      projectById,
+      responseCount: responses.length,
+    }) : "")
+    .filter(Boolean);
+
+  return [
+    `Engineering Physics Capstone Auto-Matching Results (${currentYear})`,
+    `Generated from ${responses.length} submitted ranking${responses.length === 1 ? "" : "s"} on ${generatedAt}.`,
+    "",
+    "Shared constraints for both methods:",
+    "- Active teams must have 2-3 students.",
+    "- Honors students are locked to their approved Honors project when that project is in the catalog.",
+    "- The optimizer fills required seats first, then optional third seats, and only compares rosters that satisfy those constraints.",
+    "- Inactive projects are allowed when the ranking data does not support a strong 2-student team.",
+    "",
+    ...modeTexts.flatMap((text, index) => (
+      index === 0 ? [text] : ["", "------------------------------------------------------------", "", text]
+    )),
+    "",
+    "Discussion note:",
+    "I prefer the Top 1 first method because it optimizes for genuine student excitement. In this context, I would rather have more students placed on projects they are truly happy about than open extra projects by assigning students to lower-ranked options they feel lukewarm about.",
+  ].join("\n");
+};
+
 const peopleFromTeamRows = (rows, projectId, memberType) => uniqueRecipients(
   rows
     .filter((row) => row.project_id === projectId && row.member_type === memberType)
@@ -605,8 +739,21 @@ const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows,
   const [dirty, setDirty] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
   const [saveStatus, setSaveStatus] = React.useState("");
+  const [matchingCopyStatus, setMatchingCopyStatus] = React.useState("");
   const liveResponseSignature = React.useMemo(() => responseSignature(responses), [responses]);
   const previousResponseSignatureRef = React.useRef(null);
+  const autoResultsByMode = React.useMemo(() => (
+    Object.fromEntries(MATCHING_MODE_OPTIONS.map((option) => [
+      option.id,
+      buildTeams({ projects, responses, students, seed, mode: option.id }),
+    ]))
+  ), [projects, responses, students, seed]);
+  const matchingDiscussionText = React.useMemo(() => buildMatchingDiscussionText({
+    currentYear,
+    projects,
+    responses,
+    resultsByMode: autoResultsByMode,
+  }), [autoResultsByMode, currentYear, projects, responses]);
 
   React.useEffect(() => {
     const previousSignature = previousResponseSignatureRef.current;
@@ -750,6 +897,20 @@ const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows,
     setSaveStatus(`Saved ${activeStudentCount} students and ${rows.filter((row) => row.member_type === "mentor" && row.person_email).length} mentors to the live database.`);
   };
 
+  const copyMatchingDiscussion = async () => {
+    if (!responses.length) {
+      setMatchingCopyStatus("No ranking submissions to summarize yet.");
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(matchingDiscussionText);
+      setMatchingCopyStatus("Plain-text matching comparison copied.");
+    } catch {
+      setMatchingCopyStatus("Copy failed. Select the text and copy it manually.");
+    }
+  };
+
   return (
     <div>
       <div className="teams-controls">
@@ -832,6 +993,26 @@ const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows,
           Waiting for submitted rankings before creating the first auto-match preview.
         </div>
       )}
+
+      <section className="matching-export-panel">
+        <div className="matching-export-head">
+          <div>
+            <p className="field-label">Plain-text shareout</p>
+            <h3>Matching comparison</h3>
+          </div>
+          <button className="btn btn-ghost" onClick={copyMatchingDiscussion} disabled={!responses.length} data-spark>
+            Copy both methods
+          </button>
+        </div>
+        <textarea
+          className="matching-export-text"
+          readOnly
+          rows="14"
+          value={matchingDiscussionText}
+          aria-label="Email-friendly matching comparison"
+        />
+        {matchingCopyStatus && <p className="matching-export-status">{matchingCopyStatus}</p>}
+      </section>
 
       <div className="teams-grid">
         {[...projects].sort((a, b) => a.num - b.num).map((p) => {
