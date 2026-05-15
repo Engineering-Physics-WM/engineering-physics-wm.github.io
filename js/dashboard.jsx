@@ -994,26 +994,6 @@ const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows,
         </div>
       )}
 
-      <section className="matching-export-panel">
-        <div className="matching-export-head">
-          <div>
-            <p className="field-label">Plain-text shareout</p>
-            <h3>Matching comparison</h3>
-          </div>
-          <button className="btn btn-ghost" onClick={copyMatchingDiscussion} disabled={!responses.length} data-spark>
-            Copy both methods
-          </button>
-        </div>
-        <textarea
-          className="matching-export-text"
-          readOnly
-          rows="14"
-          value={matchingDiscussionText}
-          aria-label="Email-friendly matching comparison"
-        />
-        {matchingCopyStatus && <p className="matching-export-status">{matchingCopyStatus}</p>}
-      </section>
-
       <div className="teams-grid">
         {[...projects].sort((a, b) => a.num - b.num).map((p) => {
           const roster = teams.teams[p.id] || [];
@@ -1059,6 +1039,26 @@ const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows,
           );
         })}
       </div>
+
+      <section className="matching-export-panel">
+        <div className="matching-export-head">
+          <div>
+            <p className="field-label">Plain-text shareout</p>
+            <h3>Matching comparison</h3>
+          </div>
+          <button className="btn btn-ghost" onClick={copyMatchingDiscussion} disabled={!responses.length} data-spark>
+            Copy both methods
+          </button>
+        </div>
+        <textarea
+          className="matching-export-text"
+          readOnly
+          rows="14"
+          value={matchingDiscussionText}
+          aria-label="Email-friendly matching comparison"
+        />
+        {matchingCopyStatus && <p className="matching-export-status">{matchingCopyStatus}</p>}
+      </section>
     </div>
   );
 };
