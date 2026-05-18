@@ -10,17 +10,17 @@ import { RankingPage } from "./ranking.jsx";
 import { ArchivePage, DashboardPage } from "./dashboard.jsx";
 import { AuthGate } from "./auth.jsx";
 import { YangLink } from "./links.jsx";
-import { NewsPage } from "./news.jsx";
+import { NewsPage, currentCourseAnnouncement } from "./news.jsx";
 import { TweakPanelInline } from "./tweaks.jsx";
 import { loadPublishedAnnouncements } from "./announcements.js";
 
-const Header = ({ page, onNavigate, year, setYear, years }) => {
+const Header = ({ page, onNavigate, year, setYear, years, latestAnnouncement }) => {
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [compactHeader, setCompactHeader] = React.useState(false);
 
   React.useEffect(() => {
     if (!globalThis.matchMedia) return undefined;
-    const media = globalThis.matchMedia("(max-width: 860px)");
+    const media = globalThis.matchMedia("(max-width: 1100px)");
     const syncHeaderMode = () => setCompactHeader(media.matches);
     syncHeaderMode();
     media.addEventListener("change", syncHeaderMode);
@@ -50,9 +50,9 @@ const Header = ({ page, onNavigate, year, setYear, years }) => {
       >
         <Monogram size={36} />
         <div className="brand-stack">
-          <span className="brand-mono">Engineering Physics<em>Capstone</em></span>
+          <span className="brand-mono">Engineering Physics<em>Capstone HQ</em></span>
           <span className="brand-links">
-            <a href="https://www.wm.edu/as/physics/undergrad/major/typical-course-of-study-epad/" target="_blank" rel="noopener" onClick={e => e.stopPropagation()}>Engineering Physics</a>
+            <span>2026-2027 course home</span>
             <span className="brand-sep">·</span>
             <a href="https://www.wm.edu/as/physics/" target="_blank" rel="noopener" onClick={e => e.stopPropagation()}>Physics</a>
             <span className="brand-sep">·</span>
@@ -81,12 +81,14 @@ const Header = ({ page, onNavigate, year, setYear, years }) => {
         </div>
 
         <nav className="site-nav" aria-label="Sections">
-          <button aria-current={page === "catalog"} onClick={() => { onNavigate("catalog"); setMobileOpen(false); }}>Projects</button>
+          <button aria-current={page === "catalog"} onClick={() => { onNavigate("catalog"); setMobileOpen(false); }}>Home</button>
           <button aria-current={page === "news"} onClick={() => { onNavigate("news"); setMobileOpen(false); }}>Updates</button>
+          <button aria-current={page === "ranking"} onClick={() => { onNavigate("ranking"); setMobileOpen(false); }}>Ranking</button>
           <button aria-current={page === "dashboard"} onClick={() => { onNavigate("dashboard"); setMobileOpen(false); }}>Dashboard</button>
           <button aria-current={page === "archive"} onClick={() => { onNavigate("archive"); setMobileOpen(false); }}>Archive</button>
-          <button className="nav-cta" onClick={() => { onNavigate("ranking"); setMobileOpen(false); }} data-spark>
-            Rank projects
+          <button className="nav-cta" onClick={() => { onNavigate("news"); setMobileOpen(false); }} data-spark>
+            <span>{latestAnnouncement?.label || "Latest"}</span>
+            Latest note
           </button>
         </nav>
       </div>
@@ -159,10 +161,28 @@ const App = () => {
     return () => { active = false; };
   }, [announcementRefreshKey]);
 
-  const data = React.useMemo(() => ({
-    ...EP_DATA,
-    announcements: liveAnnouncements?.length ? liveAnnouncements : EP_DATA.announcements,
-  }), [liveAnnouncements]);
+  const data = React.useMemo(() => {
+    if (!liveAnnouncements?.length) return EP_DATA;
+
+    const seededBySlug = new Map(EP_DATA.announcements.map((item) => [item.slug || item.id, item]));
+    const liveSlugs = new Set();
+    const mergedLive = liveAnnouncements.map((item) => {
+      const slug = item.slug || item.id;
+      liveSlugs.add(slug);
+      const seeded = seededBySlug.get(slug);
+      return seeded ? { ...item, ...seeded, live: true } : item;
+    });
+    const seededOnly = EP_DATA.announcements.filter((item) => !liveSlugs.has(item.slug || item.id));
+
+    return {
+      ...EP_DATA,
+      announcements: [...mergedLive, ...seededOnly],
+    };
+  }, [liveAnnouncements]);
+
+  const latestAnnouncement = React.useMemo(() => (
+    currentCourseAnnouncement((data.announcements || []).filter(item => item.cohortYear === data.currentYear))
+  ), [data.announcements, data.currentYear]);
 
   React.useEffect(() => {
     const h = (e) => setSparks(e.detail);
@@ -184,7 +204,14 @@ const App = () => {
       <span className="paper-bg" />
       <span className="grain" />
       <SparkLayer intensity={sparks} />
-      <Header page={page} onNavigate={onNavigate} year={year} setYear={setYear} years={data.years} />
+      <Header
+        page={page}
+        onNavigate={onNavigate}
+        year={year}
+        setYear={setYear}
+        years={data.years}
+        latestAnnouncement={latestAnnouncement}
+      />
       <main key={page + year}>
         {page === "catalog" && <CatalogPage data={data} onNavigate={onNavigate} />}
         {page === "news" && <NewsPage data={data} currentYear={year} onNavigate={onNavigate} />}

@@ -3,7 +3,7 @@
 import * as React from "react";
 import { HeroParticles, Reveal } from "./motion.jsx";
 import { LinkedText, PersonLink, YangLink, isYangName } from "./links.jsx";
-import { AnnouncementPanel } from "./news.jsx";
+import { currentCourseAnnouncement, sortAnnouncements } from "./news.jsx";
 
 const AREA_COLORS = {
   "Instrumentation / sensors": "oklch(72% 0.060 18)",
@@ -18,8 +18,9 @@ const AREA_COLORS = {
 };
 const ALL_AREAS = Object.keys(AREA_COLORS);
 
-const ProjectCard = ({ project, displayIdx, onOpen }) => {
+const ProjectCard = ({ project, displayIdx, onOpen, status = "", statusLabel = "" }) => {
   const railColor = AREA_COLORS[project.areas[0]] || "var(--pink)";
+  const cardClass = "project-card" + (status ? ` is-${status}` : "");
   const openFromKeyboard = (event) => {
     if (event.key !== "Enter" && event.key !== " ") return;
     event.preventDefault();
@@ -28,8 +29,9 @@ const ProjectCard = ({ project, displayIdx, onOpen }) => {
 
   return (
     <article
-      className="project-card"
+      className={cardClass}
       data-spark="card"
+      data-status={status || undefined}
       role="button"
       tabIndex={0}
       onClick={() => onOpen(project)}
@@ -53,6 +55,7 @@ const ProjectCard = ({ project, displayIdx, onOpen }) => {
       <p className="project-card-pitch">{project.pitch}</p>
       <div className="project-card-foot">
         <span className="read">Read brief</span>
+        {statusLabel && <span className="project-status-badge">{statusLabel}</span>}
       </div>
     </article>
   );
@@ -196,6 +199,76 @@ const DirectorQuote = ({ className = "" }) => (
   </blockquote>
 );
 
+const CourseResource = ({ resource, onNavigate }) => {
+  if (resource.page) {
+    return (
+      <button type="button" className="course-now-resource" onClick={() => onNavigate(resource.page)}>
+        <span>{resource.kind}</span>{resource.label}
+      </button>
+    );
+  }
+  return (
+    <a className="course-now-resource" href={resource.url} target="_blank" rel="noopener">
+      <span>{resource.kind}</span>{resource.label}
+    </a>
+  );
+};
+
+const CourseNow = ({ announcement, referenceItems = [], onNavigate }) => {
+  if (!announcement) return null;
+
+  return (
+    <Reveal as="section" className="course-now" aria-label="Latest course update">
+      <div className="course-now-main">
+        <p className="kicker"><span className="dot">●</span> &nbsp; Latest course update</p>
+        <h2>{announcement.title}</h2>
+        <p>{announcement.summary}</p>
+        {referenceItems.length > 0 && (
+          <div className="course-reference">
+            <span className="course-reference-label">Earlier updates</span>
+            <ul>
+              {referenceItems.map((item) => (
+                <li key={item.id}>
+                  <span>{item.label || item.date}</span>
+                  <strong>{item.title}</strong>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+      <div className="course-now-side">
+        <div className="course-now-meta">
+          <span className="mono">{announcement.label || announcement.date}</span>
+          {announcement.audience && <span>{announcement.audience}</span>}
+        </div>
+        {announcement.resources?.length > 0 && (
+          <div className="course-now-resources" aria-label="Update resources">
+            {announcement.resources.map((resource) => (
+              <CourseResource key={resource.label} resource={resource} onNavigate={onNavigate} />
+            ))}
+          </div>
+        )}
+        <button className="btn btn-primary" data-spark onClick={() => onNavigate("news")}>
+          View updates
+        </button>
+      </div>
+    </Reveal>
+  );
+};
+
+const HeroLatest = ({ announcement, onNavigate }) => {
+  if (!announcement) return null;
+
+  return (
+    <button type="button" className="hero-latest" onClick={() => onNavigate("news")} data-spark>
+      <span className="hero-latest-label">Latest update</span>
+      <strong>{announcement.title}</strong>
+      <span className="hero-latest-meta">{announcement.label || announcement.date}</span>
+    </button>
+  );
+};
+
 const CatalogPage = ({ data, onNavigate }) => {
   const [search, setSearch] = React.useState("");
   const [areaFilter, setAreaFilter] = React.useState("");
@@ -207,6 +280,22 @@ const CatalogPage = ({ data, onNavigate }) => {
     () => [...new Set(data.projects.map(p => p.affiliation))].sort(),
     [data.projects]
   );
+  const activeProjectIds = data.cohortStatus?.activeProjectIds || [];
+  const hasProjectStatus = activeProjectIds.length > 0;
+  const activeProjectSet = React.useMemo(() => new Set(activeProjectIds), [activeProjectIds]);
+  const activeProjectCount = hasProjectStatus ? activeProjectSet.size : data.projects.length;
+  const inactiveProjectCount = hasProjectStatus ? Math.max(0, data.projects.length - activeProjectSet.size) : 0;
+  const currentAnnouncements = React.useMemo(() => (
+    sortAnnouncements((data.announcements || []).filter(item => item.cohortYear === data.currentYear))
+  ), [data.announcements, data.currentYear]);
+  const currentUpdate = currentCourseAnnouncement(currentAnnouncements);
+  const referenceUpdates = React.useMemo(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    return [...currentAnnouncements]
+      .filter((item) => item.id !== currentUpdate?.id && item.date && item.date <= today)
+      .sort((a, b) => (b.date || "").localeCompare(a.date || ""))
+      .slice(0, 4);
+  }, [currentAnnouncements, currentUpdate]);
 
   const filtered = React.useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -218,10 +307,14 @@ const CatalogPage = ({ data, onNavigate }) => {
                (!affiliationFilter || p.affiliation === affiliationFilter);
       })
       .sort((a, b) => {
+        if (hasProjectStatus) {
+          const activeDelta = Number(!activeProjectSet.has(a.id)) - Number(!activeProjectSet.has(b.id));
+          if (activeDelta) return activeDelta;
+        }
         if (sort === "advisor") return a.advisor.localeCompare(b.advisor);
         return a.title.localeCompare(b.title);
       });
-  }, [data.projects, search, areaFilter, affiliationFilter, sort]);
+  }, [activeProjectSet, data.projects, hasProjectStatus, search, areaFilter, affiliationFilter, sort]);
 
 
   return (
@@ -229,49 +322,55 @@ const CatalogPage = ({ data, onNavigate }) => {
       <section className="hero" style={{ position: "relative" }}>
         <HeroParticles count={18} intensity={window.__epTweakSparks ?? 1} />
         <div style={{ position: "relative", zIndex: 1 }}>
-          <p className="kicker"><span className="dot">●</span> &nbsp; 2026 — 2027 cohort &nbsp; <span style={{color: "var(--pink-ink)"}}>·</span> &nbsp; William &amp; Mary</p>
+          <p className="kicker"><span className="dot">●</span> &nbsp; 2026 — 2027 cohort &nbsp; <span style={{color: "var(--pink-ink)"}}>·</span> &nbsp; {data.cohortStatus?.label || "William & Mary"}</p>
           <h1>
-            Engineering<br/>
-            <span className="ital">Physics</span><span style={{color:"var(--muted)"}}>,</span> <span className="olv">in&nbsp;practice.</span>
+            Capstone<br/>
+            <span className="ital">course</span><span style={{color:"var(--muted)"}}>,</span> <span className="olv">in&nbsp;motion.</span>
           </h1>
           <p className="hero-sub">
-            A capstone home for nine projects, the students who pick them, and the faculty who advise.
-            Browse the slate, rank your favorites, and watch the cohort take shape.
+            The central home for Engineering Physics teams, project briefs, course updates, mentor context, and the work that carries the cohort from matching to showcase.
           </p>
-          <DirectorQuote className="hero-pull-banner" />
+          <HeroLatest announcement={currentUpdate} onNavigate={onNavigate} />
 
           <ul className="hero-marquee" aria-label="At a glance">
-            <li><span className="hm-num">09</span><span className="hm-lab">projects</span></li>
-            <li><span className="hm-num">14</span><span className="hm-lab">advisors</span></li>
+            <li><span className="hm-num">{String(activeProjectCount).padStart(2, "0")}</span><span className="hm-lab">active teams</span></li>
+            <li><span className="hm-num">{String(inactiveProjectCount).padStart(2, "0")}</span><span className="hm-lab">inactive this year</span></li>
             <li><span className="hm-num">2 – 3</span><span className="hm-lab">per team</span></li>
-            <li><span className="hm-num">1</span><span className="hm-lab">academic year</span></li>
+            <li><span className="hm-num">May</span><span className="hm-lab">showcase target</span></li>
           </ul>
           <div className="hero-actions">
-            <button className="btn btn-primary" data-spark onClick={() => onNavigate("ranking")}>Take the ranking poll</button>
-            <button className="btn btn-ghost" onClick={() => document.getElementById("projects")?.scrollIntoView({ behavior: "smooth" })}>Read all projects</button>
+            <button className="btn btn-primary" data-spark onClick={() => onNavigate("news")}>Open course updates</button>
+            <button className="btn btn-ghost" onClick={() => document.getElementById("projects")?.scrollIntoView({ behavior: "smooth" })}>View team slate</button>
             <button className="btn btn-ghost" onClick={() => document.getElementById("themes")?.scrollIntoView({ behavior: "smooth" })}>See the idea map</button>
           </div>
         </div>
 
         <aside className="hero-aside" style={{ position: "relative", zIndex: 1 }}>
-          <div className="hero-card">
-            <p className="kicker" style={{ marginBottom: 14 }}><span className="dot">●</span> &nbsp; Timeline</p>
-            <AnnouncementPanel
-              announcements={(data.announcements || []).filter(item => item.cohortYear === data.currentYear)}
-              onNavigate={onNavigate}
-            />
+          <div className="hero-card hero-course-card">
+            <p className="kicker" style={{ marginBottom: 14 }}><span className="dot">●</span> &nbsp; Course base</p>
+            <dl className="course-facts">
+              <div><dt>Status</dt><dd>{data.cohortStatus?.label || "Live"}</dd></div>
+              <div><dt>Active teams</dt><dd>{String(activeProjectCount).padStart(2, "0")}</dd></div>
+              <div><dt>Project briefs</dt><dd>{String(data.projects.length).padStart(2, "0")}</dd></div>
+              <div><dt>Updates</dt><dd>{String(currentAnnouncements.length).padStart(2, "0")}</dd></div>
+            </dl>
+            <div className="course-card-actions">
+              <button className="btn btn-primary" data-spark onClick={() => onNavigate("news")}>Latest note</button>
+              <button className="btn btn-ghost" onClick={() => onNavigate("dashboard")}>Dashboard</button>
+            </div>
           </div>
         </aside>
       </section>
 
+      <CourseNow announcement={currentUpdate} referenceItems={referenceUpdates} onNavigate={onNavigate} />
+
       <Reveal as="section" id="projects">
         <div className="section-heading">
           <div>
-            <p className="kicker">Capstone slate · 2026·27</p>
-            <h2>Nine real problems. <span className="ital" style={{color: "var(--pink-ink)"}}>One year</span> to build the answer.</h2>
+            <p className="kicker">Team slate · 2026·27</p>
+            <h2>{activeProjectCount} active teams. <span className="ital" style={{color: "var(--pink-ink)"}}>{inactiveProjectCount} proposals</span> held for another year.</h2>
             <p style={{ maxWidth: 560, color: "var(--ink-soft)", marginTop: 12, fontSize: 15 }}>
-              Each project is sponsored by a faculty advisor and runs the full academic year — from problem framing
-              in the fall to a public showcase in May. Read the briefs, find the one that pulls at you, and rank.
+              The running teams stay visually forward while inactive proposals remain available as a record of the full slate.
             </p>
           </div>
           <p className="meta mono">{String(filtered.length).padStart(2, "0")} / {String(data.projects.length).padStart(2, "0")} shown</p>
@@ -308,9 +407,24 @@ const CatalogPage = ({ data, onNavigate }) => {
         <div className="project-grid">
           {filtered.length === 0 ? (
             <div className="empty">No projects match those filters yet.</div>
-          ) : filtered.map((p, i) => (
-            <ProjectCard key={p.id} project={p} displayIdx={p.num - 1} onOpen={setOpenProject} />
-          ))}
+          ) : filtered.map((p) => {
+            const status = hasProjectStatus ? (activeProjectSet.has(p.id) ? "active" : "inactive") : "";
+            const statusLabel = status === "active"
+              ? data.cohortStatus?.activeLabel || "Active team"
+              : status === "inactive"
+              ? data.cohortStatus?.inactiveLabel || "Inactive this year"
+              : "";
+            return (
+              <ProjectCard
+                key={p.id}
+                project={p}
+                displayIdx={p.num - 1}
+                onOpen={setOpenProject}
+                status={status}
+                statusLabel={statusLabel}
+              />
+            );
+          })}
         </div>
       </Reveal>
 

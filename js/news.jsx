@@ -16,6 +16,18 @@ const sortAnnouncements = (items = []) => [...items].sort((a, b) => {
   return (b.date || "").localeCompare(a.date || "");
 });
 
+const currentCourseAnnouncement = (items = []) => {
+  const today = new Date().toISOString().slice(0, 10);
+  const dated = [...items]
+    .filter((item) => item.date && item.date <= today)
+    .sort((a, b) => (
+      (b.date || "").localeCompare(a.date || "") ||
+      (a.order ?? 999) - (b.order ?? 999)
+    ));
+
+  return dated[0] || sortAnnouncements(items)[0] || null;
+};
+
 const ResourceLink = ({ resource, onNavigate }) => {
   if (resource.page) {
     return (
@@ -135,4 +147,4 @@ const NewsPage = ({ data, currentYear, onNavigate }) => {
   );
 };
 
-export { AnnouncementPanel, NewsPage, sortAnnouncements };
+export { AnnouncementPanel, NewsPage, currentCourseAnnouncement, sortAnnouncements };

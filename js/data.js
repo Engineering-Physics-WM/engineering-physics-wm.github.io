@@ -2,28 +2,27 @@ const announcements2026 = [
   {
     id: "ranking-poll-open",
     cohortYear: "2026-2027",
-    order: 1,
+    order: 5,
     date: "2026-05-05",
-    label: "Now",
-    title: "Take the ranking poll.",
-    summary: "Browse the slate and submit your ordered project preferences.",
+    label: "Reference",
+    title: "Ranking poll archived.",
+    summary: "The project preference poll is closed and kept here as a record of the matching stage.",
     body: [
-      "Use the ranking poll to drag all nine projects into your preferred order. Your top three choices carry the most weight, but the full ranking helps when teams need balancing.",
-      "Honors students can rank freely; the auto-matching preview will simply default them to their already approved Honors projects.",
+      "The ranking poll collected ordered project preferences from the cohort before teams were formed.",
+      "Students can still review the project catalog and course updates on this site.",
     ],
     audience: "All students",
-    pinned: true,
+    pinned: false,
     resources: [
-      { label: "Take the ranking poll", kind: "Site", page: "ranking" },
       { label: "Review project catalog", kind: "Site", page: "catalog" },
     ],
   },
   {
     id: "ranking-close",
     cohortYear: "2026-2027",
-    order: 2,
+    order: 4,
     date: "2026-05-13",
-    label: "Wed · May 13 · 4 PM",
+    label: "Closed · May 13",
     title: "Ranking poll closes.",
     summary: "Students can edit their saved response until 4:00 PM.",
     body: [
@@ -38,23 +37,26 @@ const announcements2026 = [
   {
     id: "team-preview",
     cohortYear: "2026-2027",
-    order: 3,
-    date: "2026-05-15",
-    label: "Fri · May 15",
-    title: "Team assignments emailed.",
-    summary: "Students will receive team assignments and course registration guidance.",
+    order: 1,
+    date: "2026-05-18",
+    label: "Now",
+    title: "Team assignments are next.",
+    summary: "Final teams are ready to announce; students should watch W&M email for assignments and course registration guidance.",
     body: [
-      "We will email students their team assignments on Friday, May 15 after reviewing the matching dashboard.",
-      "Please watch that message, and any follow-up, for course registration information and next steps for your assigned team.",
+      "Team assignments are the current course update after the matching dashboard review.",
+      "Once assignments are sent, this site becomes the course home for registration guidance, meeting notes, mentor communication, and project-specific next steps.",
     ],
     audience: "All students",
-    pinned: false,
-    resources: [],
+    pinned: true,
+    resources: [
+      { label: "Course updates", kind: "Site", page: "news" },
+      { label: "Project slate", kind: "Site", page: "catalog" },
+    ],
   },
   {
     id: "summer-registration",
     cohortYear: "2026-2027",
-    order: 4,
+    order: 2,
     date: "2026-06-01",
     label: "Summer 2026",
     title: "Watch for registration reminders.",
@@ -70,7 +72,7 @@ const announcements2026 = [
   {
     id: "first-cohort-meeting",
     cohortYear: "2026-2027",
-    order: 5,
+    order: 3,
     date: "2026-08-24",
     label: "Late August",
     title: "First cohort meeting.",
@@ -92,6 +94,20 @@ const EP_DATA = {
     { id: "2027-2028", label: "27·28", status: "future" },
   ],
   currentYear: "2026-2027",
+
+  cohortStatus: {
+    label: "Teams set",
+    activeLabel: "Active team",
+    inactiveLabel: "Inactive this year",
+    activeProjectIds: [
+      "animal-crossing",
+      "photosensor-readout",
+      "irays-pupillometry",
+      "audimo",
+      "smr-heat-load",
+      "quantum-forge",
+    ],
+  },
 
   projects: [
     {
@@ -227,7 +243,7 @@ const EP_DATA = {
 
   archive: [
     { year: "2025-2026", title: "Previous cohort", projects: 8, teams: 3, students: 8, summary: "Archive details for this cohort are being organized and will be expanded as records are cleaned up.", status: "past" },
-    { year: "2026-2027", title: "Current cohort — you are here", projects: 9, teams: null, students: 18, summary: "Ranking poll + first auto team-making preview running this year. Quantum Forge industry track joins the slate.", status: "current" },
+    { year: "2026-2027", title: "Current cohort — you are here", projects: 9, teams: 6, students: 18, summary: "Teams are formed for the current course year. Quantum Forge industry track joins the slate.", status: "current" },
     { year: "2027-2028", title: "Reserved", projects: null, teams: null, students: null, summary: "Placeholder for next year. Ranking and team data will land here once the cohort starts.", status: "future" },
   ],
 };
