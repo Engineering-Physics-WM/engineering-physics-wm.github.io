@@ -192,7 +192,7 @@ const DirectorQuote = ({ className = "" }) => (
       <div className="hf-avatar" aria-hidden="true">RY</div>
       <div>
         <div className="hf-name"><YangLink>Prof. Ran Yang</YangLink></div>
-        <div className="hf-role">Capstone director · Engineering Physics</div>
+        <div className="hf-role">Capstone Instructor · Engineering Physics</div>
         <a href="https://yangran.org" className="hf-link">yangran.org ↗</a>
       </div>
     </footer>
