@@ -1478,6 +1478,29 @@ const annToRow = (ann, instructorEmail) => ({
   created_by_email: instructorEmail || null,
 });
 
+const comparableAnnouncementRow = (row) => ({
+  slug: row.slug || "",
+  title: row.title || "",
+  summary: row.summary || "",
+  body: Array.isArray(row.body) ? row.body : [],
+  resources: Array.isArray(row.resources) ? row.resources : [],
+  audience_label: row.audience_label || null,
+  label: row.label || null,
+  pinned: Boolean(row.pinned),
+  display_order: row.display_order == null ? null : Number(row.display_order),
+  event_date: row.event_date || null,
+  status: row.status || "published",
+});
+
+const announcementRowsNeedSync = (rows, sourceItems) => {
+  const rowBySlug = new Map((rows || []).map((row) => [row.slug, row]));
+  return sourceItems.some((item) => {
+    const sourceRow = staticAnnouncementToRow(item);
+    const existing = rowBySlug.get(sourceRow.slug);
+    return !existing || JSON.stringify(comparableAnnouncementRow(existing)) !== JSON.stringify(comparableAnnouncementRow(sourceRow));
+  });
+};
+
 const bodyText = (body) => (Array.isArray(body) ? body.join("\n\n") : (body || ""));
 const textToBody = (text) => text.split(/\n{2,}/).map(s => s.trim()).filter(Boolean);
 
@@ -1585,19 +1608,40 @@ const AnnouncementsView = ({ data, onAnnouncementsChange }) => {
   const [saving, setSaving] = React.useState(false);
   const [confirmDelete, setConfirmDelete] = React.useState(null);
   const [importing, setImporting] = React.useState(false);
+  const sourceItems = React.useMemo(
+    () => (data.announcements || []).filter(a => a.cohortYear === cohortYear),
+    [cohortYear, data.announcements]
+  );
 
   const load = React.useCallback(async () => {
     if (!isSupabaseConfigured) { setLoading(false); return; }
     setLoading(true); setError("");
-    const { data: rows, error: err } = await supabase
+
+    const fetchRows = () => supabase
       .from("cohort_announcements")
       .select(ANN_COLUMNS)
       .eq("cohort_year", cohortYear)
       .order("display_order", { ascending: true, nullsFirst: false });
+
+    let { data: rows, error: err } = await fetchRows();
     if (err) { setError(err.message); setLoading(false); return; }
+
+    if (sourceItems.length && announcementRowsNeedSync(rows || [], sourceItems)) {
+      for (const item of sourceItems) {
+        const row = staticAnnouncementToRow(item);
+        const { error: syncError } = await supabase
+          .from("cohort_announcements")
+          .upsert(row, { onConflict: "cohort_year,slug" });
+        if (syncError) { setError(syncError.message); setLoading(false); return; }
+      }
+      ({ data: rows, error: err } = await fetchRows());
+      if (err) { setError(err.message); setLoading(false); return; }
+      onAnnouncementsChange?.();
+    }
+
     setItems((rows || []).map(announcementFromRow));
     setLoading(false);
-  }, [cohortYear]);
+  }, [cohortYear, onAnnouncementsChange, sourceItems]);
 
   React.useEffect(() => { load(); }, [load]);
 
@@ -1635,11 +1679,13 @@ const AnnouncementsView = ({ data, onAnnouncementsChange }) => {
   const handleImport = async () => {
     if (!isSupabaseConfigured) return;
     setImporting(true); setError("");
-    const staticItems = (data.announcements || []).filter(a => a.cohortYear === cohortYear);
     try {
-      for (const item of staticItems) {
+      for (const item of sourceItems) {
         const row = staticAnnouncementToRow(item);
-        await supabase.from("cohort_announcements").upsert(row, { onConflict: "cohort_year,slug" });
+        const { error: syncError } = await supabase
+          .from("cohort_announcements")
+          .upsert(row, { onConflict: "cohort_year,slug" });
+        if (syncError) throw syncError;
       }
       await load();
       onAnnouncementsChange?.();
@@ -1675,9 +1721,9 @@ const AnnouncementsView = ({ data, onAnnouncementsChange }) => {
       <div className="ann-toolbar">
         <span className="ann-count">{items ? `${items.length} update${items.length !== 1 ? "s" : ""}` : "Loading…"}</span>
         <div className="ann-toolbar-actions">
-          {items != null && items.length === 0 && (
+          {items != null && sourceItems.length > 0 && (
             <button className="btn btn-ghost" onClick={handleImport} disabled={importing}>
-              {importing ? "Importing…" : "Import from static data"}
+              {importing ? "Syncing…" : "Sync all updates"}
             </button>
           )}
           <button className="btn btn-primary" onClick={startCreate} disabled={creating}>+ New update</button>
