@@ -229,7 +229,7 @@
 }
 .hero-split {
   display: grid;
-  grid-template-columns: minmax(0, 1.12fr) minmax(280px, 0.62fr);
+  grid-template-columns: minmax(0, 760px);
   gap: 20px;
   align-items: stretch;
   max-width: 1080px;
@@ -587,24 +587,6 @@
   max-width: none;
   margin-top: 0;
   min-height: 100%;
-}
-.hero-split .hero-latest {
-  width: 100%;
-  min-height: 100%;
-  margin-top: 0;
-  grid-template-columns: 1fr;
-  gap: 8px;
-  align-content: start;
-  padding: 18px 20px;
-}
-.hero-split .hero-latest strong {
-  white-space: normal;
-  font-size: 24px;
-  line-height: 1.08;
-  letter-spacing: -0.02em;
-}
-.hero-split .hero-latest-meta {
-  margin-top: auto;
 }
 
 /* Emphasis sections — dark green panels */

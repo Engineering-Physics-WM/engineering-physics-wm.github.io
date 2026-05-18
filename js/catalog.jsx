@@ -326,7 +326,6 @@ const CatalogPage = ({ data, onNavigate }) => {
           <h1>Engineering Physics Capstone</h1>
           <div className="hero-split">
             <DirectorQuote className="hero-pull-banner" />
-            <HeroLatest announcement={currentUpdate} onNavigate={onNavigate} />
           </div>
           <div className="hero-actions">
             <button className="btn btn-primary" data-spark onClick={() => onNavigate("news")}>Open course updates</button>
@@ -342,9 +341,9 @@ const CatalogPage = ({ data, onNavigate }) => {
         <div className="section-heading">
           <div>
             <p className="kicker">Team slate · 2026·27</p>
-            <h2>{activeProjectCount} active teams. <span className="ital" style={{color: "var(--pink-ink)"}}>{inactiveProjectCount} proposals</span> held for another year.</h2>
+            <h2>{activeProjectCount} capstone teams are underway.</h2>
             <p style={{ maxWidth: 560, color: "var(--ink-soft)", marginTop: 12, fontSize: 15 }}>
-              The running teams stay visually forward while inactive proposals remain available as a record of the full slate.
+              Browse the active team briefs and the full proposal slate for this cohort.
             </p>
           </div>
           <p className="meta mono">{String(filtered.length).padStart(2, "0")} / {String(data.projects.length).padStart(2, "0")} shown</p>
