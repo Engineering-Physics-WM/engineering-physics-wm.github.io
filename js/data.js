@@ -121,10 +121,10 @@ const EP_DATA = {
     inactiveLabel: "Inactive this year",
     activeProjectIds: [
       "animal-crossing",
-      "photosensor-readout",
+      "usv-race-boat",
       "irays-pupillometry",
-      "audimo",
       "smr-heat-load",
+      "soft-bio-robot",
       "quantum-forge",
     ],
   },
