@@ -83,7 +83,6 @@ const Header = ({ page, onNavigate, year, setYear, years, latestAnnouncement }) 
         <nav className="site-nav" aria-label="Sections">
           <button aria-current={page === "catalog"} onClick={() => { onNavigate("catalog"); setMobileOpen(false); }}>Home</button>
           <button aria-current={page === "news"} onClick={() => { onNavigate("news"); setMobileOpen(false); }}>Updates</button>
-          <button aria-current={page === "ranking"} onClick={() => { onNavigate("ranking"); setMobileOpen(false); }}>Ranking</button>
           <button aria-current={page === "dashboard"} onClick={() => { onNavigate("dashboard"); setMobileOpen(false); }}>Dashboard</button>
           <button aria-current={page === "archive"} onClick={() => { onNavigate("archive"); setMobileOpen(false); }}>Archive</button>
           <button className="nav-cta" onClick={() => { onNavigate("news"); setMobileOpen(false); }} data-spark>
