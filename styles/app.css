@@ -217,11 +217,23 @@
 /* ---------- Hero (catalog) ---------- */
 .hero {
   display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.75fr);
-  gap: 44px;
-  padding: 16px 0 18px;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  padding: 16px 0 32px;
   align-items: start;
   position: relative;
+}
+.hero-main {
+  grid-column: 1 / -1;
+  width: 100%;
+}
+.hero-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.12fr) minmax(280px, 0.62fr);
+  gap: 20px;
+  align-items: stretch;
+  max-width: 1080px;
+  margin-top: 20px;
 }
 .hero-marquee {
   list-style: none; margin: 32px 0 0; padding: 18px 0 0;
@@ -571,6 +583,29 @@
   left: 10px;
   font-size: 34px;
 }
+.hero-split .hero-pull-banner {
+  max-width: none;
+  margin-top: 0;
+  min-height: 100%;
+}
+.hero-split .hero-latest {
+  width: 100%;
+  min-height: 100%;
+  margin-top: 0;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  align-content: start;
+  padding: 18px 20px;
+}
+.hero-split .hero-latest strong {
+  white-space: normal;
+  font-size: 24px;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+}
+.hero-split .hero-latest-meta {
+  margin-top: auto;
+}
 
 /* Emphasis sections — dark green panels */
 section.is-emph,
@@ -601,7 +636,8 @@ section.is-emph-soft .section-heading,
 }
 
 @media (max-width: 960px) {
-  .hero { grid-template-columns: 1fr; gap: 32px; }
+  .hero { grid-template-columns: 1fr; gap: 28px; }
+  .hero-split { grid-template-columns: 1fr; }
   .hero-marquee { grid-template-columns: repeat(2, 1fr); }
   .hero-pull-banner {
     max-width: 100%;
@@ -651,12 +687,13 @@ section.is-emph-soft .section-heading,
 .hero h1 {
   font-family: var(--font-display);
   font-weight: 500;
-  font-size: clamp(56px, 8vw, 116px);
-  line-height: 0.92;
-  letter-spacing: -0.035em;
+  font-size: clamp(54px, 6.6vw, 94px);
+  line-height: 0.95;
+  letter-spacing: -0.03em;
   margin: 16px 0 20px;
   color: var(--ink);
   text-wrap: balance;
+  max-width: 1180px;
 }
 .hero h1 .ital {
   font-style: italic;

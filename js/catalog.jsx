@@ -321,39 +321,19 @@ const CatalogPage = ({ data, onNavigate }) => {
     <div className="page catalog-page">
       <section className="hero" style={{ position: "relative" }}>
         <HeroParticles count={18} intensity={window.__epTweakSparks ?? 1} />
-        <div style={{ position: "relative", zIndex: 1 }}>
+        <div className="hero-main" style={{ position: "relative", zIndex: 1 }}>
           <p className="kicker"><span className="dot">●</span> &nbsp; 2026 — 2027 cohort &nbsp; <span style={{color: "var(--pink-ink)"}}>·</span> &nbsp; {data.cohortStatus?.label || "William & Mary"}</p>
-          <h1>
-            Capstone<br/>
-            <span className="ital">course</span><span style={{color:"var(--muted)"}}>,</span> <span className="olv">in&nbsp;motion.</span>
-          </h1>
-          <p className="hero-sub">
-            The central home for Engineering Physics teams, project briefs, course updates, mentor context, and the work that carries the cohort from matching to showcase.
-          </p>
-          <HeroLatest announcement={currentUpdate} onNavigate={onNavigate} />
-          <DirectorQuote className="hero-pull-banner" />
+          <h1>Engineering Physics Capstone</h1>
+          <div className="hero-split">
+            <DirectorQuote className="hero-pull-banner" />
+            <HeroLatest announcement={currentUpdate} onNavigate={onNavigate} />
+          </div>
           <div className="hero-actions">
             <button className="btn btn-primary" data-spark onClick={() => onNavigate("news")}>Open course updates</button>
             <button className="btn btn-ghost" onClick={() => document.getElementById("projects")?.scrollIntoView({ behavior: "smooth" })}>View team slate</button>
             <button className="btn btn-ghost" onClick={() => document.getElementById("themes")?.scrollIntoView({ behavior: "smooth" })}>See the idea map</button>
           </div>
         </div>
-
-        <aside className="hero-aside" style={{ position: "relative", zIndex: 1 }}>
-          <div className="hero-card hero-course-card">
-            <p className="kicker" style={{ marginBottom: 14 }}><span className="dot">●</span> &nbsp; Course base</p>
-            <dl className="course-facts">
-              <div><dt>Status</dt><dd>{data.cohortStatus?.label || "Live"}</dd></div>
-              <div><dt>Active teams</dt><dd>{String(activeProjectCount).padStart(2, "0")}</dd></div>
-              <div><dt>Project briefs</dt><dd>{String(data.projects.length).padStart(2, "0")}</dd></div>
-              <div><dt>Updates</dt><dd>{String(currentAnnouncements.length).padStart(2, "0")}</dd></div>
-            </dl>
-            <div className="course-card-actions">
-              <button className="btn btn-primary" data-spark onClick={() => onNavigate("news")}>Latest note</button>
-              <button className="btn btn-ghost" onClick={() => onNavigate("dashboard")}>Dashboard</button>
-            </div>
-          </div>
-        </aside>
       </section>
 
       <CourseNow announcement={currentUpdate} referenceItems={referenceUpdates} onNavigate={onNavigate} />
