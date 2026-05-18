@@ -331,13 +331,7 @@ const CatalogPage = ({ data, onNavigate }) => {
             The central home for Engineering Physics teams, project briefs, course updates, mentor context, and the work that carries the cohort from matching to showcase.
           </p>
           <HeroLatest announcement={currentUpdate} onNavigate={onNavigate} />
-
-          <ul className="hero-marquee" aria-label="At a glance">
-            <li><span className="hm-num">{String(activeProjectCount).padStart(2, "0")}</span><span className="hm-lab">active teams</span></li>
-            <li><span className="hm-num">{String(inactiveProjectCount).padStart(2, "0")}</span><span className="hm-lab">inactive this year</span></li>
-            <li><span className="hm-num">2 – 3</span><span className="hm-lab">per team</span></li>
-            <li><span className="hm-num">May</span><span className="hm-lab">showcase target</span></li>
-          </ul>
+          <DirectorQuote className="hero-pull-banner" />
           <div className="hero-actions">
             <button className="btn btn-primary" data-spark onClick={() => onNavigate("news")}>Open course updates</button>
             <button className="btn btn-ghost" onClick={() => document.getElementById("projects")?.scrollIntoView({ behavior: "smooth" })}>View team slate</button>
