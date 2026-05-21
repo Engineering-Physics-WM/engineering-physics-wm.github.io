@@ -112,6 +112,7 @@
 /* steps */
 .ranking-steps {
   display: flex; gap: 24px;
+  flex-wrap: wrap;
   padding: 16px 0;
   margin-bottom: 32px;
   border-top: 1px solid var(--hairline);
@@ -287,3 +288,47 @@
 .submitted-card h3 { font-family: var(--font-display); font-size: 24px; margin: 0; color: var(--olive-ink); font-weight: 500; }
 .submitted-card .receipt-mono { font-family: var(--font-mono); font-size: 12px; color: var(--ink-soft); }
 .submitted-card ol { margin: 0; padding-left: 24px; color: var(--ink-soft); }
+
+@media (max-width: 700px) {
+  .ranking-hero {
+    padding: 12px 0 30px;
+  }
+  .ranking-hero h1 {
+    font-size: 42px;
+    line-height: 1;
+    letter-spacing: 0;
+  }
+  .ranking-steps {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .step .step-line {
+    display: none;
+  }
+  .student-form-card {
+    position: static;
+    padding: 20px 16px;
+  }
+  .ranking-item {
+    grid-template-columns: 36px minmax(0, 1fr);
+    gap: 10px;
+    padding: 12px;
+  }
+  .rank-num {
+    width: 32px;
+    height: 32px;
+  }
+  .rank-title {
+    -webkit-line-clamp: 2;
+  }
+  .rank-controls {
+    grid-column: 2;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+  .submission-mock,
+  .submitted-card {
+    padding: 22px 16px;
+  }
+}

@@ -790,6 +790,36 @@
   .recipient-panel { position: static; }
 }
 @media (max-width: 560px) {
+  .auth-panel {
+    padding: 24px 18px;
+  }
+  .auth-panel h1,
+  .dashboard-hero h1 {
+    font-size: 38px;
+    line-height: 1.02;
+    letter-spacing: 0;
+  }
+  .auth-strip {
+    display: grid;
+    width: calc(100% - 32px);
+  }
+  .auth-strip .btn {
+    width: 100%;
+  }
+  .dash-tabs {
+    width: 100%;
+    border-radius: var(--radius-lg);
+  }
+  .dash-tab {
+    flex: 1 1 calc(50% - 4px);
+  }
+  .dist-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .dist-row .dist-title {
+    white-space: normal;
+  }
   .dashboard-hero .stats { grid-template-columns: 1fr; }
   .response-roster-head { display: grid; }
   .response-roster-metrics { justify-content: stretch; }
@@ -858,6 +888,7 @@
   inset: 0;
   pointer-events: none;
   z-index: 0;
+  overflow: hidden;
 }
 .particle {
   position: absolute;

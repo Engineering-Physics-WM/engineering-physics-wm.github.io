@@ -119,7 +119,7 @@
 [data-font="editorial"] { --font-display: "Instrument Serif", Georgia, serif; --font-ui: "Inter Tight", system-ui, sans-serif; }
 
 * { box-sizing: border-box; }
-html, body { margin: 0; padding: 0; }
+html, body { margin: 0; padding: 0; width: 100%; overflow-x: hidden; }
 html { background: var(--paper); color: var(--ink); }
 body {
   font-family: var(--font-ui);
@@ -131,10 +131,10 @@ body {
   text-rendering: optimizeLegibility;
   font-feature-settings: "ss01", "ss02", "cv11";
   min-height: 100vh;
-  overflow-x: hidden;
 }
 
-button, input, select, textarea { font: inherit; color: inherit; }
+img, picture, video, canvas { max-width: 100%; }
+button, input, select, textarea { font: inherit; color: inherit; min-width: 0; }
 button { cursor: pointer; -webkit-tap-highlight-color: transparent; }
 a { color: inherit; }
 ::selection { background: color-mix(in oklch, var(--pink) 30%, transparent); color: var(--ink); }

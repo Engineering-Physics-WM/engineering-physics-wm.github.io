@@ -220,10 +220,27 @@ const CourseNow = ({ announcement, referenceItems = [], onNavigate }) => {
   return (
     <Reveal as="section" className="course-now" aria-label="Latest course update">
       <div className="course-now-main">
-        <p className="kicker"><span className="dot">●</span> &nbsp; Latest course update</p>
+        <p className="cn-dateline">
+          <span className="live" />
+          <span>Now</span>
+          {announcement.label && (
+            <>
+              <span className="sep">·</span>
+              <span>{announcement.label}</span>
+            </>
+          )}
+          {announcement.audience && (
+            <>
+              <span className="sep">·</span>
+              <span>{announcement.audience}</span>
+            </>
+          )}
+        </p>
         <h2>{announcement.title}</h2>
         <p>{announcement.summary}</p>
-        {referenceItems.length > 0 && (
+      </div>
+      {referenceItems.length > 0 && (
+        <aside className="course-now-aside">
           <div className="course-reference">
             <span className="course-reference-label">Earlier updates</span>
             <ul>
@@ -235,24 +252,15 @@ const CourseNow = ({ announcement, referenceItems = [], onNavigate }) => {
               ))}
             </ul>
           </div>
-        )}
-      </div>
-      <div className="course-now-side">
-        <div className="course-now-meta">
-          <span className="mono">{announcement.label || announcement.date}</span>
-          {announcement.audience && <span>{announcement.audience}</span>}
-        </div>
-        {announcement.resources?.length > 0 && (
-          <div className="course-now-resources" aria-label="Update resources">
-            {announcement.resources.map((resource) => (
-              <CourseResource key={resource.label} resource={resource} onNavigate={onNavigate} />
-            ))}
-          </div>
-        )}
-        <button className="btn btn-primary" data-spark onClick={() => onNavigate("news")}>
-          View updates
-        </button>
-      </div>
+          <a
+            className="cn-viewall"
+            href="#"
+            onClick={(e) => { e.preventDefault(); onNavigate("news"); }}
+          >
+            View all updates →
+          </a>
+        </aside>
+      )}
     </Reveal>
   );
 };
@@ -322,15 +330,10 @@ const CatalogPage = ({ data, onNavigate }) => {
       <section className="hero" style={{ position: "relative" }}>
         <HeroParticles count={18} intensity={window.__epTweakSparks ?? 1} />
         <div className="hero-main" style={{ position: "relative", zIndex: 1 }}>
-          <p className="kicker"><span className="dot">●</span> &nbsp; 2026 — 2027 cohort &nbsp; <span style={{color: "var(--pink-ink)"}}>·</span> &nbsp; {data.cohortStatus?.label || "William & Mary"}</p>
+          <p className="kicker"><span className="dot">●</span> &nbsp; 2026 — 2027 cohort</p>
           <h1>Engineering Physics Capstone</h1>
           <div className="hero-split">
             <DirectorQuote className="hero-pull-banner" />
-          </div>
-          <div className="hero-actions">
-            <button className="btn btn-primary" data-spark onClick={() => onNavigate("news")}>Open course updates</button>
-            <button className="btn btn-ghost" onClick={() => document.getElementById("projects")?.scrollIntoView({ behavior: "smooth" })}>View team slate</button>
-            <button className="btn btn-ghost" onClick={() => document.getElementById("themes")?.scrollIntoView({ behavior: "smooth" })}>See the idea map</button>
           </div>
         </div>
       </section>
