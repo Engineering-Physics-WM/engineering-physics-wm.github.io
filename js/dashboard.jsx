@@ -3,7 +3,7 @@
 import * as React from "react";
 import { Reveal } from "./motion.jsx";
 import { DEFAULT_MATCHING_MODE, MATCHING_MODE_OPTIONS, buildTeams, rankSatisfaction } from "./teamMatching.js";
-import { PersonLink, YangLink } from "./links.jsx";
+import { ExternalLink, PersonLink, YangLink } from "./links.jsx";
 import { sortAnnouncements } from "./news.jsx";
 import { isSupabaseConfigured, supabase } from "./supabaseClient.js";
 import { announcementFromRow, postDraftAsNowAnnouncement, staticAnnouncementToRow } from "./announcements.js";
@@ -1853,7 +1853,7 @@ const AnnouncementsView = ({ data, seedAnnouncements = [], onAnnouncementsChange
                   {item.resources.map((r, i) => (
                     <span key={i} className="ann-resource-chip">
                       {(r.href || r.url)
-                        ? <a href={r.href || r.url} target="_blank" rel="noopener">{r.label || r.href || r.url}</a>
+                        ? <ExternalLink href={r.href || r.url}>{r.label || r.href || r.url}</ExternalLink>
                         : r.label}
                     </span>
                   ))}

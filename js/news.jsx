@@ -1,5 +1,6 @@
 import * as React from "react";
 import { Reveal } from "./motion.jsx";
+import { ExternalLink } from "./links.jsx";
 
 const formatDate = (date) => {
   if (!date) return "";
@@ -49,9 +50,9 @@ const ResourceLink = ({ resource, onNavigate }) => {
   }
   if (!href) return null;
   return (
-    <a className="news-resource" href={href} target="_blank" rel="noopener">
+    <ExternalLink className="news-resource" href={href}>
       <span>{kind}</span>{label}
-    </a>
+    </ExternalLink>
   );
 };
 

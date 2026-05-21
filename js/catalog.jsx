@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { HeroParticles, Reveal } from "./motion.jsx";
-import { LinkedText, PersonLink, YangLink, isYangName } from "./links.jsx";
+import { ExternalLink, LinkedText, PersonLink, YangLink, isYangName } from "./links.jsx";
 import { currentCourseAnnouncement, resourceHref, resourceKind, resourceLabel, sortAnnouncements } from "./news.jsx";
 
 const AREA_COLORS = {
@@ -109,7 +109,7 @@ const ProjectDialog = ({ project, displayIdx, onClose }) => {
             {project.partners && (
               <><dt>Partners</dt><dd>{project.partners.map((p, i) => (
                 <span key={i} style={{ display: "block" }}>
-                  <a href={p.url} target="_blank" rel="noopener">{p.name} ↗</a>
+                  <ExternalLink href={p.url}>{p.name} ↗</ExternalLink>
                 </span>
               ))}</dd></>
             )}
@@ -195,7 +195,7 @@ const DirectorQuote = ({ className = "" }) => (
       <div>
         <div className="hf-name"><YangLink>Prof. Ran Yang</YangLink></div>
         <div className="hf-role">Capstone Instructor · Engineering Physics</div>
-        <a href="https://yangran.org" className="hf-link">yangran.org ↗</a>
+        <ExternalLink href="https://yangran.org" className="hf-link">yangran.org ↗</ExternalLink>
       </div>
     </footer>
   </blockquote>
@@ -215,9 +215,9 @@ const CourseResource = ({ resource, onNavigate }) => {
   }
   if (!href) return null;
   return (
-    <a className="course-now-resource" href={href} target="_blank" rel="noopener">
+    <ExternalLink className="course-now-resource" href={href}>
       <span>{kind}</span>{label}
-    </a>
+    </ExternalLink>
   );
 };
 

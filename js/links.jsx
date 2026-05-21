@@ -5,17 +5,30 @@ const YANG_TEXT_RE = /(Prof\.?\s+Ran\s+Yang|Prof\.?\s+Yang|Dr\.?\s+Yang|Ran\s+Ya
 const YANG_TEXT_EXACT_RE = /^(Prof\.?\s+Ran\s+Yang|Prof\.?\s+Yang|Dr\.?\s+Yang|Ran\s+Yang)$/i;
 
 const isYangName = (name = "") => /^(prof\.?\s+)?ran yang$/i.test(name.trim()) || /^dr\.?\s+yang$/i.test(name.trim());
+const isExternalHref = (href = "") => /^(https?:)?\/\//i.test(String(href).trim());
+
+const ExternalLink = ({ href, children, target, rel, ...props }) => {
+  const external = isExternalHref(href);
+  return (
+    <a
+      href={href}
+      target={target ?? (external ? "_blank" : undefined)}
+      rel={rel ?? (external ? "noopener noreferrer" : undefined)}
+      {...props}
+    >
+      {children}
+    </a>
+  );
+};
 
 const YangLink = ({ children = "Ran Yang", className = "", ...props }) => (
-  <a
+  <ExternalLink
     href={YANG_URL}
-    target="_blank"
-    rel="noopener"
     className={["yang-link", className].filter(Boolean).join(" ")}
     {...props}
   >
     {children}
-  </a>
+  </ExternalLink>
 );
 
 const PersonLink = ({ name, children = name, ...props }) => (
@@ -35,4 +48,4 @@ const LinkedText = ({ text }) => {
   });
 };
 
-export { LinkedText, PersonLink, YangLink, YANG_URL, isYangName };
+export { ExternalLink, LinkedText, PersonLink, YangLink, YANG_URL, isExternalHref, isYangName };
