@@ -1478,26 +1478,11 @@ const annToRow = (ann, instructorEmail) => ({
   created_by_email: instructorEmail || null,
 });
 
-const comparableAnnouncementRow = (row) => ({
-  slug: row.slug || "",
-  title: row.title || "",
-  summary: row.summary || "",
-  body: Array.isArray(row.body) ? row.body : [],
-  resources: Array.isArray(row.resources) ? row.resources : [],
-  audience_label: row.audience_label || null,
-  label: row.label || null,
-  pinned: Boolean(row.pinned),
-  display_order: row.display_order == null ? null : Number(row.display_order),
-  event_date: row.event_date || null,
-  status: row.status || "published",
-});
-
-const announcementRowsNeedSync = (rows, sourceItems) => {
+const missingAnnouncementSourceItems = (rows, sourceItems) => {
   const rowBySlug = new Map((rows || []).map((row) => [row.slug, row]));
-  return sourceItems.some((item) => {
-    const sourceRow = staticAnnouncementToRow(item);
-    const existing = rowBySlug.get(sourceRow.slug);
-    return !existing || JSON.stringify(comparableAnnouncementRow(existing)) !== JSON.stringify(comparableAnnouncementRow(sourceRow));
+  return sourceItems.filter((item) => {
+    const sourceSlug = item.slug || item.id;
+    return sourceSlug && !rowBySlug.has(sourceSlug);
   });
 };
 
@@ -1596,7 +1581,7 @@ const AnnForm = ({ value, onChange, onSave, onCancel, saving }) => {
   );
 };
 
-const AnnouncementsView = ({ data, onAnnouncementsChange }) => {
+const AnnouncementsView = ({ data, seedAnnouncements = [], onAnnouncementsChange }) => {
   const cohortYear = data.currentYear;
   const [items, setItems] = React.useState(null);
   const [loading, setLoading] = React.useState(true);
@@ -1609,8 +1594,8 @@ const AnnouncementsView = ({ data, onAnnouncementsChange }) => {
   const [confirmDelete, setConfirmDelete] = React.useState(null);
   const [importing, setImporting] = React.useState(false);
   const sourceItems = React.useMemo(
-    () => (data.announcements || []).filter(a => a.cohortYear === cohortYear),
-    [cohortYear, data.announcements]
+    () => (seedAnnouncements || []).filter(a => a.cohortYear === cohortYear),
+    [cohortYear, seedAnnouncements]
   );
 
   const load = React.useCallback(async () => {
@@ -1626,8 +1611,9 @@ const AnnouncementsView = ({ data, onAnnouncementsChange }) => {
     let { data: rows, error: err } = await fetchRows();
     if (err) { setError(err.message); setLoading(false); return; }
 
-    if (sourceItems.length && announcementRowsNeedSync(rows || [], sourceItems)) {
-      for (const item of sourceItems) {
+    const missingSourceItems = missingAnnouncementSourceItems(rows || [], sourceItems);
+    if (missingSourceItems.length) {
+      for (const item of missingSourceItems) {
         const row = staticAnnouncementToRow(item);
         const { error: syncError } = await supabase
           .from("cohort_announcements")
@@ -1815,7 +1801,7 @@ const AnnouncementsView = ({ data, onAnnouncementsChange }) => {
   );
 };
 
-const DashboardPage = ({ data, onNavigate, onAnnouncementsChange }) => {
+const DashboardPage = ({ data, seedAnnouncements, onNavigate, onAnnouncementsChange }) => {
   const [tab, setTab] = React.useState("distribution");
   const [responses, setResponses] = React.useState([]);
   const [students, setStudents] = React.useState([]);
@@ -2033,7 +2019,11 @@ const DashboardPage = ({ data, onNavigate, onAnnouncementsChange }) => {
         />
       )}
       {tab === "updates" && (
-        <AnnouncementsView data={data} onAnnouncementsChange={onAnnouncementsChange} />
+        <AnnouncementsView
+          data={data}
+          seedAnnouncements={seedAnnouncements}
+          onAnnouncementsChange={onAnnouncementsChange}
+        />
       )}
     </div>
   );

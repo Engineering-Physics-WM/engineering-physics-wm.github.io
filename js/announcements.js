@@ -160,7 +160,7 @@ const postDraftAsNowAnnouncement = async ({ cohortYear, subject, body, audienceL
     .update({ pinned: false, label: null })
     .eq("cohort_year", cohortYear)
     .neq("slug", announcement.slug)
-    .or("pinned.eq.true,label.eq.Now");
+    .or("pinned.eq.true,label.ilike.Now");
   if (nowClearError) throw nowClearError;
 
   return announcementFromRow(data);

@@ -145,6 +145,23 @@ const Footer = ({ onNavigate }) => (
   </footer>
 );
 
+const isNowAnnouncement = (item) => (
+  Boolean(item?.pinned) || (item?.label || "").trim().toLowerCase() === "now"
+);
+
+const announcementKey = (item) => item.slug || item.id;
+
+const announcementTime = (item) => {
+  const time = Date.parse(`${item?.date || ""}T12:00:00`);
+  return Number.isFinite(time) ? time : 0;
+};
+
+const demoteNowAnnouncement = (item) => ({
+  ...item,
+  pinned: false,
+  label: (item.label || "").trim().toLowerCase() === "now" ? "" : item.label,
+});
+
 const App = () => {
   const [liveAnnouncements, setLiveAnnouncements] = React.useState(null);
   const [announcementRefreshKey, setAnnouncementRefreshKey] = React.useState(0);
@@ -163,15 +180,33 @@ const App = () => {
   const data = React.useMemo(() => {
     if (!liveAnnouncements?.length) return EP_DATA;
 
-    const seededBySlug = new Map(EP_DATA.announcements.map((item) => [item.slug || item.id, item]));
+    const seededBySlug = new Map(EP_DATA.announcements.map((item) => [announcementKey(item), item]));
     const liveSlugs = new Set();
+    const liveNowByCohort = new Map();
+    liveAnnouncements.filter(isNowAnnouncement).forEach((item) => {
+      const current = liveNowByCohort.get(item.cohortYear);
+      if (!current || announcementTime(item) >= announcementTime(current)) {
+        liveNowByCohort.set(item.cohortYear, item);
+      }
+    });
+    const liveNowCohorts = new Set(liveNowByCohort.keys());
     const mergedLive = liveAnnouncements.map((item) => {
-      const slug = item.slug || item.id;
+      const slug = announcementKey(item);
       liveSlugs.add(slug);
       const seeded = seededBySlug.get(slug);
-      return seeded ? { ...item, ...seeded, live: true } : item;
+      const activeNow = liveNowByCohort.get(item.cohortYear);
+      const normalizedItem = activeNow && isNowAnnouncement(item) && announcementKey(activeNow) !== slug
+        ? demoteNowAnnouncement(item)
+        : item;
+      return seeded ? { ...seeded, ...normalizedItem, live: true } : normalizedItem;
     });
-    const seededOnly = EP_DATA.announcements.filter((item) => !liveSlugs.has(item.slug || item.id));
+    const seededOnly = EP_DATA.announcements
+      .filter((item) => !liveSlugs.has(announcementKey(item)))
+      .map((item) => (
+        liveNowCohorts.has(item.cohortYear) && isNowAnnouncement(item)
+          ? demoteNowAnnouncement(item)
+          : item
+      ));
 
     return {
       ...EP_DATA,
@@ -217,7 +252,12 @@ const App = () => {
         {page === "ranking" && <RankingPage data={data} onNavigate={onNavigate} />}
         {page === "dashboard" && (
           <AuthGate>
-            <DashboardPage data={data} onNavigate={onNavigate} onAnnouncementsChange={refreshAnnouncements} />
+            <DashboardPage
+              data={data}
+              seedAnnouncements={EP_DATA.announcements}
+              onNavigate={onNavigate}
+              onAnnouncementsChange={refreshAnnouncements}
+            />
           </AuthGate>
         )}
         {page === "archive" && <ArchivePage data={data} onNavigate={onNavigate} currentYear={year} setYear={setYear} />}
