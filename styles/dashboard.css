@@ -665,7 +665,7 @@
 }
 .recipient-stats {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
 }
 .recipient-stat,
@@ -740,6 +740,14 @@
 .recipient-group h4 span {
   color: var(--ink);
   letter-spacing: 0;
+}
+.recipient-group.is-muted {
+  border-style: dashed;
+  opacity: 0.82;
+}
+.recipient-group.is-muted h4,
+.recipient-group.is-muted .recipient-card {
+  background: color-mix(in oklch, var(--paper-2) 65%, white);
 }
 .recipient-card {
   min-width: 0;

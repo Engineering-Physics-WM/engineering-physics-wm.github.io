@@ -1069,7 +1069,7 @@ section.is-emph-soft .section-heading,
   border: 0;
   text-align: left;
   cursor: pointer;
-  transition: background 200ms var(--ease), transform 250ms var(--ease);
+  transition: background 200ms var(--ease), box-shadow 200ms var(--ease), transform 250ms var(--ease);
   min-height: 280px;
   overflow: hidden;
 }
@@ -1078,24 +1078,19 @@ section.is-emph-soft .section-heading,
 
 .project-card:hover {
   background: color-mix(in oklch, var(--paper) 90%, white);
+  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--pink-ink) 36%, transparent);
   z-index: 2;
 }
 .project-card:focus-visible {
   outline: 3px solid color-mix(in oklch, var(--pink-ink) 40%, transparent);
   outline-offset: -3px;
+  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--pink-ink) 46%, transparent);
   z-index: 3;
 }
 .project-card:hover .project-card-num { color: var(--pink-ink); }
 .project-card:hover .project-card-title { color: var(--olive-ink); }
 .project-card.is-active {
   background: color-mix(in oklch, var(--paper) 88%, white);
-}
-.project-card.is-active .project-card-thrust-rail {
-  opacity: 0.85;
-  background: var(--olive-ink);
-  box-shadow:
-    0 0 12px color-mix(in oklch, var(--olive-ink) 48%, transparent),
-    0 0 32px color-mix(in oklch, var(--olive-ink) 28%, transparent);
 }
 .project-card.is-inactive {
   background: color-mix(in oklch, var(--paper-2) 72%, white);
@@ -1203,16 +1198,8 @@ section.is-emph-soft .section-heading,
 }
 
 .project-card-thrust-rail {
-  position: absolute; left: 0; top: 0; bottom: 0;
-  width: 3px;
-  background: var(--pink-ink);
-  box-shadow:
-    0 0 12px color-mix(in oklch, var(--pink-ink) 70%, transparent),
-    0 0 32px color-mix(in oklch, var(--pink-ink) 45%, transparent);
-  opacity: 0;
-  transition: opacity 240ms var(--ease);
+  display: none;
 }
-.project-card:hover .project-card-thrust-rail { opacity: 1; }
 
 /* ---------- Idea map (themes) ---------- */
 .theme-row {
