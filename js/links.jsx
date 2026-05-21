@@ -7,11 +7,18 @@ const YANG_TEXT_EXACT_RE = /^(Prof\.?\s+Ran\s+Yang|Prof\.?\s+Yang|Dr\.?\s+Yang|R
 const isYangName = (name = "") => /^(prof\.?\s+)?ran yang$/i.test(name.trim()) || /^dr\.?\s+yang$/i.test(name.trim());
 const isExternalHref = (href = "") => /^(https?:)?\/\//i.test(String(href).trim());
 
+const normalizeHref = (href = "") => {
+  const str = String(href).trim();
+  if (!str || /^(https?:|\/\/|\/|#|mailto:|tel:|data:)/i.test(str)) return str;
+  return `https://${str}`;
+};
+
 const ExternalLink = ({ href, children, target, rel, ...props }) => {
-  const external = isExternalHref(href);
+  const normalized = normalizeHref(href);
+  const external = isExternalHref(normalized);
   return (
     <a
-      href={href}
+      href={normalized}
       target={target ?? (external ? "_blank" : undefined)}
       rel={rel ?? (external ? "noopener noreferrer" : undefined)}
       {...props}
@@ -48,4 +55,4 @@ const LinkedText = ({ text }) => {
   });
 };
 
-export { ExternalLink, LinkedText, PersonLink, YangLink, YANG_URL, isExternalHref, isYangName };
+export { ExternalLink, LinkedText, PersonLink, YangLink, YANG_URL, isExternalHref, isYangName, normalizeHref };
