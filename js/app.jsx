@@ -134,7 +134,7 @@ const Footer = ({ onNavigate }) => (
     </div>
 
     <div className="footer-meta">
-      <span className="mono">EP™ · Engineering Physics Capstone</span>
+      <span className="mono">Engineering Physics Capstone</span>
       <span className="mono">2026 — 2027</span>
       <YangLink className="mono">© Ran Yang</YangLink>
     </div>

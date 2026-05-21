@@ -2,7 +2,7 @@
    Used as logo, mobile menu toggle, and decorative mark.
    The "interlock" is the right vertical bar of the E doubling as the stem of the P. */
 
-const Monogram = ({ size = 40, color = "currentColor", trademark = true, decorative = true }) => {
+const Monogram = ({ size = 40, color = "currentColor", decorative = true }) => {
   const stroke = Math.max(2, Math.round(size * 0.14));
   return (
     <svg
@@ -39,13 +39,6 @@ const Monogram = ({ size = 40, color = "currentColor", trademark = true, decorat
         d="M 36 8 Q 56 8 56 20 Q 56 32 36 32"
         fill="none" stroke={color} strokeWidth={stroke} strokeLinecap="square"
       />
-      {trademark && (
-        <text
-          x="58" y="14"
-          fontSize="9" fontFamily="ui-monospace, monospace"
-          fill={color} opacity="0.7"
-        >™</text>
-      )}
     </svg>
   );
 };
