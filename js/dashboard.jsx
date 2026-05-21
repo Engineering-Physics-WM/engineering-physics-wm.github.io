@@ -11,6 +11,7 @@ import { announcementFromRow, postDraftAsNowAnnouncement, staticAnnouncementToRo
 const INSTRUCTOR_EMAIL = "rxyan2@wm.edu";
 const CUSTOM_DRAFT_ID = "custom-draft";
 const TEAM_AUDIENCES = new Set(["team", "team_students", "team_mentors"]);
+const CURRENT_TEAM_MATCHING_MODE = "top1";
 
 const normalizeEmail = (email) => (email || "").trim().toLowerCase();
 
@@ -749,17 +750,15 @@ const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows,
   const [teams, setTeams] = React.useState(null);
   const [draggedStudent, setDraggedStudent] = React.useState(null);
   const [dropTarget, setDropTarget] = React.useState(null);
-  const [matchingMode, setMatchingMode] = React.useState(DEFAULT_MATCHING_MODE);
-  const [activeMatchingMode, setActiveMatchingMode] = React.useState(DEFAULT_MATCHING_MODE);
+  const [matchingMode, setMatchingMode] = React.useState(CURRENT_TEAM_MATCHING_MODE);
+  const [activeMatchingMode, setActiveMatchingMode] = React.useState(CURRENT_TEAM_MATCHING_MODE);
   const [computingTeams, setComputingTeams] = React.useState(false);
   const [teamSource, setTeamSource] = React.useState("auto");
-  const [showSavedRoster, setShowSavedRoster] = React.useState(false);
+  const [teamViewMode, setTeamViewMode] = React.useState("current");
   const [dirty, setDirty] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
   const [saveStatus, setSaveStatus] = React.useState("");
   const [matchingCopyStatus, setMatchingCopyStatus] = React.useState("");
-  const liveResponseSignature = React.useMemo(() => responseSignature(responses), [responses]);
-  const previousResponseSignatureRef = React.useRef(null);
   const autoResultsByMode = React.useMemo(() => (
     Object.fromEntries(MATCHING_MODE_OPTIONS.map((option) => [
       option.id,
@@ -772,15 +771,6 @@ const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows,
     responses,
     resultsByMode: autoResultsByMode,
   }), [autoResultsByMode, currentYear, projects, responses]);
-
-  React.useEffect(() => {
-    const previousSignature = previousResponseSignatureRef.current;
-    if (previousSignature && previousSignature !== liveResponseSignature && showSavedRoster) {
-      setShowSavedRoster(false);
-      setSaveStatus("New rankings loaded; showing live auto preview.");
-    }
-    previousResponseSignatureRef.current = liveResponseSignature;
-  }, [liveResponseSignature, showSavedRoster]);
 
   React.useEffect(() => {
     onDraftStateChange?.(dirty || saving);
@@ -800,10 +790,10 @@ const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows,
     const autoResult = buildTeams({ projects, responses, students, seed, mode: activeMatchingMode });
     const savedStudentRows = (teamMemberRows || []).filter((row) => row.member_type === "student");
 
-    if (savedStudentRows.length && showSavedRoster) {
+    if (savedStudentRows.length && teamViewMode === "current") {
       const savedTeams = rowsToTeamMap({ projects, rows: teamMemberRows, responses, students });
       setTeams(withTeamSummary({ ...autoResult, teams: savedTeams }, projects, responses));
-      setTeamSource("saved");
+      setTeamSource("current");
       setDirty(false);
       setComputingTeams(false);
       return;
@@ -813,7 +803,7 @@ const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows,
     setTeamSource("auto");
     setDirty(false);
     setComputingTeams(false);
-  }, [projects, responses, students, seed, teamMemberRows, showSavedRoster, activeMatchingMode]);
+  }, [projects, responses, students, seed, teamMemberRows, teamViewMode, activeMatchingMode]);
 
   if (!teams) return null;
 
@@ -821,7 +811,7 @@ const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows,
   const missLabel = teams.topChoiceWindow === 1 ? "Missed top choice" : `Moved below top-${teams.topChoiceWindow}`;
   const sizeErrors = activeTeamSizeErrors(teams.teams, teams.minTeamSize, teams.maxTeamSize);
   const activeStudentCount = Object.values(teams.teams).reduce((total, roster) => total + roster.length, 0);
-  const canSave = activeStudentCount > 0 && !saving && sizeErrors.length === 0 && (dirty || teamSource !== "saved");
+  const canSave = activeStudentCount > 0 && !saving && sizeErrors.length === 0 && (dirty || teamSource !== "current");
   const hasSavedRoster = (teamMemberRows || []).some((row) => row.member_type === "student");
 
   const selectMatchingMode = (nextMode) => {
@@ -829,8 +819,20 @@ const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows,
     const nextOption = matchingOptionFor(nextMode);
     setComputingTeams(true);
     setMatchingMode(nextMode);
-    setShowSavedRoster(false);
+    setTeamViewMode("auto");
     setSaveStatus(`Showing ${nextOption.label} auto preview.`);
+  };
+
+  const showCurrentTeams = () => {
+    if (dirty && !window.confirm("Discard the unsaved manual draft and return to the locked current teams?")) return;
+    setTeamViewMode("current");
+    setSaveStatus("Showing locked current teams. Auto-match previews are still available separately.");
+  };
+
+  const showAutoPreview = () => {
+    if (dirty && !window.confirm("Discard the unsaved manual draft and open an auto-match preview?")) return;
+    setTeamViewMode("auto");
+    setSaveStatus(`Showing ${matchingOption.label} auto preview. Locked current teams are unchanged.`);
   };
 
   const moveStudent = (email, fromProjectId, toProjectId) => {
@@ -849,7 +851,7 @@ const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows,
     setTeams(withTeamSummary({ ...teams, teams: next }, projects, responses));
     setDirty(true);
     setTeamSource("manual");
-    setSaveStatus("Unsaved manual changes.");
+    setSaveStatus("Unsaved manual draft. Save it to replace the locked current teams.");
   };
 
   const saveFinalTeams = async () => {
@@ -863,7 +865,7 @@ const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows,
     }
 
     setSaving(true);
-    setSaveStatus("Saving final team assignments...");
+    setSaveStatus("Saving locked current teams...");
 
     const rows = buildSavedTeamRows({
       projects,
@@ -909,10 +911,10 @@ const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows,
 
     setTeams(withTeamSummary({ ...teams, teams: lockedTeams }, projects, responses));
     setTeamMemberRows(lockedRows);
-    setShowSavedRoster(true);
-    setTeamSource("saved");
+    setTeamViewMode("current");
+    setTeamSource("current");
     setDirty(false);
-    setSaveStatus(`Saved ${activeStudentCount} students and ${rows.filter((row) => row.member_type === "mentor" && row.person_email).length} mentors to the live database.`);
+    setSaveStatus(`Saved locked current teams with ${activeStudentCount} students and ${rows.filter((row) => row.member_type === "mentor" && row.person_email).length} mentors. Auto-match previews remain separate.`);
   };
 
   const copyMatchingDiscussion = async () => {
@@ -961,28 +963,23 @@ const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows,
         </div>
         <div className="field">
           <span className="field-label">Source</span>
-          <div className="mono" style={{ fontSize: 13 }}>{computingTeams ? "Computing preview..." : teamSource === "saved" ? "Saved final roster" : teamSource === "manual" ? "Manual draft" : `${matchingOption.label} auto preview`}</div>
+          <div className="mono" style={{ fontSize: 13 }}>{computingTeams ? "Computing preview..." : teamSource === "current" ? "Locked current teams" : teamSource === "manual" ? "Manual draft" : `${matchingOption.label} auto preview`}</div>
         </div>
         {hasSavedRoster && (
           <button
             className="btn btn-ghost"
-            onClick={() => {
-              setShowSavedRoster((value) => !value);
-              setSaveStatus(showSavedRoster
-                ? "Showing live auto preview from current ranking submissions."
-                : "Showing saved final roster from the live database.");
-            }}
+            onClick={teamSource === "current" ? showAutoPreview : showCurrentTeams}
             disabled={saving}
             data-spark
           >
-            {showSavedRoster ? "Use live auto preview" : "View saved roster"}
+            {teamSource === "current" ? "View auto preview" : "View locked current teams"}
           </button>
         )}
-        <button className="btn btn-ghost" onClick={() => { setSaveStatus(""); setSeed(s => s + 1); }} disabled={teamSource === "saved" || saving || computingTeams} data-spark>
-          {teamSource === "saved" ? "Roster locked" : "Re-roll"}
+        <button className="btn btn-ghost" onClick={() => { setTeamViewMode("auto"); setSaveStatus(`Showing a new ${matchingOption.label} auto preview. Locked current teams are unchanged.`); setSeed(s => s + 1); }} disabled={teamSource === "current" || saving || computingTeams} data-spark>
+          {teamSource === "current" ? "Current teams locked" : "Re-roll preview"}
         </button>
         <button className="btn btn-primary" onClick={saveFinalTeams} disabled={!canSave || computingTeams} data-spark>
-          {saving ? "Saving..." : dirty || teamSource !== "saved" ? "Save final teams" : "Saved"}
+          {saving ? "Saving..." : dirty || teamSource !== "current" ? "Save as current teams" : "Current teams saved"}
         </button>
         <div className="satisfaction">
           <div>
@@ -2001,7 +1998,7 @@ const DashboardPage = ({ data, seedAnnouncements, onNavigate, onAnnouncementsCha
           <h1>Cohort dashboard <span style={{ color: "var(--muted)", fontStyle: "italic" }}>2026·27</span></h1>
           <p style={{ color: "var(--ink-soft)", fontSize: 16, maxWidth: 580 }}>
             Live poll submissions power the ranking distribution, individual responses, conflict heatmap,
-            auto team-making preview, saved final teams, and BCC email drafts.
+            locked current teams, optional auto-match previews, and BCC email drafts.
           </p>
           <p className="construction-note">Instructor-only · private student data stays in the live database</p>
           <button className="btn btn-ghost" onClick={() => setRefreshKey((key) => key + 1)} disabled={loadingDashboard || syncingDashboard} style={{ marginTop: 12 }}>
@@ -2029,7 +2026,7 @@ const DashboardPage = ({ data, seedAnnouncements, onNavigate, onAnnouncementsCha
           ["distribution", "Distribution"],
           ["heatmap", "Conflict heatmap"],
           ["students", "Student responses"],
-          ["teams", "Auto team-making"],
+          ["teams", "Current teams"],
           ["email", "Email drafts"],
           ["updates", "Updates"],
         ].map(([k, label]) => (
