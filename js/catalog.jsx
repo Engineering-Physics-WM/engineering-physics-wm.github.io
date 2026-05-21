@@ -227,24 +227,26 @@ const CourseNow = ({ announcement, referenceItems = [], onNavigate }) => {
   return (
     <Reveal as="section" className="course-now" aria-label="Latest course update">
       <div className="course-now-main">
-        <p className="cn-dateline">
-          <span className="live" />
-          <span>Now</span>
-          {announcement.label && (
-            <>
-              <span className="sep">·</span>
-              <span>{announcement.label}</span>
-            </>
-          )}
-          {announcement.audience && (
-            <>
-              <span className="sep">·</span>
-              <span>{announcement.audience}</span>
-            </>
-          )}
-        </p>
-        <h2>{announcement.title}</h2>
-        <p>{announcement.summary}</p>
+        <button type="button" className="course-now-body" onClick={() => onNavigate("news")}>
+          <p className="cn-dateline">
+            <span className="live" />
+            <span>Now</span>
+            {announcement.label && (
+              <>
+                <span className="sep">·</span>
+                <span>{announcement.label}</span>
+              </>
+            )}
+            {announcement.audience && (
+              <>
+                <span className="sep">·</span>
+                <span>{announcement.audience}</span>
+              </>
+            )}
+          </p>
+          <h2>{announcement.title}</h2>
+          <p>{announcement.summary}</p>
+        </button>
         {announcement.resources?.length > 0 && (
           <div className="course-now-resources" aria-label="Update resources">
             {announcement.resources.map((resource, index) => (

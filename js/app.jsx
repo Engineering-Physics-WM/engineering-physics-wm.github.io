@@ -17,6 +17,18 @@ import { loadPublishedAnnouncements } from "./announcements.js";
 const Header = ({ page, onNavigate, year, setYear, years, latestAnnouncement }) => {
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [compactHeader, setCompactHeader] = React.useState(false);
+  const [scrolledDown, setScrolledDown] = React.useState(false);
+  const lastScrollY = React.useRef(0);
+
+  React.useEffect(() => {
+    const onScroll = () => {
+      const y = window.scrollY;
+      setScrolledDown(y > lastScrollY.current && y > 80);
+      lastScrollY.current = y;
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   React.useEffect(() => {
     if (!globalThis.matchMedia) return undefined;
@@ -40,7 +52,7 @@ const Header = ({ page, onNavigate, year, setYear, years, latestAnnouncement }) 
   };
 
   return (
-    <header className={"site-header" + (mobileOpen ? " is-open" : "")}>
+    <header className={"site-header" + (mobileOpen ? " is-open" : "") + (scrolledDown && !mobileOpen ? " is-scrolled-down" : "")}>
       <button
         className="brand"
         onClick={handleBrandClick}
