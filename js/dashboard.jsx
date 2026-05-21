@@ -12,6 +12,7 @@ const INSTRUCTOR_EMAIL = "rxyan2@wm.edu";
 const CUSTOM_DRAFT_ID = "custom-draft";
 const TEAM_AUDIENCES = new Set(["team", "team_students", "team_mentors"]);
 const CURRENT_TEAM_MATCHING_MODE = "top1";
+const REGULAR_STUDENT_EMAILS = new Set(["saneeley@wm.edu"]);
 
 const normalizeEmail = (email) => (email || "").trim().toLowerCase();
 
@@ -55,14 +56,17 @@ const normalizeSubmissionRow = (row, projects) => {
 };
 
 const normalizeAllowedStudentRow = (row, projects) => {
-  const honorsProject = projects.find((project) => (
-    project.id === row.honors_project_id ||
-    (row.honors_project_number && project.num === Number(row.honors_project_number))
-  ));
+  const email = normalizeEmail(row.student_email);
+  const honorsProject = REGULAR_STUDENT_EMAILS.has(email)
+    ? null
+    : projects.find((project) => (
+      project.id === row.honors_project_id ||
+      (row.honors_project_number && project.num === Number(row.honors_project_number))
+    ));
 
   return {
     name: row.student_name || row.student_email || "Student",
-    email: normalizeEmail(row.student_email),
+    email,
     honorsProject: honorsProject ? {
       number: honorsProject.num,
       projectId: honorsProject.id,
