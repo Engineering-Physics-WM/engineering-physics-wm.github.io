@@ -243,7 +243,7 @@ const App = () => {
         latestAnnouncement={latestAnnouncement}
       />
       <main key={page + year}>
-        {page === "catalog" && <CatalogPage data={data} onNavigate={onNavigate} />}
+        {page === "catalog" && <CatalogPage data={data} selectedYear={year} onNavigate={onNavigate} />}
         {page === "news" && <NewsPage data={data} currentYear={year} onNavigate={onNavigate} />}
         {page === "ranking" && <RankingPage data={data} onNavigate={onNavigate} />}
         {page === "dashboard" && (

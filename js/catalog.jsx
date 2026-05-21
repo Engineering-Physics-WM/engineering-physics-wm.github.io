@@ -291,7 +291,25 @@ const HeroLatest = ({ announcement, onNavigate }) => {
   );
 };
 
-const CatalogPage = ({ data, onNavigate }) => {
+const CohortPendingPage = ({ year, archiveItem, onNavigate }) => (
+  <div className="page catalog-page">
+    <section className="hero cohort-pending-hero" style={{ position: "relative" }}>
+      <HeroParticles count={12} intensity={window.__epTweakSparks ?? 1} />
+      <div className="hero-main" style={{ position: "relative", zIndex: 1 }}>
+        <p className="kicker"><span className="dot">●</span> &nbsp; {year} cohort</p>
+        <h1>{archiveItem?.status === "archive-pending" ? "Archive coming soon." : archiveItem?.title || "Archive coming soon."}</h1>
+        <p className="cohort-pending-copy">
+          {archiveItem?.summary || "This cohort archive is being organized. Details will appear here once the records are ready."}
+        </p>
+        <div className="cohort-pending-actions">
+          <button className="btn btn-primary" onClick={() => onNavigate("archive")}>Back to archive</button>
+        </div>
+      </div>
+    </section>
+  </div>
+);
+
+const CurrentCatalogPage = ({ data, onNavigate }) => {
   const [search, setSearch] = React.useState("");
   const [areaFilter, setAreaFilter] = React.useState("");
   const [affiliationFilter, setAffiliationFilter] = React.useState("");
@@ -436,6 +454,15 @@ const CatalogPage = ({ data, onNavigate }) => {
       <ProjectDialog project={openProject} displayIdx={openProject ? openProject.num - 1 : -1} onClose={() => setOpenProject(null)} />
     </div>
   );
+};
+
+const CatalogPage = ({ data, selectedYear = data.currentYear, onNavigate }) => {
+  if (selectedYear !== data.currentYear) {
+    const archiveItem = data.archive?.find((item) => item.year === selectedYear);
+    return <CohortPendingPage year={selectedYear} archiveItem={archiveItem} onNavigate={onNavigate} />;
+  }
+
+  return <CurrentCatalogPage data={data} onNavigate={onNavigate} />;
 };
 
 export { AREA_COLORS, CatalogPage };

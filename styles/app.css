@@ -261,6 +261,24 @@
   margin-top: 18px;
   flex-wrap: wrap;
 }
+.cohort-pending-hero {
+  min-height: min(560px, calc(100vh - 190px));
+  align-items: center;
+  padding: clamp(48px, 10vh, 104px) 0;
+}
+.cohort-pending-copy {
+  max-width: 680px;
+  margin: 18px 0 0;
+  color: var(--ink-soft);
+  font-size: clamp(17px, 2vw, 22px);
+  line-height: 1.45;
+}
+.cohort-pending-actions {
+  margin-top: 28px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
 
 .hero-aside { display: flex; flex-direction: column; gap: 20px; }
 .hero-card {
