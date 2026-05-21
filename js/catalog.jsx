@@ -262,8 +262,10 @@ const CourseNow = ({ announcement, referenceItems = [], onNavigate }) => {
             <ul>
               {referenceItems.map((item) => (
                 <li key={item.id}>
-                  <span>{item.label || item.date}</span>
-                  <strong>{item.title}</strong>
+                  <button type="button" className="course-reference-btn" onClick={() => onNavigate("news", item.id)}>
+                    <span>{item.label || item.date}</span>
+                    <strong>{item.title}</strong>
+                  </button>
                 </li>
               ))}
             </ul>

@@ -17,18 +17,6 @@ import { loadPublishedAnnouncements } from "./announcements.js";
 const Header = ({ page, onNavigate, year, setYear, years, latestAnnouncement }) => {
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [compactHeader, setCompactHeader] = React.useState(false);
-  const [scrolledDown, setScrolledDown] = React.useState(false);
-  const lastScrollY = React.useRef(0);
-
-  React.useEffect(() => {
-    const onScroll = () => {
-      const y = window.scrollY;
-      setScrolledDown(y > lastScrollY.current && y > 80);
-      lastScrollY.current = y;
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
 
   React.useEffect(() => {
     if (!globalThis.matchMedia) return undefined;
@@ -52,7 +40,7 @@ const Header = ({ page, onNavigate, year, setYear, years, latestAnnouncement }) 
   };
 
   return (
-    <header className={"site-header" + (mobileOpen ? " is-open" : "") + (scrolledDown && !mobileOpen ? " is-scrolled-down" : "")}>
+    <header className={"site-header" + (mobileOpen ? " is-open" : "")}>
       <button
         className="brand"
         onClick={handleBrandClick}
@@ -236,7 +224,8 @@ const App = () => {
     window.scrollTo({ top: 0, behavior: "instant" });
   }, [page, year]);
 
-  const onNavigate = (p) => setPage(p);
+  const [newsAnchor, setNewsAnchor] = React.useState(null);
+  const onNavigate = (p, anchor = null) => { setPage(p); setNewsAnchor(anchor); };
   const refreshAnnouncements = React.useCallback(() => {
     setAnnouncementRefreshKey((key) => key + 1);
   }, []);
@@ -256,7 +245,7 @@ const App = () => {
       />
       <main key={page + year}>
         {page === "catalog" && <CatalogPage data={data} selectedYear={year} onNavigate={onNavigate} />}
-        {page === "news" && <NewsPage data={data} currentYear={year} onNavigate={onNavigate} />}
+        {page === "news" && <NewsPage data={data} currentYear={year} onNavigate={onNavigate} anchor={newsAnchor} />}
         {page === "ranking" && <RankingPage data={data} onNavigate={onNavigate} />}
         {page === "dashboard" && (
           <AuthGate>

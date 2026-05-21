@@ -33,10 +33,6 @@
   backdrop-filter: blur(18px) saturate(1.1);
   -webkit-backdrop-filter: blur(18px) saturate(1.1);
   border-bottom: 1px solid var(--hairline);
-  transition: transform 240ms var(--ease);
-}
-.site-header.is-scrolled-down {
-  transform: translateY(-110%);
 }
 .brand {
   display: flex; align-items: center; gap: 12px;
@@ -490,7 +486,17 @@
   line-height: 1.35;
   font-weight: 500;
   color: var(--ink);
+  transition: color 160ms;
 }
+.course-reference-btn {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 4px;
+  width: 100%;
+  background: none; border: none; padding: 0;
+  text-align: left; cursor: pointer; color: inherit;
+}
+.course-reference-btn:hover strong { color: var(--pink-ink); }
 
 .cn-viewall {
   margin-top: auto;

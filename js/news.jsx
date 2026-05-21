@@ -56,8 +56,8 @@ const ResourceLink = ({ resource, onNavigate }) => {
   );
 };
 
-const AnnouncementItem = ({ item, onNavigate, compact = false, defaultOpen = false }) => (
-  <details className={"news-item" + (compact ? " is-compact" : "")} open={defaultOpen}>
+const AnnouncementItem = ({ item, onNavigate, compact = false, defaultOpen = false, id }) => (
+  <details id={id} className={"news-item" + (compact ? " is-compact" : "")} open={defaultOpen}>
     <summary>
       <span className="news-date mono">{item.label || formatDate(item.date)}</span>
       <span className="news-summary-text">
@@ -100,9 +100,17 @@ const AnnouncementPanel = ({ announcements, onNavigate }) => {
   );
 };
 
-const NewsPage = ({ data, currentYear, onNavigate }) => {
+const NewsPage = ({ data, currentYear, onNavigate, anchor }) => {
   const announcements = sortAnnouncements((data.announcements || []).filter(item => item.cohortYear === currentYear));
   const shortYear = currentYear.split("-").map(y => `'${y.slice(-2)}`).join("·");
+
+  React.useEffect(() => {
+    if (!anchor) return;
+    const id = setTimeout(() => {
+      document.getElementById(`ann-${anchor}`)?.scrollIntoView({ behavior: "instant", block: "start" });
+    }, 0);
+    return () => clearTimeout(id);
+  }, [anchor]);
 
   return (
     <div className="page news-page">
@@ -128,7 +136,12 @@ const NewsPage = ({ data, currentYear, onNavigate }) => {
           )}
           {announcements.map((item, index) => (
             <Reveal as="div" key={item.id} delay={index * 35}>
-              <AnnouncementItem item={item} onNavigate={onNavigate} defaultOpen={index === 0} />
+              <AnnouncementItem
+                id={`ann-${item.id}`}
+                item={item}
+                onNavigate={onNavigate}
+                defaultOpen={index === 0 || item.id === anchor}
+              />
             </Reveal>
           ))}
         </section>
