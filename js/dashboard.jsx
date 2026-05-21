@@ -386,8 +386,10 @@ const peopleFromTeamRows = (rows, projectId, memberType) => uniqueRecipients(
 );
 
 const resourceLine = (resource) => {
-  const label = resource.kind ? `${resource.kind}: ${resource.label}` : resource.label;
-  if (resource.url) return `${label} - ${resource.url}`;
+  const href = resource.url || resource.href || "";
+  const labelText = resource.label || href;
+  const label = resource.kind ? `${resource.kind}: ${labelText}` : labelText;
+  if (href) return `${label} - ${href}`;
   if (resource.page) return `${label} - open the EP site and choose ${resource.page}`;
   return label;
 };
@@ -1524,7 +1526,12 @@ const annToRow = (ann, instructorEmail) => ({
   title: ann.title,
   summary: ann.summary,
   body: ann.body,
-  resources: ann.resources,
+  resources: (ann.resources || []).map((resource) => ({
+    ...resource,
+    label: resource.label || "",
+    kind: resource.kind || "Link",
+    href: resource.href || resource.url || "",
+  })).filter((resource) => resource.href || resource.page || resource.label),
   audience_label: ann.audience || null,
   label: ann.label || null,
   pinned: Boolean(ann.pinned),
@@ -1555,7 +1562,7 @@ const ResourcesEditor = ({ value, onChange }) => {
       {value.map((r, i) => (
         <div key={i} className="ann-resource-row">
           <input placeholder="Label" value={r.label} onChange={e => set(i, "label", e.target.value)} />
-          <input placeholder="URL (https://...)" value={r.href || ""} onChange={e => set(i, "href", e.target.value)} />
+          <input placeholder="URL (https://...)" value={r.href || r.url || ""} onChange={e => set(i, "href", e.target.value)} />
           <button className="ann-res-remove" onClick={() => remove(i)} title="Remove">×</button>
         </div>
       ))}
@@ -1845,7 +1852,9 @@ const AnnouncementsView = ({ data, seedAnnouncements = [], onAnnouncementsChange
                 <div className="ann-resources">
                   {item.resources.map((r, i) => (
                     <span key={i} className="ann-resource-chip">
-                      {r.href ? <a href={r.href} target="_blank" rel="noopener">{r.label}</a> : r.label}
+                      {(r.href || r.url)
+                        ? <a href={r.href || r.url} target="_blank" rel="noopener">{r.label || r.href || r.url}</a>
+                        : r.label}
                     </span>
                   ))}
                 </div>

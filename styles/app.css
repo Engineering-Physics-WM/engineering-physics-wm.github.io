@@ -372,6 +372,42 @@
   font-size: 16px;
   line-height: 1.6;
 }
+.course-now-resources {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 20px;
+}
+.course-now-resource {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  max-width: 100%;
+  padding: 8px 11px;
+  border: 1px solid color-mix(in oklch, var(--pink-ink) 26%, var(--hairline));
+  border-radius: 999px;
+  background: color-mix(in oklch, white 62%, transparent);
+  color: var(--ink) !important;
+  text-decoration: none !important;
+  font-size: 12px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+  transition: border-color 160ms, background 160ms, color 160ms, transform 160ms var(--ease);
+}
+.course-now-resource:hover {
+  border-color: color-mix(in oklch, var(--pink-ink) 48%, var(--hairline));
+  background: color-mix(in oklch, white 82%, var(--pink-soft));
+  color: var(--pink-ink) !important;
+  transform: translateY(-1px);
+}
+.course-now-resource span {
+  flex: 0 0 auto;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--pink-ink);
+  text-transform: uppercase;
+  letter-spacing: 0.10em;
+}
 
 /* Right aside — Earlier updates list + "View all" link. */
 .course-now-aside {

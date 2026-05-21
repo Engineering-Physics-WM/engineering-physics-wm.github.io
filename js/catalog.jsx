@@ -3,7 +3,7 @@
 import * as React from "react";
 import { HeroParticles, Reveal } from "./motion.jsx";
 import { LinkedText, PersonLink, YangLink, isYangName } from "./links.jsx";
-import { currentCourseAnnouncement, sortAnnouncements } from "./news.jsx";
+import { currentCourseAnnouncement, resourceHref, resourceKind, resourceLabel, sortAnnouncements } from "./news.jsx";
 
 const AREA_COLORS = {
   "Instrumentation / sensors": "oklch(72% 0.060 18)",
@@ -202,16 +202,21 @@ const DirectorQuote = ({ className = "" }) => (
 );
 
 const CourseResource = ({ resource, onNavigate }) => {
+  const label = resourceLabel(resource);
+  const kind = resourceKind(resource);
+  const href = resourceHref(resource);
+
   if (resource.page) {
     return (
       <button type="button" className="course-now-resource" onClick={() => onNavigate(resource.page)}>
-        <span>{resource.kind}</span>{resource.label}
+        <span>{kind}</span>{label}
       </button>
     );
   }
+  if (!href) return null;
   return (
-    <a className="course-now-resource" href={resource.url} target="_blank" rel="noopener">
-      <span>{resource.kind}</span>{resource.label}
+    <a className="course-now-resource" href={href} target="_blank" rel="noopener">
+      <span>{kind}</span>{label}
     </a>
   );
 };
@@ -240,6 +245,13 @@ const CourseNow = ({ announcement, referenceItems = [], onNavigate }) => {
         </p>
         <h2>{announcement.title}</h2>
         <p>{announcement.summary}</p>
+        {announcement.resources?.length > 0 && (
+          <div className="course-now-resources" aria-label="Update resources">
+            {announcement.resources.map((resource, index) => (
+              <CourseResource key={resource.label || resource.href || resource.url || resource.page || index} resource={resource} onNavigate={onNavigate} />
+            ))}
+          </div>
+        )}
       </div>
       {referenceItems.length > 0 && (
         <aside className="course-now-aside">

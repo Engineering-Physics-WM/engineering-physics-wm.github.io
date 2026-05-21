@@ -28,17 +28,29 @@ const currentCourseAnnouncement = (items = []) => {
   return dated[0] || sortAnnouncements(items)[0] || null;
 };
 
+const resourceHref = (resource) => (resource?.url || resource?.href || "").trim();
+const resourceLabel = (resource) => {
+  const href = resourceHref(resource);
+  return (resource?.label || "").trim() || href;
+};
+const resourceKind = (resource) => (resource?.kind || (resource?.page ? "Site" : "Link")).trim();
+
 const ResourceLink = ({ resource, onNavigate }) => {
+  const label = resourceLabel(resource);
+  const kind = resourceKind(resource);
+  const href = resourceHref(resource);
+
   if (resource.page) {
     return (
       <button type="button" className="news-resource" onClick={() => onNavigate(resource.page)}>
-        <span>{resource.kind}</span>{resource.label}
+        <span>{kind}</span>{label}
       </button>
     );
   }
+  if (!href) return null;
   return (
-    <a className="news-resource" href={resource.url} target="_blank" rel="noopener">
-      <span>{resource.kind}</span>{resource.label}
+    <a className="news-resource" href={href} target="_blank" rel="noopener">
+      <span>{kind}</span>{label}
     </a>
   );
 };
@@ -56,8 +68,8 @@ const AnnouncementItem = ({ item, onNavigate, compact = false, defaultOpen = fal
       {item.body?.map((paragraph, index) => <p key={index}>{paragraph}</p>)}
       {item.resources?.length > 0 && (
         <div className="news-resources" aria-label="Announcement resources">
-          {item.resources.map((resource) => (
-            <ResourceLink key={resource.label} resource={resource} onNavigate={onNavigate} />
+          {item.resources.map((resource, index) => (
+            <ResourceLink key={resource.label || resource.href || resource.url || resource.page || index} resource={resource} onNavigate={onNavigate} />
           ))}
         </div>
       )}
@@ -148,3 +160,4 @@ const NewsPage = ({ data, currentYear, onNavigate }) => {
 };
 
 export { AnnouncementPanel, NewsPage, currentCourseAnnouncement, sortAnnouncements };
+export { ResourceLink, resourceHref, resourceLabel, resourceKind };
