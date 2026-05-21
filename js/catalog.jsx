@@ -18,7 +18,7 @@ const AREA_COLORS = {
 };
 const ALL_AREAS = Object.keys(AREA_COLORS);
 
-const ProjectCard = ({ project, displayIdx, onOpen, status = "", statusLabel = "" }) => {
+const ProjectCard = ({ project, displayIdx, onOpen, status = "", statusLabel = "", revealDelay = 0 }) => {
   const railColor = AREA_COLORS[project.areas[0]] || "var(--pink)";
   const cardClass = "project-card" + (status ? ` is-${status}` : "");
   const openFromKeyboard = (event) => {
@@ -28,7 +28,9 @@ const ProjectCard = ({ project, displayIdx, onOpen, status = "", statusLabel = "
   };
 
   return (
-    <article
+    <Reveal
+      as="article"
+      delay={revealDelay}
       className={cardClass}
       data-spark="card"
       data-status={status || undefined}
@@ -57,7 +59,7 @@ const ProjectCard = ({ project, displayIdx, onOpen, status = "", statusLabel = "
         <span className="read">Read brief</span>
         {statusLabel && <span className="project-status-badge">{statusLabel}</span>}
       </div>
-    </article>
+    </Reveal>
   );
 };
 
@@ -383,7 +385,7 @@ const CatalogPage = ({ data, onNavigate }) => {
         <div className="project-grid">
           {filtered.length === 0 ? (
             <div className="empty">No projects match those filters yet.</div>
-          ) : filtered.map((p) => {
+          ) : filtered.map((p, index) => {
             const status = hasProjectStatus ? (activeProjectSet.has(p.id) ? "active" : "inactive") : "";
             const statusLabel = status === "active"
               ? data.cohortStatus?.activeLabel || "Active team"
@@ -398,6 +400,7 @@ const CatalogPage = ({ data, onNavigate }) => {
                 onOpen={setOpenProject}
                 status={status}
                 statusLabel={statusLabel}
+                revealDelay={Math.min(360, index * 45)}
               />
             );
           })}
