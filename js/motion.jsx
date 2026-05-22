@@ -4,7 +4,6 @@ import * as React from "react";
 
 // ---------- Hero particles ----------
 const HeroParticles = ({ count = 14, intensity = 1 }) => {
-  if (intensity <= 0) return null;
   const dots = React.useMemo(() => Array.from({ length: count }, (_, i) => {
     const x = Math.random() * 100;
     const y = 60 + Math.random() * 40;
@@ -16,6 +15,8 @@ const HeroParticles = ({ count = 14, intensity = 1 }) => {
     const size = 2 + Math.random() * 3;
     return { x, y, tx, ty, dur, delay, olive, size };
   }), [count]);
+
+  if (intensity <= 0) return null;
 
   return (
     <div className="particles" aria-hidden="true">

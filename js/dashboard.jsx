@@ -528,7 +528,11 @@ const StudentsView = ({ currentYear, projects, responses, students }) => {
 
   const toggle = (email) => setExpanded(prev => {
     const next = new Set(prev);
-    next.has(email) ? next.delete(email) : next.add(email);
+    if (next.has(email)) {
+      next.delete(email);
+    } else {
+      next.add(email);
+    }
     return next;
   });
 
