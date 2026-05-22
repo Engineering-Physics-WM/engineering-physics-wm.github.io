@@ -342,8 +342,8 @@
 
 .course-now {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
-  gap: 56px;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
+  gap: clamp(32px, 3vw, 48px);
   align-items: stretch;
   margin: 28px calc(var(--gutter) * -1) 56px;
   padding: 48px var(--gutter) 52px;
@@ -353,7 +353,8 @@
   border-bottom: 1px solid var(--hairline);
 }
 .course-now-main {
-  max-width: 720px;
+  width: 100%;
+  max-width: none;
   padding-top: 8px;
 }
 .course-now-body {
@@ -395,6 +396,7 @@
 .cn-dateline .sep { color: var(--hairline-2); }
 
 .course-now h2 {
+  max-width: 980px;
   margin: 0 0 20px;
   font-family: var(--font-display);
   font-size: clamp(32px, 3.6vw, 48px);
@@ -402,11 +404,11 @@
   line-height: 1.04;
   letter-spacing: -0.02em;
   color: var(--ink);
-  text-wrap: balance;
+  text-wrap: pretty;
   transition: color 160ms;
 }
 .course-now-summary {
-  max-width: 60ch;
+  max-width: 76ch;
   margin: 0;
   color: var(--ink-soft);
   font-size: 16px;
