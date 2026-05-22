@@ -444,7 +444,7 @@ const CurrentCatalogPage = ({ data, onNavigate }) => {
         </div>
       </Reveal>
 
-      <Reveal as="section" id="themes" className="is-emph-soft">
+      <Reveal as="section" id="themes" className="is-emph-soft theme-network-panel">
         <div className="section-heading">
           <div>
             <p className="kicker">Idea network</p>
