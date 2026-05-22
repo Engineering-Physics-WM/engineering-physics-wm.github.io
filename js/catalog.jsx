@@ -247,7 +247,8 @@ const CourseNow = ({ announcement, referenceItems = [], onNavigate }) => {
             )}
           </p>
           <h2>{announcement.title}</h2>
-          <p>{announcement.summary}</p>
+          <p className="course-now-summary">{announcement.summary}</p>
+          <span className="course-now-readmore" aria-hidden="true">Read more</span>
         </button>
         {announcement.resources?.length > 0 && (
           <div className="course-now-resources" aria-label="Update resources">
