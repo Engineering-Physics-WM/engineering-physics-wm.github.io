@@ -772,20 +772,10 @@ section.is-emph-soft .section-heading,
   z-index: -1;
   pointer-events: none;
   background:
-    linear-gradient(115deg,
-      transparent 0 20%,
-      color-mix(in oklch, white 34%, transparent) 44%,
-      transparent 70% 100%
-    ),
-    repeating-linear-gradient(32deg,
-      color-mix(in oklch, var(--olive-ink) 9%, transparent) 0 1px,
-      transparent 1px 64px
-    ),
-    repeating-linear-gradient(122deg,
-      color-mix(in oklch, var(--pink-ink) 7%, transparent) 0 1px,
-      transparent 1px 88px
-    );
-  opacity: 0.72;
+    radial-gradient(520px 240px at 16% 18%, color-mix(in oklch, white 48%, transparent), transparent 72%),
+    radial-gradient(620px 300px at 82% 72%, color-mix(in oklch, var(--olive) 13%, transparent), transparent 76%),
+    linear-gradient(115deg, transparent 0 24%, color-mix(in oklch, white 26%, transparent) 48%, transparent 76% 100%);
+  opacity: 0.82;
 }
 .theme-network-panel .section-heading {
   border-bottom: 1px solid color-mix(in oklch, var(--olive-ink) 12%, transparent);
