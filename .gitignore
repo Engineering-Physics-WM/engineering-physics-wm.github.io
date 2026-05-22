@@ -23,6 +23,12 @@ dist/
 # Local roster exports and private student/contact data
 data/*/*roster*.csv
 data/*/students*.json
+data/*/private/
+data/**/*.private.*
+data/**/*ranking*.csv
+data/**/*rankings*.csv
+data/**/*team-assignment*.csv
+data/**/*team-assignments*.csv
 supabase/allowed-students-*.sql
 supabase/*.private.sql
 supabase/.temp/

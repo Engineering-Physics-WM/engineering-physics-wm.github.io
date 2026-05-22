@@ -1,7 +1,8 @@
 -- Template only. Do not commit real student names or emails.
 -- Copy this file to an ignored private file, such as:
---   supabase/allowed-students-2026-2027.private.sql
--- Then replace the example rows and run the private file in Supabase SQL Editor.
+--   supabase/allowed-students-2025-2026.private.sql
+--   supabase/allowed-students-2027-2028.private.sql
+-- Then replace the cohort year, example rows, and honors project values before running the private file in Supabase SQL Editor.
 
 insert into public.ranking_allowed_students (
   cohort_year,

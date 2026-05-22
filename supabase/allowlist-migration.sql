@@ -56,7 +56,7 @@ to anon
 with check (
   student_email ~* '^[^@[:space:]]+@wm\.edu$'
   and jsonb_typeof(ranking) = 'array'
-  and jsonb_array_length(ranking) = 9
+  and jsonb_array_length(ranking) > 0
   and public.is_ranking_student_allowed(
     ranking_submissions.cohort_year,
     ranking_submissions.student_email
@@ -78,7 +78,7 @@ using (
 with check (
   student_email ~* '^[^@[:space:]]+@wm\.edu$'
   and jsonb_typeof(ranking) = 'array'
-  and jsonb_array_length(ranking) = 9
+  and jsonb_array_length(ranking) > 0
   and public.is_ranking_student_allowed(
     ranking_submissions.cohort_year,
     ranking_submissions.student_email

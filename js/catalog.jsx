@@ -64,7 +64,7 @@ const ProjectCard = ({ project, displayIdx, onOpen, status = "", statusLabel = "
   );
 };
 
-const ProjectDialog = ({ project, displayIdx, onClose }) => {
+const ProjectDialog = ({ project, displayIdx, onClose, yearLabel = "", shortYearLabel = "" }) => {
   const dialogRef = React.useRef(null);
   React.useEffect(() => {
     if (project) {
@@ -85,7 +85,7 @@ const ProjectDialog = ({ project, displayIdx, onClose }) => {
       <div className="dialog-inner">
         <div className="dialog-head">
           <div>
-            <span className="num">PROJECT NO. {String(displayIdx + 1).padStart(2, "0")} · 2026·27</span>
+            <span className="num">PROJECT NO. {String(displayIdx + 1).padStart(2, "0")} · {shortYearLabel}</span>
             <h2>{project.title}</h2>
             <p className="advisor"><PersonLink name={project.advisor}>{project.advisor}</PersonLink> · {project.affiliation}</p>
           </div>
@@ -131,7 +131,7 @@ const ProjectDialog = ({ project, displayIdx, onClose }) => {
                 </dd>
               </>
             )}
-            <dt>Year</dt><dd className="mono">2026 — 2027</dd>
+            <dt>Year</dt><dd className="mono">{yearLabel}</dd>
             <dt>Team size</dt><dd>2 – 3 students</dd>
           </dl>
           <section className="dialog-section">
@@ -298,15 +298,15 @@ const HeroLatest = ({ announcement, onNavigate }) => {
   );
 };
 
-const CohortPendingPage = ({ year, archiveItem, onNavigate }) => (
+const CohortPendingPage = ({ data, onNavigate }) => (
   <div className="page catalog-page">
     <section className="hero cohort-pending-hero" style={{ position: "relative" }}>
       <HeroParticles count={12} intensity={window.__epTweakSparks ?? 1} />
       <div className="hero-main" style={{ position: "relative", zIndex: 1 }}>
-        <p className="kicker"><span className="dot">●</span> &nbsp; {year} cohort</p>
-        <h1>{archiveItem?.status === "archive-pending" ? "Archive coming soon." : archiveItem?.title || "Archive coming soon."}</h1>
+        <p className="kicker"><span className="dot">●</span> &nbsp; {data.currentYear} cohort</p>
+        <h1>{data.placeholderTitle || data.archiveItem?.title || "Cohort materials coming soon."}</h1>
         <p className="cohort-pending-copy">
-          {archiveItem?.summary || "This cohort archive is being organized. Details will appear here once the records are ready."}
+          {data.placeholderSummary || data.archiveItem?.summary || "This cohort is ready for materials once the records are available."}
         </p>
         <div className="cohort-pending-actions">
           <button className="btn btn-primary" onClick={() => onNavigate("archive")}>Back to archive</button>
@@ -331,7 +331,12 @@ const CurrentCatalogPage = ({ data, onNavigate }) => {
   const hasProjectStatus = activeProjectIds.length > 0;
   const activeProjectSet = React.useMemo(() => new Set(activeProjectIds), [activeProjectIds]);
   const activeProjectCount = hasProjectStatus ? activeProjectSet.size : data.projects.length;
-  const inactiveProjectCount = hasProjectStatus ? Math.max(0, data.projects.length - activeProjectSet.size) : 0;
+  const slateHeading = hasProjectStatus
+    ? `${activeProjectCount} capstone team${activeProjectCount === 1 ? " is" : "s are"} underway.`
+    : `${data.projects.length} capstone project${data.projects.length === 1 ? " is" : "s are"} ready.`;
+  const slateCopy = hasProjectStatus
+    ? "Browse the active team briefs and the full proposal slate for this cohort."
+    : "Browse the project briefs and proposal slate for this cohort.";
   const currentAnnouncements = React.useMemo(() => (
     sortAnnouncements((data.announcements || []).filter(item => item.cohortYear === data.currentYear))
   ), [data.announcements, data.currentYear]);
@@ -369,7 +374,7 @@ const CurrentCatalogPage = ({ data, onNavigate }) => {
       <section className="hero" style={{ position: "relative" }}>
         <HeroParticles count={18} intensity={window.__epTweakSparks ?? 1} />
         <div className="hero-main" style={{ position: "relative", zIndex: 1 }}>
-          <p className="kicker"><span className="dot">●</span> &nbsp; 2026 — 2027 cohort</p>
+          <p className="kicker"><span className="dot">●</span> &nbsp; {data.yearLabel} cohort</p>
           <h1>Engineering Physics Capstone</h1>
           <div className="hero-split">
             <DirectorQuote className="hero-pull-banner" />
@@ -382,10 +387,10 @@ const CurrentCatalogPage = ({ data, onNavigate }) => {
       <Reveal as="section" id="projects">
         <div className="section-heading">
           <div>
-            <p className="kicker">Team slate · 2026·27</p>
-            <h2>{activeProjectCount} capstone teams are underway.</h2>
+            <p className="kicker">Team slate · {data.shortYearLabel}</p>
+            <h2>{slateHeading}</h2>
             <p style={{ maxWidth: 560, color: "var(--ink-soft)", marginTop: 12, fontSize: 15 }}>
-              Browse the active team briefs and the full proposal slate for this cohort.
+              {slateCopy}
             </p>
           </div>
           <p className="meta mono">{String(filtered.length).padStart(2, "0")} / {String(data.projects.length).padStart(2, "0")} shown</p>
@@ -458,15 +463,20 @@ const CurrentCatalogPage = ({ data, onNavigate }) => {
         }} />
       </Reveal>
 
-      <ProjectDialog project={openProject} displayIdx={openProject ? openProject.num - 1 : -1} onClose={() => setOpenProject(null)} />
+      <ProjectDialog
+        project={openProject}
+        displayIdx={openProject ? openProject.num - 1 : -1}
+        onClose={() => setOpenProject(null)}
+        yearLabel={data.yearLabel}
+        shortYearLabel={data.shortYearLabel}
+      />
     </div>
   );
 };
 
-const CatalogPage = ({ data, selectedYear = data.currentYear, onNavigate }) => {
-  if (selectedYear !== data.currentYear) {
-    const archiveItem = data.archive?.find((item) => item.year === selectedYear);
-    return <CohortPendingPage year={selectedYear} archiveItem={archiveItem} onNavigate={onNavigate} />;
+const CatalogPage = ({ data, onNavigate }) => {
+  if (!data.projects?.length) {
+    return <CohortPendingPage data={data} onNavigate={onNavigate} />;
   }
 
   return <CurrentCatalogPage data={data} onNavigate={onNavigate} />;

@@ -14,11 +14,18 @@ create table if not exists public.ranking_submissions (
   constraint ranking_submissions_wm_email
     check (student_email ~* '^[^@[:space:]]+@wm\.edu$'),
   constraint ranking_submissions_ranking_array
-    check (jsonb_typeof(ranking) = 'array' and jsonb_array_length(ranking) = 9)
+    check (jsonb_typeof(ranking) = 'array' and jsonb_array_length(ranking) > 0)
 );
 
 alter table public.ranking_submissions
   add column if not exists updated_at timestamptz not null default now();
+
+alter table public.ranking_submissions
+  drop constraint if exists ranking_submissions_ranking_array;
+
+alter table public.ranking_submissions
+  add constraint ranking_submissions_ranking_array
+  check (jsonb_typeof(ranking) = 'array' and jsonb_array_length(ranking) > 0);
 
 create table if not exists public.ranking_allowed_students (
   id uuid primary key default gen_random_uuid(),
@@ -151,8 +158,8 @@ begin
   end if;
 
   if jsonb_typeof(submit_ranking) is distinct from 'array'
-    or jsonb_array_length(submit_ranking) <> 9 then
-    raise exception 'Ranking must include every project.' using errcode = '22023';
+    or jsonb_array_length(submit_ranking) < 1 then
+    raise exception 'Ranking must include at least one project.' using errcode = '22023';
   end if;
 
   if not public.is_ranking_poll_open(submit_cohort_year) then
@@ -229,7 +236,7 @@ with check (
   student_email ~* '^[^@[:space:]]+@wm\.edu$'
   and public.is_ranking_poll_open(ranking_submissions.cohort_year)
   and jsonb_typeof(ranking) = 'array'
-  and jsonb_array_length(ranking) = 9
+  and jsonb_array_length(ranking) > 0
   and public.is_ranking_student_allowed(
     ranking_submissions.cohort_year,
     ranking_submissions.student_email
@@ -253,7 +260,7 @@ with check (
   student_email ~* '^[^@[:space:]]+@wm\.edu$'
   and public.is_ranking_poll_open(ranking_submissions.cohort_year)
   and jsonb_typeof(ranking) = 'array'
-  and jsonb_array_length(ranking) = 9
+  and jsonb_array_length(ranking) > 0
   and public.is_ranking_student_allowed(
     ranking_submissions.cohort_year,
     ranking_submissions.student_email

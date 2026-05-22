@@ -2018,7 +2018,7 @@ const DashboardPage = ({ data, seedAnnouncements, onNavigate, onAnnouncementsCha
       <section className="dashboard-hero">
         <div>
           <p className="kicker"><span className="dot">●</span> &nbsp; Instructor view · <YangLink>Prof. Ran Yang</YangLink></p>
-          <h1>Cohort dashboard <span style={{ color: "var(--muted)", fontStyle: "italic" }}>2026·27</span></h1>
+          <h1>Cohort dashboard <span style={{ color: "var(--muted)", fontStyle: "italic" }}>{data.shortYearLabel}</span></h1>
           <p style={{ color: "var(--ink-soft)", fontSize: 16, maxWidth: 580 }}>
             Live poll submissions power the ranking distribution, individual responses, conflict heatmap,
             locked current teams, optional auto-match previews, and BCC email drafts.

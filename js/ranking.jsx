@@ -6,8 +6,7 @@ import { isSupabaseConfigured, supabase } from "./supabaseClient.js";
 import { PersonLink, YangLink } from "./links.jsx";
 
 const WM_EMAIL_RE = /^[^@\s]+@wm\.edu$/i;
-const POLL_CLOSED = true;
-const POLL_CLOSED_MESSAGE = "The ranking poll closed on Wednesday, May 13 at 4:00 PM.";
+const DEFAULT_POLL_CLOSED_MESSAGE = "The ranking poll is not open for this cohort.";
 const normalizeStudentEmail = (value) => (
   value.replace(/[\u200B-\u200D\uFEFF]/g, "").trim().toLowerCase()
 );
@@ -140,7 +139,9 @@ const PrivacyNotice = () => (
 );
 
 const RankingPage = ({ data, onNavigate }) => {
-  const DRAFT_KEY = "ep-ranking-draft-2627";
+  const pollClosed = data.rankingPoll?.isClosed ?? true;
+  const pollClosedMessage = data.rankingPoll?.closedMessage || DEFAULT_POLL_CLOSED_MESSAGE;
+  const DRAFT_KEY = `ep-ranking-draft-${data.currentYear}`;
   const [name, setName] = React.useState("");
   const [email, setEmail] = React.useState("");
   const [order, setOrder] = React.useState(() => {
@@ -172,12 +173,12 @@ const RankingPage = ({ data, onNavigate }) => {
         setOrder([...restored, ...missing]);
       }
     } catch {}
-  }, [data.projects]);
+  }, [DRAFT_KEY, data.projects]);
 
   // Persist draft
   React.useEffect(() => {
     localStorage.setItem(DRAFT_KEY, JSON.stringify({ name, email, order }));
-  }, [name, email, order]);
+  }, [DRAFT_KEY, name, email, order]);
 
   // Update step
   React.useEffect(() => {
@@ -220,8 +221,8 @@ const RankingPage = ({ data, onNavigate }) => {
   };
 
   const submit = async () => {
-    if (POLL_CLOSED) {
-      setStatus(POLL_CLOSED_MESSAGE);
+    if (pollClosed) {
+      setStatus(pollClosedMessage);
       return;
     }
     if (!name.trim() || !email.trim()) {
@@ -309,6 +310,22 @@ const RankingPage = ({ data, onNavigate }) => {
     }, 900);
   };
 
+  if (!data.projects?.length) {
+    return (
+      <div className="page">
+        <section className="ranking-hero">
+          <div>
+            <p className="kicker"><span className="dot">●</span> &nbsp; Ranking poll · {data.currentYear}</p>
+            <h1>Project slate <span className="ital">coming soon.</span></h1>
+            <p>{data.placeholderSummary || "This cohort is ready for a ranking poll once project materials are loaded."}</p>
+            <p className="construction-note">{pollClosedMessage}</p>
+            <button className="btn btn-primary" onClick={() => onNavigate("catalog")}>Back to cohort home</button>
+          </div>
+        </section>
+      </div>
+    );
+  }
+
   if (submitted) {
     return (
       <div className="page">
@@ -337,7 +354,7 @@ const RankingPage = ({ data, onNavigate }) => {
           <p style={{ color: "var(--ink-soft)", margin: "0 0 12px" }}>The form keeps one saved response per student email. Submitting again with the same email updates that response.</p>
           <div className="endpoints">
             <div className="endpoint"><div><span className="ep-method">POST</span><span className="ep-path">/api/rankings</span></div><div className="ep-desc">Stores or updates ranking against a year + student.</div></div>
-            <div className="endpoint"><div><span className="ep-method">GET</span><span className="ep-path">/api/cohort/2026-2027</span></div><div className="ep-desc">Returns the live response set for the instructor view.</div></div>
+            <div className="endpoint"><div><span className="ep-method">GET</span><span className="ep-path">/api/cohort/{data.currentYear}</span></div><div className="ep-desc">Returns the live response set for the instructor view.</div></div>
             <div className="endpoint"><div><span className="ep-method">POST</span><span className="ep-path">/api/teams/auto</span></div><div className="ep-desc">Runs the matching algorithm and returns a team draft.</div></div>
           </div>
         </Reveal>
@@ -352,7 +369,7 @@ const RankingPage = ({ data, onNavigate }) => {
           <p className="kicker"><span className="dot">●</span> &nbsp; Step into your capstone year</p>
           <h1>Rank the projects that <span className="ital">pull&nbsp;you&nbsp;in.</span></h1>
           <p>Drag the slate into your preferred order. Top three carry the most weight, and the full ranking helps when teams need balancing.</p>
-          <p className="construction-note">{POLL_CLOSED ? POLL_CLOSED_MESSAGE : isSupabaseConfigured ? "Student polling live · one saved response per W&M email" : "Student polling mockup · under construction · submissions stay local for now"}</p>
+          <p className="construction-note">{pollClosed ? pollClosedMessage : isSupabaseConfigured ? "Student polling live · one saved response per W&M email" : "Student polling mockup · under construction · submissions stay local for now"}</p>
         </div>
       </section>
 
@@ -382,10 +399,10 @@ const RankingPage = ({ data, onNavigate }) => {
             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="username@wm.edu" autoComplete="email" />
           </label>
           <PrivacyNotice />
-          <p className="status-line">{POLL_CLOSED ? POLL_CLOSED_MESSAGE : status}</p>
+          <p className="status-line">{pollClosed ? pollClosedMessage : status}</p>
           <div className="button-row">
-            <button className="btn btn-primary" data-spark onClick={submit} disabled={POLL_CLOSED || submitting}>
-              {POLL_CLOSED ? "Poll closed" : submitting ? "Submitting…" : "Submit ranking"}
+            <button className="btn btn-primary" data-spark onClick={submit} disabled={pollClosed || submitting}>
+              {pollClosed ? "Poll closed" : submitting ? "Submitting…" : "Submit ranking"}
             </button>
             <button className="btn btn-ghost" onClick={reset}>Reset order</button>
           </div>

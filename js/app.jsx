@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { createRoot } from "react-dom/client";
-import { EP_DATA } from "./data.js";
+import { EP_DATA, formatAcademicYear, getSeedAnnouncements, resolveCohortData } from "./data.js";
 import { Monogram } from "./monogram.jsx";
 import { SparkLayer } from "./motion.jsx";
 import { CatalogPage } from "./catalog.jsx";
@@ -14,9 +14,10 @@ import { NewsPage, currentCourseAnnouncement } from "./news.jsx";
 import { TweakPanelInline } from "./tweaks.jsx";
 import { loadPublishedAnnouncements } from "./announcements.js";
 
-const Header = ({ page, onNavigate, year, setYear, years, latestAnnouncement }) => {
+const Header = ({ page, onNavigate, year, setYear, years, currentYear, latestAnnouncement }) => {
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [compactHeader, setCompactHeader] = React.useState(false);
+  const selectedYearLabel = formatAcademicYear(year, "-");
 
   React.useEffect(() => {
     if (!globalThis.matchMedia) return undefined;
@@ -52,7 +53,7 @@ const Header = ({ page, onNavigate, year, setYear, years, latestAnnouncement }) 
         <div className="brand-stack">
           <span className="brand-mono">Engineering Physics<em>Capstone HQ</em></span>
           <span className="brand-links">
-            <span>2026-2027 course home</span>
+            <span>{selectedYearLabel} {year === currentYear ? "course home" : "cohort"}</span>
             <span className="brand-sep">·</span>
             <a href="https://www.wm.edu/as/physics/" target="_blank" rel="noopener" onClick={e => e.stopPropagation()}>Physics</a>
             <span className="brand-sep">·</span>
@@ -70,9 +71,9 @@ const Header = ({ page, onNavigate, year, setYear, years, latestAnnouncement }) 
               key={y.id}
               className="year-pill"
               aria-current={y.id === year}
-              disabled={y.status === "future" || (y.status !== "current" && y.id !== year)}
+              disabled={false}
               onClick={() => { setYear(y.id); setMobileOpen(false); }}
-              title={y.status === "future" ? "Reserved" : y.id === "2026-2027" ? "Current cohort" : "Archive"}
+              title={y.status === "future" ? "Reserved cohort" : y.id === currentYear ? "Current cohort" : "Archive"}
             >
               {y.status === "future" && <span className="future-dot" />}
               {y.label}
@@ -91,7 +92,7 @@ const Header = ({ page, onNavigate, year, setYear, years, latestAnnouncement }) 
   );
 };
 
-const Footer = ({ onNavigate }) => (
+const Footer = ({ onNavigate, yearLabel }) => (
   <footer className="site-footer">
     <div className="footer-top">
       <div className="footer-brand">
@@ -135,7 +136,7 @@ const Footer = ({ onNavigate }) => (
 
     <div className="footer-meta">
       <span className="mono">Engineering Physics Capstone</span>
-      <span className="mono">2026 — 2027</span>
+      <span className="mono">{yearLabel}</span>
       <YangLink className="mono">© Ran Yang</YangLink>
     </div>
   </footer>
@@ -173,10 +174,17 @@ const App = () => {
     return () => { active = false; };
   }, [announcementRefreshKey]);
 
-  const data = React.useMemo(() => {
-    if (!liveAnnouncements?.length) return EP_DATA;
+  const allData = React.useMemo(() => {
+    const seedAnnouncements = getSeedAnnouncements(EP_DATA);
+    if (!liveAnnouncements?.length) {
+      return {
+        ...EP_DATA,
+        staticAnnouncements: seedAnnouncements,
+        announcements: seedAnnouncements,
+      };
+    }
 
-    const seededBySlug = new Map(EP_DATA.announcements.map((item) => [announcementKey(item), item]));
+    const seededBySlug = new Map(seedAnnouncements.map((item) => [announcementKey(item), item]));
     const liveSlugs = new Set();
     const liveNowByCohort = new Map();
     liveAnnouncements.filter(isNowAnnouncement).forEach((item) => {
@@ -196,7 +204,7 @@ const App = () => {
         : item;
       return seeded ? { ...seeded, ...normalizedItem, live: true } : normalizedItem;
     });
-    const seededOnly = EP_DATA.announcements
+    const seededOnly = seedAnnouncements
       .filter((item) => !liveSlugs.has(announcementKey(item)))
       .map((item) => (
         liveNowCohorts.has(item.cohortYear) && isNowAnnouncement(item)
@@ -206,9 +214,14 @@ const App = () => {
 
     return {
       ...EP_DATA,
+      staticAnnouncements: seedAnnouncements,
       announcements: [...mergedLive, ...seededOnly],
     };
   }, [liveAnnouncements]);
+
+  const data = React.useMemo(() => (
+    resolveCohortData(allData, year)
+  ), [allData, year]);
 
   const latestAnnouncement = React.useMemo(() => (
     currentCourseAnnouncement((data.announcements || []).filter(item => item.cohortYear === data.currentYear))
@@ -240,18 +253,19 @@ const App = () => {
         onNavigate={onNavigate}
         year={year}
         setYear={setYear}
-        years={data.years}
+        years={allData.years}
+        currentYear={allData.currentYear}
         latestAnnouncement={latestAnnouncement}
       />
       <main key={page + year}>
-        {page === "catalog" && <CatalogPage data={data} selectedYear={year} onNavigate={onNavigate} />}
+        {page === "catalog" && <CatalogPage data={data} onNavigate={onNavigate} />}
         {page === "news" && <NewsPage data={data} currentYear={year} onNavigate={onNavigate} anchor={newsAnchor} />}
         {page === "ranking" && <RankingPage data={data} onNavigate={onNavigate} />}
         {page === "dashboard" && (
           <AuthGate>
             <DashboardPage
               data={data}
-              seedAnnouncements={EP_DATA.announcements}
+              seedAnnouncements={data.seedAnnouncements}
               onNavigate={onNavigate}
               onAnnouncementsChange={refreshAnnouncements}
             />
@@ -259,7 +273,7 @@ const App = () => {
         )}
         {page === "archive" && <ArchivePage data={data} onNavigate={onNavigate} currentYear={year} setYear={setYear} />}
       </main>
-      <Footer onNavigate={onNavigate} />
+      <Footer onNavigate={onNavigate} yearLabel={data.yearLabel} />
       <TweakPanelInline />
     </div>
   );

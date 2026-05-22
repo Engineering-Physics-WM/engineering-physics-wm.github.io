@@ -28,11 +28,18 @@ Copy `.env.example` to `.env.local` and add the Supabase project URL and publish
 
 ## Data
 
-Project data lives in `data/<year>/`. Student rosters, ranking submissions, team assignments, and other private course records are stored in Supabase and are not checked in.
+Project data lives in `data/<year>/`. The app is prepared for `2025-2026`, `2026-2027`, and `2027-2028`; each cohort can have its own project slate, status labels, announcements, ranking poll state, and dashboard records.
 
-Cohort announcements load from Supabase when configured. The `js/data.js` announcements array is the fallback and seed source. Public files attached to announcements can be placed in `public/announcements/<year>/`.
+Public files attached to announcements can be placed in `public/announcements/<year>/`. Cohort announcements load from Supabase when configured. The `js/data.js` cohort announcements are the fallback and seed source.
 
-Only public course information should be committed to this repository. Student preference data and private roster details belong in the authenticated dashboard/database.
+Only public course information should be committed to this repository. Student rosters, ranking submissions, team assignments, student emails, private notes, and other private course records belong in Supabase or ignored local files.
+
+When adding a cohort:
+
+- Put public project/archive materials under `data/<year>/`.
+- Put public announcement files under `public/announcements/<year>/`.
+- Add or update the cohort entry in `js/data.js`.
+- Load private allowlists, ranking submissions, and saved team rows into Supabase using the same `cohort_year`.
 
 ## Dashboard
 
@@ -44,6 +51,8 @@ The instructor dashboard (protected by Supabase auth) includes:
 - **Auto team-making** — algorithm-generated team previews with manual adjustment
 - **Email drafts** — compose BCC emails to students, mentors, or specific teams; opens the system mail client
 - **Updates** — create, edit, and delete public cohort announcements
+
+The dashboard reads the selected cohort year, so the same views work for previous, current, and future cohorts once their Supabase rows use the matching `cohort_year`.
 
 The dashboard is for course administration. Do not publish individual student rankings, private notes, or non-directory student information on public pages.
 

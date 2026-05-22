@@ -109,7 +109,7 @@ const announcements2026 = [
 
 const EP_DATA = {
   years: [
-    { id: "2025-2026", label: "25·26", status: "archive-pending" },
+    { id: "2025-2026", label: "25·26", status: "past" },
     { id: "2026-2027", label: "26·27", status: "current" },
     { id: "2027-2028", label: "27·28", status: "future" },
   ],
@@ -266,6 +266,130 @@ const EP_DATA = {
     { year: "2026-2027", title: "Current cohort — you are here", projects: 9, teams: 6, students: 18, summary: "Teams are formed for the current course year. Quantum Forge industry track joins the slate.", status: "current" },
     { year: "2027-2028", title: "Reserved", projects: null, teams: null, students: null, summary: "Placeholder for next year. Ranking and team data will land here once the cohort starts.", status: "future" },
   ],
+
+  cohorts: {
+    "2025-2026": {
+      title: "Previous cohort",
+      projects: [],
+      announcements: [],
+      placeholder: true,
+      placeholderTitle: "2025-2026 archive ready for materials.",
+      placeholderSummary: "The app is prepared for the 2025-2026 project slate, public updates, final teams, and dashboard records. Add the real public materials when they are ready.",
+      cohortStatus: {
+        label: "Archive prep",
+        activeLabel: "Final team",
+        inactiveLabel: "Proposal archive",
+        activeProjectIds: [],
+      },
+      rankingPoll: {
+        isClosed: true,
+        closedMessage: "The 2025-2026 ranking poll is archived while materials are being loaded.",
+      },
+    },
+    "2026-2027": {
+      title: "Current cohort",
+      announcements: announcements2026,
+      rankingPoll: {
+        isClosed: true,
+        closedMessage: "The ranking poll closed on Wednesday, May 13 at 4:00 PM.",
+      },
+    },
+    "2027-2028": {
+      title: "Future cohort",
+      projects: [],
+      announcements: [],
+      placeholder: true,
+      placeholderTitle: "2027-2028 cohort reserved.",
+      placeholderSummary: "The app is prepared for the next project slate, ranking poll, public updates, and dashboard records. Add proposals and roster data when that cycle opens.",
+      cohortStatus: {
+        label: "Reserved",
+        activeLabel: "Active team",
+        inactiveLabel: "Inactive this year",
+        activeProjectIds: [],
+      },
+      rankingPoll: {
+        isClosed: true,
+        closedMessage: "The 2027-2028 ranking poll is not open yet.",
+      },
+    },
+  },
 };
 
-export { EP_DATA };
+const formatAcademicYear = (year, separator = " — ") => (
+  String(year || "").split("-").filter(Boolean).join(separator)
+);
+
+const shortAcademicYear = (year) => (
+  String(year || "").split("-").filter(Boolean).map((part) => part.slice(-2)).join("·")
+);
+
+const announcementKey = (item) => `${item.cohortYear || ""}:${item.slug || item.id || item.title || ""}`;
+
+const getSeedAnnouncements = (data = EP_DATA) => {
+  if (Array.isArray(data.staticAnnouncements)) return data.staticAnnouncements;
+  const byKey = new Map();
+  (data.announcements || []).forEach((item) => {
+    if (item) byKey.set(announcementKey(item), item);
+  });
+  Object.values(data.cohorts || {}).forEach((cohort) => {
+    (cohort.announcements || []).forEach((item) => {
+      if (item) byKey.set(announcementKey(item), item);
+    });
+  });
+  return [...byKey.values()];
+};
+
+const getSeedAnnouncementsForCohort = (data = EP_DATA, year = data.currentYear) => (
+  getSeedAnnouncements(data).filter((item) => item.cohortYear === year)
+);
+
+const resolveCohortData = (data = EP_DATA, selectedYear = data.currentYear) => {
+  const year = selectedYear || data.currentYear;
+  const isDefaultYear = year === data.currentYear;
+  const cohort = data.cohorts?.[year] || {};
+  const archiveItem = data.archive?.find((item) => item.year === year) || null;
+  const projects = Array.isArray(cohort.projects)
+    ? cohort.projects
+    : isDefaultYear
+      ? data.projects || []
+      : [];
+  const cohortStatus = cohort.cohortStatus || (isDefaultYear ? data.cohortStatus : {
+    label: archiveItem?.status === "future" ? "Reserved" : "Archive",
+    activeLabel: "Active team",
+    inactiveLabel: "Inactive this year",
+    activeProjectIds: [],
+  });
+  const seedAnnouncements = getSeedAnnouncementsForCohort(data, year);
+
+  return {
+    ...data,
+    ...cohort,
+    currentYear: year,
+    selectedYear: year,
+    title: cohort.title || archiveItem?.title || year,
+    yearLabel: formatAcademicYear(year),
+    shortYearLabel: shortAcademicYear(year),
+    archiveItem,
+    projects,
+    cohortStatus,
+    announcements: data.announcements || [],
+    seedAnnouncements,
+    rankingPoll: {
+      isClosed: true,
+      closedMessage: "The ranking poll is not open for this cohort.",
+      ...(cohort.rankingPoll || {}),
+    },
+    placeholder: Boolean(cohort.placeholder && projects.length === 0),
+    placeholderTitle: cohort.placeholderTitle || archiveItem?.title || "Cohort materials coming soon.",
+    placeholderSummary: cohort.placeholderSummary || archiveItem?.summary || "This cohort is ready for materials once the records are available.",
+  };
+};
+
+export {
+  EP_DATA,
+  formatAcademicYear,
+  getSeedAnnouncements,
+  getSeedAnnouncementsForCohort,
+  resolveCohortData,
+  shortAcademicYear,
+};
