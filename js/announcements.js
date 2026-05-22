@@ -1,4 +1,5 @@
 import { isSupabaseConfigured, supabase } from "./supabaseClient.js";
+import { SITE_PAGE_LABELS, normalizeAnnouncementResources, resourcePageFromTarget } from "./resources.js";
 
 const ANNOUNCEMENT_COLUMNS = [
   "id",
@@ -54,6 +55,72 @@ const removeEmailShell = (paragraphs) => {
   return cleaned;
 };
 
+const URL_RE = /\bhttps?:\/\/[^\s<>"']+/gi;
+const SITE_PAGE_INSTRUCTION_RE = /open the EP site and choose\s+([a-z][a-z0-9_-]*(?:\s+[a-z][a-z0-9_-]*)?)/i;
+
+const trimLinkTarget = (value) => cleanText(value).replace(/[),.;:!?]+$/, "");
+
+const labelFromUrl = (href) => {
+  try {
+    return new URL(href).hostname.replace(/^www\./, "");
+  } catch {
+    return "Link";
+  }
+};
+
+const kindAndLabelFromPrefix = (prefix, fallbackLabel = "Link") => {
+  const cleaned = cleanText(prefix)
+    .replace(/^\s*[-•]\s*/, "")
+    .replace(/\s*[-:]\s*$/, "")
+    .trim();
+  const typed = cleaned.match(/^([A-Za-z][A-Za-z ]{1,18}):\s*(.+)$/);
+  if (typed) return { kind: typed[1].trim(), label: typed[2].trim() };
+  return { kind: "Link", label: cleaned || fallbackLabel };
+};
+
+const resourceFromDraftLine = (line) => {
+  const text = cleanText(line).replace(/^\s*[-•]\s*/, "");
+  if (!text) return null;
+
+  const urlMatch = text.match(URL_RE)?.[0] || "";
+  const pageMatch = text.match(SITE_PAGE_INSTRUCTION_RE);
+  const target = trimLinkTarget(urlMatch || pageMatch?.[1] || "");
+  if (!target) return null;
+
+  const prefixEnd = urlMatch ? text.indexOf(urlMatch) : pageMatch.index;
+  const page = resourcePageFromTarget(target);
+  const fallbackLabel = page ? SITE_PAGE_LABELS[page] : labelFromUrl(target);
+  const { kind, label } = kindAndLabelFromPrefix(text.slice(0, prefixEnd), fallbackLabel);
+
+  return page
+    ? { label: label || fallbackLabel, kind: "Site", page }
+    : { label: label || fallbackLabel, kind, href: target };
+};
+
+const resourcesFromDraftText = (text) => (
+  cleanText(text)
+    .split(/\n+/)
+    .map(resourceFromDraftLine)
+    .filter(Boolean)
+);
+
+const splitDraftContentAndResources = (paragraphs) => {
+  const content = [];
+  const resources = [];
+
+  paragraphs.forEach((paragraph) => {
+    if (/^resources?:\s*/i.test(paragraph)) {
+      resources.push(...resourcesFromDraftText(paragraph.replace(/^resources?:\s*/i, "")));
+      return;
+    }
+
+    resources.push(...[...paragraph.matchAll(URL_RE)].map((match) => resourceFromDraftLine(match[0])).filter(Boolean));
+    content.push(paragraph);
+  });
+
+  return { content, resources };
+};
+
 const todayIsoDate = () => new Date().toISOString().slice(0, 10);
 
 const makeNowSlug = (cohortYear) => `${cohortYear}-${DASHBOARD_NOW_SLUG}`;
@@ -68,17 +135,18 @@ const announcementFromRow = (row) => ({
   title: row.title,
   summary: row.summary,
   body: normalizeList(row.body),
-  resources: normalizeList(row.resources),
+  resources: normalizeAnnouncementResources(normalizeList(row.resources)),
   audience: row.audience_label || "",
   pinned: Boolean(row.pinned),
   live: true,
 });
 
-const draftToAnnouncement = ({ cohortYear, subject, body, audienceLabel }) => {
+const draftToAnnouncement = ({ cohortYear, subject, body, audienceLabel, resources = [] }) => {
   const paragraphs = removeEmailShell(splitBodyParagraphs(body));
+  const draftParts = splitDraftContentAndResources(paragraphs);
   const title = stripSubjectPrefix(subject, cohortYear) || "Cohort update.";
-  const summary = paragraphs[0] || "New Engineering Physics Capstone update.";
-  const rest = paragraphs.slice(1);
+  const summary = draftParts.content[0] || "New Engineering Physics Capstone update.";
+  const rest = draftParts.content.slice(1);
 
   return {
     id: makeNowSlug(cohortYear),
@@ -90,7 +158,7 @@ const draftToAnnouncement = ({ cohortYear, subject, body, audienceLabel }) => {
     title,
     summary,
     body: rest,
-    resources: [],
+    resources: normalizeAnnouncementResources([...resources, ...draftParts.resources]),
     audience: audienceLabel,
     pinned: true,
     live: true,
@@ -103,7 +171,7 @@ const rowFromAnnouncement = (announcement, createdByEmail) => ({
   title: announcement.title,
   summary: announcement.summary,
   body: announcement.body || [],
-  resources: announcement.resources || [],
+  resources: normalizeAnnouncementResources(announcement.resources || []),
   audience_label: announcement.audience || null,
   label: announcement.label || null,
   pinned: Boolean(announcement.pinned),
@@ -120,7 +188,7 @@ const staticAnnouncementToRow = (item) => ({
   title: item.title,
   summary: item.summary,
   body: item.body || [],
-  resources: item.resources || [],
+  resources: normalizeAnnouncementResources(item.resources || []),
   audience_label: item.audience || null,
   label: item.label || null,
   pinned: Boolean(item.pinned),
@@ -142,9 +210,9 @@ const loadPublishedAnnouncements = async () => {
   return { announcements: (data || []).map(announcementFromRow), error: null };
 };
 
-const postDraftAsNowAnnouncement = async ({ cohortYear, subject, body, audienceLabel, createdByEmail }) => {
+const postDraftAsNowAnnouncement = async ({ cohortYear, subject, body, audienceLabel, resources, createdByEmail }) => {
   if (!isSupabaseConfigured) throw new Error("Live announcement posting is not configured.");
-  const announcement = draftToAnnouncement({ cohortYear, subject, body, audienceLabel });
+  const announcement = draftToAnnouncement({ cohortYear, subject, body, audienceLabel, resources });
   const row = rowFromAnnouncement(announcement, createdByEmail);
 
   const { data, error } = await supabase

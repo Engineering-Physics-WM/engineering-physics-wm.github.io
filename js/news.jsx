@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Reveal } from "./motion.jsx";
 import { ExternalLink } from "./links.jsx";
+import { resourceHref, resourceKind, resourceLabel, resourcePage } from "./resources.js";
 
 const formatDate = (date) => {
   if (!date) return "";
@@ -29,21 +30,15 @@ const currentCourseAnnouncement = (items = []) => {
   return dated[0] || sortAnnouncements(items)[0] || null;
 };
 
-const resourceHref = (resource) => (resource?.url || resource?.href || "").trim();
-const resourceLabel = (resource) => {
-  const href = resourceHref(resource);
-  return (resource?.label || "").trim() || href;
-};
-const resourceKind = (resource) => (resource?.kind || (resource?.page ? "Site" : "Link")).trim();
-
 const ResourceLink = ({ resource, onNavigate }) => {
   const label = resourceLabel(resource);
   const kind = resourceKind(resource);
   const href = resourceHref(resource);
+  const page = resourcePage(resource);
 
-  if (resource.page) {
+  if (page) {
     return (
-      <button type="button" className="news-resource" onClick={() => onNavigate(resource.page)}>
+      <button type="button" className="news-resource" onClick={() => onNavigate(page)}>
         <span>{kind}</span>{label}
       </button>
     );

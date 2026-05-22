@@ -4,6 +4,7 @@ import * as React from "react";
 import { HeroParticles, Reveal } from "./motion.jsx";
 import { ExternalLink, LinkedText, PersonLink, YangLink, isYangName } from "./links.jsx";
 import { currentCourseAnnouncement, resourceHref, resourceKind, resourceLabel, sortAnnouncements } from "./news.jsx";
+import { resourcePage } from "./resources.js";
 
 const AREA_COLORS = {
   "Instrumentation / sensors": "oklch(72% 0.060 18)",
@@ -205,10 +206,11 @@ const CourseResource = ({ resource, onNavigate }) => {
   const label = resourceLabel(resource);
   const kind = resourceKind(resource);
   const href = resourceHref(resource);
+  const page = resourcePage(resource);
 
-  if (resource.page) {
+  if (page) {
     return (
-      <button type="button" className="course-now-resource" onClick={() => onNavigate(resource.page)}>
+      <button type="button" className="course-now-resource" onClick={() => onNavigate(page)}>
         <span>{kind}</span>{label}
       </button>
     );
@@ -227,7 +229,7 @@ const CourseNow = ({ announcement, referenceItems = [], onNavigate }) => {
   return (
     <Reveal as="section" className="course-now" aria-label="Latest course update">
       <div className="course-now-main">
-        <button type="button" className="course-now-body" onClick={() => onNavigate("news")}>
+        <button type="button" className="course-now-body" onClick={() => onNavigate("news", announcement.id)}>
           <p className="cn-dateline">
             <span className="live" />
             <span>Now</span>
@@ -287,7 +289,7 @@ const HeroLatest = ({ announcement, onNavigate }) => {
   if (!announcement) return null;
 
   return (
-    <button type="button" className="hero-latest" onClick={() => onNavigate("news")} data-spark>
+    <button type="button" className="hero-latest" onClick={() => onNavigate("news", announcement.id)} data-spark>
       <span className="hero-latest-label">Latest update</span>
       <strong>{announcement.title}</strong>
       <span className="hero-latest-meta">{announcement.label || announcement.date}</span>

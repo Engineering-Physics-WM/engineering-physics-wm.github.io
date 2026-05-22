@@ -5,6 +5,7 @@ import { Reveal } from "./motion.jsx";
 import { DEFAULT_MATCHING_MODE, MATCHING_MODE_OPTIONS, buildTeams, rankSatisfaction } from "./teamMatching.js";
 import { ExternalLink, PersonLink, YangLink } from "./links.jsx";
 import { sortAnnouncements } from "./news.jsx";
+import { normalizeAnnouncementResources, resourceHref, resourceKind, resourceLabel, resourcePage } from "./resources.js";
 import { isSupabaseConfigured, supabase } from "./supabaseClient.js";
 import { announcementFromRow, postDraftAsNowAnnouncement, staticAnnouncementToRow } from "./announcements.js";
 
@@ -386,11 +387,13 @@ const peopleFromTeamRows = (rows, projectId, memberType) => uniqueRecipients(
 );
 
 const resourceLine = (resource) => {
-  const href = resource.url || resource.href || "";
-  const labelText = resource.label || href;
-  const label = resource.kind ? `${resource.kind}: ${labelText}` : labelText;
+  const page = resourcePage(resource);
+  const href = resourceHref(resource);
+  const labelText = resourceLabel(resource);
+  const kind = resourceKind(resource);
+  const label = kind ? `${kind}: ${labelText}` : labelText;
   if (href) return `${label} - ${href}`;
-  if (resource.page) return `${label} - open the EP site and choose ${resource.page}`;
+  if (page) return `${label} - open the EP site and choose ${page}`;
   return label;
 };
 
@@ -1316,6 +1319,7 @@ const EmailDraftView = ({ data, projects, responses, students, teamMemberRows, o
         subject,
         body,
         audienceLabel,
+        resources: selectedAnnouncement?.resources || [],
         createdByEmail: userData?.user?.email,
       });
       onAnnouncementsChange?.();
@@ -1526,12 +1530,12 @@ const annToRow = (ann, instructorEmail) => ({
   title: ann.title,
   summary: ann.summary,
   body: ann.body,
-  resources: (ann.resources || []).map((resource) => ({
+  resources: normalizeAnnouncementResources((ann.resources || []).map((resource) => ({
     ...resource,
     label: resource.label || "",
     kind: resource.kind || "Link",
-    href: resource.href || resource.url || "",
-  })).filter((resource) => resource.href || resource.page || resource.label),
+    href: resource.href || resource.url || resource.page || "",
+  })).filter((resource) => resource.href || resource.page || resource.label)),
   audience_label: ann.audience || null,
   label: ann.label || null,
   pinned: Boolean(ann.pinned),
@@ -1556,13 +1560,16 @@ const textToBody = (text) => text.split(/\n{2,}/).map(s => s.trim()).filter(Bool
 const ResourcesEditor = ({ value, onChange }) => {
   const add = () => onChange([...value, { label: "", kind: "Link", href: "" }]);
   const remove = (i) => onChange(value.filter((_, idx) => idx !== i));
-  const set = (i, field, val) => onChange(value.map((r, idx) => idx === i ? { ...r, [field]: val } : r));
+  const set = (i, field, val) => onChange(value.map((r, idx) => idx === i
+    ? { ...r, [field]: val, ...(field === "href" ? { page: undefined, url: undefined } : {}) }
+    : r
+  ));
   return (
     <div className="ann-resources-editor">
       {value.map((r, i) => (
         <div key={i} className="ann-resource-row">
           <input placeholder="Label" value={r.label} onChange={e => set(i, "label", e.target.value)} />
-          <input placeholder="URL (https://...)" value={r.href || r.url || ""} onChange={e => set(i, "href", e.target.value)} />
+          <input placeholder="URL or page" value={r.href || r.url || r.page || ""} onChange={e => set(i, "href", e.target.value)} />
           <button className="ann-res-remove" onClick={() => remove(i)} title="Remove">×</button>
         </div>
       ))}
@@ -1850,13 +1857,16 @@ const AnnouncementsView = ({ data, seedAnnouncements = [], onAnnouncementsChange
               )}
               {item.resources?.length > 0 && (
                 <div className="ann-resources">
-                  {item.resources.map((r, i) => (
-                    <span key={i} className="ann-resource-chip">
-                      {(r.href || r.url)
-                        ? <ExternalLink href={r.href || r.url}>{r.label || r.href || r.url}</ExternalLink>
-                        : r.label}
-                    </span>
-                  ))}
+                  {item.resources.map((r, i) => {
+                    const page = resourcePage(r);
+                    const href = resourceHref(r);
+                    const label = resourceLabel(r);
+                    return (
+                      <span key={i} className="ann-resource-chip">
+                        {href ? <ExternalLink href={href}>{label || href}</ExternalLink> : label || page}
+                      </span>
+                    );
+                  })}
                 </div>
               )}
             </>
