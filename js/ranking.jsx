@@ -2,79 +2,17 @@
 
 import * as React from "react";
 import { Reveal } from "./motion.jsx";
-import { isSupabaseConfigured, supabase } from "./supabaseClient.js";
+import { isSupabaseConfigured } from "./supabaseClient.js";
 import { PersonLink, YangLink } from "./links.jsx";
-
-const WM_EMAIL_RE = /^[^@\s]+@wm\.edu$/i;
-const DEFAULT_POLL_CLOSED_MESSAGE = "The ranking poll is not open for this cohort.";
-const normalizeStudentEmail = (value) => (
-  value.replace(/[\u200B-\u200D\uFEFF]/g, "").trim().toLowerCase()
-);
-
-const createReceiptCode = () => {
-  if (globalThis.crypto?.randomUUID) {
-    return "EP-" + globalThis.crypto.randomUUID().replaceAll("-", "").slice(0, 8).toUpperCase();
-  }
-  return "EP-" + Math.random().toString(36).slice(2, 10).toUpperCase();
-};
-
-const isDuplicateSubmissionError = (error) => (
-  error?.code === "23505" ||
-  /ranking_one_response_per_student|duplicate key/i.test(error?.message || "")
-);
-
-const isPolicyError = (error) => error?.code === "42501";
-
-const isMissingSubmitFunctionError = (error) => (
-  error?.code === "PGRST202" ||
-  /submit_ranking_submission|could not find the function|function .* does not exist/i.test(error?.message || "")
-);
-
-const submitRankingViaRows = async ({ payload, cohortYear, cleanEmail }) => {
-  const { error } = await supabase.from("ranking_submissions").insert(payload);
-
-  if (!error) return { mode: "created" };
-  if (!isDuplicateSubmissionError(error) && !isPolicyError(error)) return { error };
-
-  const { error: updateError, count } = await supabase
-    .from("ranking_submissions")
-    .update({
-      student_name: payload.student_name,
-      notes: payload.notes,
-      ranking: payload.ranking,
-      receipt_code: payload.receipt_code,
-    }, { count: "exact" })
-    .eq("cohort_year", cohortYear)
-    .ilike("student_email", cleanEmail);
-
-  if (!updateError && count > 0) return { mode: "updated" };
-  if (!updateError) {
-    return { error: { message: "No existing response was updated. Please ask Prof. Yang to run the latest poll database update." } };
-  }
-  return { error: updateError };
-};
-
-const submitRankingLive = async ({ payload, cohortYear, cleanEmail }) => {
-  const { data, error } = await supabase.rpc("submit_ranking_submission", {
-    submit_cohort_year: cohortYear,
-    submit_student_name: payload.student_name,
-    submit_student_email: cleanEmail,
-    submit_ranking: payload.ranking,
-    submit_receipt_code: payload.receipt_code,
-  });
-
-  if (!error) {
-    return {
-      mode: data?.[0]?.submission_mode === "updated" ? "updated" : "created",
-    };
-  }
-
-  if (isMissingSubmitFunctionError(error)) {
-    return submitRankingViaRows({ payload, cohortYear, cleanEmail });
-  }
-
-  return { error };
-};
+import {
+  DEFAULT_POLL_CLOSED_MESSAGE,
+  WM_EMAIL_RE,
+  createReceiptCode,
+  isPolicyError,
+  isStudentAllowed,
+  normalizeStudentEmail,
+  submitRankingLive,
+} from "../src/lib/rankingSubmissions";
 
 const RankItem = ({ project, idx, total, onMove, onDragStart, onDragOver, onDrop, onDragEnd, dragging }) => (
   <li
@@ -251,9 +189,9 @@ const RankingPage = ({ data, onNavigate }) => {
     setStatus("Submitting...");
 
     if (isSupabaseConfigured) {
-      const { data: allowed, error: allowError } = await supabase.rpc("is_ranking_student_allowed", {
-        check_cohort_year: data.currentYear,
-        check_student_email: cleanEmail,
+      const { allowed, error: allowError } = await isStudentAllowed({
+        cohortYear: data.currentYear,
+        cleanEmail,
       });
 
       if (allowError || !allowed) {

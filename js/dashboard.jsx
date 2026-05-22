@@ -2,80 +2,33 @@
 
 import * as React from "react";
 import { Reveal } from "./motion.jsx";
-import { DEFAULT_MATCHING_MODE, MATCHING_MODE_OPTIONS, buildTeams, rankSatisfaction } from "./teamMatching.js";
+import { DEFAULT_MATCHING_MODE, MATCHING_MODE_OPTIONS, buildTeams } from "./teamMatching.js";
 import { ExternalLink, PersonLink, YangLink } from "./links.jsx";
 import { sortAnnouncements } from "./news.jsx";
 import { normalizeAnnouncementResources, resourceHref, resourceKind, resourceLabel, resourcePage } from "./resources.js";
 import { isSupabaseConfigured, supabase } from "./supabaseClient.js";
 import { announcementFromRow, postDraftAsNowAnnouncement, staticAnnouncementToRow } from "./announcements.js";
+import {
+  activeTeamSizeErrors,
+  buildSavedTeamRows,
+  isActiveProject,
+  mentorsForProject,
+  normalizeAllowedStudentRow,
+  normalizeEmail,
+  normalizeSubmissionRow,
+  peopleFromTeamRows,
+  projectLabel,
+  projectNumber,
+  rowsToTeamMap,
+  splitProjectMentors,
+  uniqueRecipients,
+  withTeamSummary,
+} from "../src/features/dashboard/dashboardData";
 
 const INSTRUCTOR_EMAIL = "rxyan2@wm.edu";
 const CUSTOM_DRAFT_ID = "custom-draft";
 const TEAM_AUDIENCES = new Set(["team", "team_students", "team_mentors"]);
 const CURRENT_TEAM_MATCHING_MODE = "top1";
-const REGULAR_STUDENT_EMAILS = new Set(["saneeley@wm.edu"]);
-
-const normalizeEmail = (email) => (email || "").trim().toLowerCase();
-
-const uniqueRecipients = (people) => {
-  const seen = new Set();
-  return (people || [])
-    .map((person) => ({
-      name: (person.name || person.email || "").trim(),
-      email: normalizeEmail(person.email),
-      role: person.role || "recipient",
-    }))
-    .filter((person) => {
-      if (!person.email || seen.has(person.email)) return false;
-      seen.add(person.email);
-      return true;
-    });
-};
-
-const projectNumber = (project) => `P${String(project?.num || 0).padStart(2, "0")}`;
-
-const projectLabel = (project) => (
-  project ? `${projectNumber(project)} · ${project.title.split(":")[0]}` : "Selected project"
-);
-
-const normalizeSubmissionRow = (row, projects) => {
-  const projectIds = projects.map((project) => project.id);
-  const seen = new Set();
-  const ranking = (Array.isArray(row.ranking) ? row.ranking : [])
-    .filter((projectId) => projectIds.includes(projectId) && !seen.has(projectId) && seen.add(projectId));
-  const missing = projectIds.filter((projectId) => !seen.has(projectId));
-
-  return {
-    id: row.id,
-    name: row.student_name || row.student_email || "Student",
-    email: normalizeEmail(row.student_email),
-    notes: row.notes || "",
-    ranking: [...ranking, ...missing],
-    submittedAt: row.updated_at || row.created_at,
-    receiptCode: row.receipt_code,
-  };
-};
-
-const normalizeAllowedStudentRow = (row, projects) => {
-  const email = normalizeEmail(row.student_email);
-  const honorsProject = REGULAR_STUDENT_EMAILS.has(email)
-    ? null
-    : projects.find((project) => (
-      project.id === row.honors_project_id ||
-      (row.honors_project_number && project.num === Number(row.honors_project_number))
-    ));
-
-  return {
-    name: row.student_name || row.student_email || "Student",
-    email,
-    honorsProject: honorsProject ? {
-      number: honorsProject.num,
-      projectId: honorsProject.id,
-      projectTitle: row.honors_project_title || honorsProject.title,
-      lockedForMatching: true,
-    } : null,
-  };
-};
 
 const dashboardReadError = (label, error) => (
   `${label} could not load: ${error?.message || "unknown live data error"}`
@@ -91,143 +44,6 @@ const functionErrorMessage = async (error, fallback) => {
   }
   return error?.message || fallback;
 };
-
-const mentorsForProject = (project) => {
-  if (!project) return [];
-  return uniqueRecipients([
-    { name: project.advisor, email: project.advisorEmail, role: "mentor" },
-    ...(project.coadvisors || []).map((person) => ({ ...person, role: "mentor" })),
-  ]);
-};
-
-const isActiveProject = (project, activeProjectIds) => (
-  Boolean(project) && (!activeProjectIds?.length || activeProjectIds.includes(project.id))
-);
-
-const splitProjectMentors = (projects, activeProjectIds) => {
-  const activeProjects = projects.filter((project) => isActiveProject(project, activeProjectIds));
-  const inactiveProjects = projects.filter((project) => !isActiveProject(project, activeProjectIds));
-  const activeMentors = uniqueRecipients(activeProjects.flatMap(mentorsForProject));
-  const activeEmails = new Set(activeMentors.map((mentor) => mentor.email));
-  const inactiveMentors = uniqueRecipients(inactiveProjects.flatMap(mentorsForProject))
-    .filter((mentor) => !activeEmails.has(mentor.email));
-
-  return { activeProjects, inactiveProjects, activeMentors, inactiveMentors };
-};
-
-const projectMentorRows = (project, cohortYear, assignedByEmail) => (
-  mentorsForProject(project).map((mentor, index) => ({
-    cohort_year: cohortYear,
-    project_id: project.id,
-    project_number: project.num,
-    person_name: mentor.name || mentor.email || "Mentor",
-    person_email: mentor.email || null,
-    member_type: "mentor",
-    source: "project_catalog",
-    locked: true,
-    sort_order: index,
-    assigned_by_email: assignedByEmail,
-  }))
-);
-
-const rowsToTeamMap = ({ projects, rows, responses, students }) => {
-  const teams = Object.fromEntries(projects.map((project) => [project.id, []]));
-  const studentByEmail = Object.fromEntries((students || []).map((student) => [normalizeEmail(student.email), student]));
-  const responseByEmail = Object.fromEntries(responses.map((response) => [normalizeEmail(response.email), response]));
-
-  rows
-    .filter((row) => row.member_type === "student" && teams[row.project_id])
-    .sort((a, b) => (a.project_number || 999) - (b.project_number || 999) || (a.sort_order ?? 999) - (b.sort_order ?? 999))
-    .forEach((row) => {
-      const email = normalizeEmail(row.person_email);
-      const response = responseByEmail[email];
-      teams[row.project_id].push({
-        email: row.person_email,
-        name: row.person_name,
-        prefRank: response ? response.ranking.indexOf(row.project_id) : -1,
-        locked: Boolean(row.locked),
-        honorsProject: studentByEmail[email]?.honorsProject || null,
-      });
-    });
-
-  return teams;
-};
-
-const buildSavedTeamRows = ({ projects, teams, cohortYear, assignedByEmail }) => (
-  projects.flatMap((project) => {
-    const roster = teams[project.id] || [];
-    const studentRows = roster.map((student, index) => ({
-      cohort_year: cohortYear,
-      project_id: project.id,
-      project_number: project.num,
-      person_name: student.name,
-      person_email: student.email,
-      member_type: "student",
-      source: student.honorsProject?.projectId === project.id ? "honors_default" : "manual",
-      locked: true,
-      sort_order: index,
-      assigned_by_email: assignedByEmail,
-    }));
-    return [
-      ...studentRows,
-      ...(roster.length ? projectMentorRows(project, cohortYear, assignedByEmail) : []),
-    ];
-  })
-);
-
-const activeTeamSizeErrors = (teams, minTeamSize, maxTeamSize) => (
-  Object.entries(teams)
-    .filter(([, roster]) => roster.length > 0 && (roster.length < minTeamSize || roster.length > maxTeamSize))
-    .map(([projectId, roster]) => ({ projectId, size: roster.length }))
-);
-
-const summarizeTeamSnapshot = ({ projects, responses, teams, minTeamSize, maxTeamSize, topChoiceWindow }) => {
-  const assigned = {};
-  const responseByEmail = Object.fromEntries(responses.map((response) => [normalizeEmail(response.email), response]));
-
-  Object.entries(teams).forEach(([projectId, roster]) => {
-    roster.forEach((student) => {
-      const email = normalizeEmail(student.email);
-      const response = responseByEmail[email];
-      const prefRank = Number.isFinite(student.prefRank) && student.prefRank >= 0
-        ? student.prefRank
-        : response?.ranking.indexOf(projectId) ?? projects.length;
-      assigned[student.email] = { project: projectId, prefRank, locked: Boolean(student.locked) };
-    });
-  });
-
-  const satisfactionScores = responses.map((response) => {
-    const result = assigned[response.email];
-    return result ? rankSatisfaction(result.prefRank, projects.length) : 0;
-  });
-  const avg = satisfactionScores.length
-    ? satisfactionScores.reduce((total, score) => total + score, 0) / satisfactionScores.length
-    : 0;
-  const activeProjectIds = projects.map((project) => project.id).filter((id) => (teams[id] || []).length > 0);
-  const sizeWarnings = activeTeamSizeErrors(teams, minTeamSize, maxTeamSize)
-    .map(({ projectId, size }) => ({ type: "team-size", projectId, size }));
-
-  return {
-    assigned,
-    satisfaction: Math.round(avg * 100),
-    unhappyCount: responses.filter((response) => assigned[response.email]?.prefRank >= topChoiceWindow).length,
-    activeProjectIds,
-    inactiveProjectIds: projects.map((project) => project.id).filter((id) => (teams[id] || []).length === 0),
-    warnings: sizeWarnings,
-  };
-};
-
-const withTeamSummary = (snapshot, projects, responses) => ({
-  ...snapshot,
-  ...summarizeTeamSnapshot({
-    projects,
-    responses,
-    teams: snapshot.teams,
-    minTeamSize: snapshot.minTeamSize,
-    maxTeamSize: snapshot.maxTeamSize,
-    topChoiceWindow: snapshot.topChoiceWindow,
-  }),
-});
 
 const responseSignature = (responses) => (
   responses
@@ -374,17 +190,6 @@ const buildMatchingDiscussionText = ({ currentYear, projects, responses, results
     "I prefer the Top 1 first method because it optimizes for genuine student excitement. In this context, I would rather have more students placed on projects they are truly happy about than open extra projects by assigning students to lower-ranked options they feel lukewarm about.",
   ].join("\n");
 };
-
-const peopleFromTeamRows = (rows, projectId, memberType) => uniqueRecipients(
-  rows
-    .filter((row) => row.project_id === projectId && row.member_type === memberType)
-    .sort((a, b) => (a.sort_order ?? 999) - (b.sort_order ?? 999) || (a.person_name || "").localeCompare(b.person_name || ""))
-    .map((row) => ({
-      name: row.person_name,
-      email: row.person_email,
-      role: memberType,
-    }))
-);
 
 const resourceLine = (resource) => {
   const page = resourcePage(resource);
