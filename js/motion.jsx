@@ -4,17 +4,21 @@ import * as React from "react";
 
 // ---------- Hero particles ----------
 const HeroParticles = ({ count = 14, intensity = 1 }) => {
-  const dots = React.useMemo(() => Array.from({ length: count }, (_, i) => {
-    const x = Math.random() * 100;
-    const y = 60 + Math.random() * 40;
-    const tx = (Math.random() - 0.5) * 200;
-    const ty = -100 - Math.random() * 200;
-    const dur = 8 + Math.random() * 10;
-    const delay = -Math.random() * dur;
-    const olive = i % 3 === 0;
-    const size = 2 + Math.random() * 3;
-    return { x, y, tx, ty, dur, delay, olive, size };
-  }), [count]);
+  const dots = React.useMemo(
+    () =>
+      Array.from({ length: count }, (_, i) => {
+        const x = Math.random() * 100;
+        const y = 60 + Math.random() * 40;
+        const tx = (Math.random() - 0.5) * 200;
+        const ty = -100 - Math.random() * 200;
+        const dur = 8 + Math.random() * 10;
+        const delay = -Math.random() * dur;
+        const olive = i % 3 === 0;
+        const size = 2 + Math.random() * 3;
+        return { x, y, tx, ty, dur, delay, olive, size };
+      }),
+    [count]
+  );
 
   if (intensity <= 0) return null;
 
@@ -27,7 +31,8 @@ const HeroParticles = ({ count = 14, intensity = 1 }) => {
           style={{
             left: d.x + "%",
             top: d.y + "%",
-            width: d.size, height: d.size,
+            width: d.size,
+            height: d.size,
             "--tx": d.tx + "px",
             "--ty": d.ty + "px",
             animationDuration: d.dur + "s",
@@ -68,7 +73,8 @@ const SparkLayer = ({ intensity = 1 }) => {
       lastSpawn = now;
       const olive = Math.random() < 0.35;
       particles.push({
-        x, y,
+        x,
+        y,
         vx: (Math.random() - 0.5) * 0.4,
         vy: -0.2 - Math.random() * 0.3,
         life: 1,
@@ -83,7 +89,8 @@ const SparkLayer = ({ intensity = 1 }) => {
         const a = (i / n) * Math.PI * 2 + Math.random() * 0.4;
         const v = 1 + Math.random() * 2;
         particles.push({
-          x, y,
+          x,
+          y,
           vx: Math.cos(a) * v,
           vy: Math.sin(a) * v - 0.5,
           life: 1,
@@ -102,8 +109,11 @@ const SparkLayer = ({ intensity = 1 }) => {
       const tgt = e.target.closest("[data-spark]");
       if (tgt) {
         const r = tgt.getBoundingClientRect();
-        burst(r.left + r.width / 2 + (Math.random() - 0.5) * r.width * 0.6,
-              r.top + r.height * 0.3 + (Math.random() - 0.5) * r.height * 0.4, 4);
+        burst(
+          r.left + r.width / 2 + (Math.random() - 0.5) * r.width * 0.6,
+          r.top + r.height * 0.3 + (Math.random() - 0.5) * r.height * 0.4,
+          4
+        );
       }
     };
 
@@ -113,9 +123,12 @@ const SparkLayer = ({ intensity = 1 }) => {
 
     const tick = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      particles = particles.filter(p => p.life > 0);
+      particles = particles.filter((p) => p.life > 0);
       for (const p of particles) {
-        p.x += p.vx; p.y += p.vy; p.vy += 0.03; p.life -= 0.018;
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.03;
+        p.life -= 0.018;
         ctx.globalAlpha = Math.max(0, p.life) * 0.7 * intensity;
         ctx.fillStyle = p.olive ? "oklch(42% 0.045 120)" : "oklch(72% 0.060 18)";
         ctx.beginPath();
@@ -147,18 +160,25 @@ const Reveal = ({ children, delay = 0, as: Tag = "div", className = "", ...rest 
     const el = ref.current;
     if (!el) return;
     if (seen) return;
-    const io = new IntersectionObserver((entries) => {
-      entries.forEach((e) => {
-        if (e.isIntersecting) {
-          setTimeout(() => setSeen(true), delay);
-          io.disconnect();
-        }
-      });
-    }, { threshold: 0.08, rootMargin: "0px 0px -40px 0px" });
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            setTimeout(() => setSeen(true), delay);
+            io.disconnect();
+          }
+        });
+      },
+      { threshold: 0.08, rootMargin: "0px 0px -40px 0px" }
+    );
     io.observe(el);
     return () => io.disconnect();
   }, [delay, seen]);
-  return <Tag ref={ref} className={"reveal " + (seen ? "in " : "") + className} {...rest}>{children}</Tag>;
+  return (
+    <Tag ref={ref} className={"reveal " + (seen ? "in " : "") + className} {...rest}>
+      {children}
+    </Tag>
+  );
 };
 
 export { HeroParticles, Reveal, SparkLayer };

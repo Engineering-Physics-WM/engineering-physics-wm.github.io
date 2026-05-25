@@ -5,9 +5,19 @@ import { Reveal } from "./motion.jsx";
 import { DEFAULT_MATCHING_MODE, MATCHING_MODE_OPTIONS, buildTeams } from "./teamMatching.js";
 import { ExternalLink, PersonLink, YangLink } from "./links.jsx";
 import { sortAnnouncements } from "./news.jsx";
-import { normalizeAnnouncementResources, resourceHref, resourceKind, resourceLabel, resourcePage } from "./resources.js";
+import {
+  normalizeAnnouncementResources,
+  resourceHref,
+  resourceKind,
+  resourceLabel,
+  resourcePage,
+} from "./resources.js";
 import { isSupabaseConfigured, supabase } from "./supabaseClient.js";
-import { announcementFromRow, postDraftAsNowAnnouncement, staticAnnouncementToRow } from "./announcements.js";
+import {
+  announcementFromRow,
+  postDraftAsNowAnnouncement,
+  staticAnnouncementToRow,
+} from "./announcements.js";
 import {
   activeTeamSizeErrors,
   buildSavedTeamRows,
@@ -30,9 +40,8 @@ const CUSTOM_DRAFT_ID = "custom-draft";
 const TEAM_AUDIENCES = new Set(["team", "team_students", "team_mentors"]);
 const CURRENT_TEAM_MATCHING_MODE = "top1";
 
-const dashboardReadError = (label, error) => (
-  `${label} could not load: ${error?.message || "unknown live data error"}`
-);
+const dashboardReadError = (label, error) =>
+  `${label} could not load: ${error?.message || "unknown live data error"}`;
 
 const functionErrorMessage = async (error, fallback) => {
   const response = error?.context;
@@ -45,25 +54,21 @@ const functionErrorMessage = async (error, fallback) => {
   return error?.message || fallback;
 };
 
-const responseSignature = (responses) => (
+const responseSignature = (responses) =>
   responses
     .map((response) => `${normalizeEmail(response.email)}:${(response.ranking || []).join(">")}`)
     .sort()
-    .join("|")
-);
+    .join("|");
 
-const matchingOptionFor = (mode) => (
+const matchingOptionFor = (mode) =>
   MATCHING_MODE_OPTIONS.find((option) => option.id === mode) ||
-  MATCHING_MODE_OPTIONS.find((option) => option.id === DEFAULT_MATCHING_MODE)
-);
+  MATCHING_MODE_OPTIONS.find((option) => option.id === DEFAULT_MATCHING_MODE);
 
-const shortProjectTitle = (project) => (
-  project?.title?.split(":")[0]?.split("(")[0]?.trim() || "Untitled project"
-);
+const shortProjectTitle = (project) =>
+  project?.title?.split(":")[0]?.split("(")[0]?.trim() || "Untitled project";
 
-const preferenceText = (prefRank) => (
-  Number.isFinite(prefRank) && prefRank >= 0 ? `#${prefRank + 1}` : "unranked"
-);
+const preferenceText = (prefRank) =>
+  Number.isFinite(prefRank) && prefRank >= 0 ? `#${prefRank + 1}` : "unranked";
 
 const assignmentStatsFor = (result, responseCount) => {
   const assignments = Object.values(result?.assigned || {});
@@ -71,7 +76,9 @@ const assignmentStatsFor = (result, responseCount) => {
   const top3 = assignments.filter((item) => item.prefRank >= 0 && item.prefRank < 3).length;
   const top5 = assignments.filter((item) => item.prefRank >= 0 && item.prefRank < 5).length;
   const lower = assignments.filter((item) => item.prefRank >= 5).length;
-  const unranked = assignments.filter((item) => !Number.isFinite(item.prefRank) || item.prefRank < 0).length;
+  const unranked = assignments.filter(
+    (item) => !Number.isFinite(item.prefRank) || item.prefRank < 0
+  ).length;
 
   return {
     assigned: assignments.length,
@@ -118,23 +125,29 @@ const modeExplanationLines = (option, stats, result) => {
 
 const buildMethodText = ({ option, result, projects, projectById, responseCount }) => {
   const stats = assignmentStatsFor(result, responseCount);
-  const inactive = (result.inactiveProjectIds || []).map((projectId) => projectNumber(projectById[projectId])).join(", ") || "none";
+  const inactive =
+    (result.inactiveProjectIds || [])
+      .map((projectId) => projectNumber(projectById[projectId]))
+      .join(", ") || "none";
   const warnings = (result.warnings || []).map((warning) => warningLineFor(warning, projectById));
   const teams = [...projects]
     .sort((a, b) => a.num - b.num)
     .filter((project) => (result.teams[project.id] || []).length > 0)
     .flatMap((project) => {
-      const roster = [...(result.teams[project.id] || [])].sort((a, b) => (
-        (a.prefRank ?? 999) - (b.prefRank ?? 999) ||
-        (a.name || a.email || "").localeCompare(b.name || b.email || "")
-      ));
+      const roster = [...(result.teams[project.id] || [])].sort(
+        (a, b) =>
+          (a.prefRank ?? 999) - (b.prefRank ?? 999) ||
+          (a.name || a.email || "").localeCompare(b.name || b.email || "")
+      );
       return [
         `${projectNumber(project)} - ${shortProjectTitle(project)} (${project.advisor})`,
         ...roster.map((student) => {
           const notes = [
             preferenceText(student.prefRank),
             student.honorsProject ? "Honors locked" : "",
-          ].filter(Boolean).join(", ");
+          ]
+            .filter(Boolean)
+            .join(", ");
           return `  - ${student.name || student.email} (${notes})`;
         }),
       ];
@@ -162,15 +175,17 @@ const buildMatchingDiscussionText = ({ currentYear, projects, responses, results
     hour: "numeric",
     minute: "2-digit",
   }).format(new Date());
-  const modeTexts = MATCHING_MODE_OPTIONS
-    .map((option) => resultsByMode[option.id] ? buildMethodText({
-      option,
-      result: resultsByMode[option.id],
-      projects,
-      projectById,
-      responseCount: responses.length,
-    }) : "")
-    .filter(Boolean);
+  const modeTexts = MATCHING_MODE_OPTIONS.map((option) =>
+    resultsByMode[option.id]
+      ? buildMethodText({
+          option,
+          result: resultsByMode[option.id],
+          projects,
+          projectById,
+          responseCount: responses.length,
+        })
+      : ""
+  ).filter(Boolean);
 
   return [
     `Engineering Physics Capstone Auto-Matching Results (${currentYear})`,
@@ -182,9 +197,11 @@ const buildMatchingDiscussionText = ({ currentYear, projects, responses, results
     "- The optimizer fills required seats first, then optional third seats, and only compares rosters that satisfy those constraints.",
     "- Inactive projects are allowed when the ranking data does not support a strong 2-student team.",
     "",
-    ...modeTexts.flatMap((text, index) => (
-      index === 0 ? [text] : ["", "------------------------------------------------------------", "", text]
-    )),
+    ...modeTexts.flatMap((text, index) =>
+      index === 0
+        ? [text]
+        : ["", "------------------------------------------------------------", "", text]
+    ),
     "",
     "Discussion note:",
     "I prefer the Top 1 first method because it optimizes for genuine student excitement. In this context, I would rather have more students placed on projects they are truly happy about than open extra projects by assigning students to lower-ranked options they feel lukewarm about.",
@@ -219,7 +236,9 @@ const draftFromAnnouncement = (announcement, cohortYear) => {
       ...(announcement.body || []),
       resources.length ? `Resources:\n${resources.map((line) => `- ${line}`).join("\n")}` : "",
       "Best,\nRan",
-    ].filter(Boolean).join("\n\n"),
+    ]
+      .filter(Boolean)
+      .join("\n\n"),
   };
 };
 
@@ -229,15 +248,16 @@ const buildMailtoUrl = ({ recipients, subject, body }) => {
     ["subject", subject],
     ["body", body],
   ];
-  const query = params
-    .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
-    .join("&");
+  const query = params.map(([key, value]) => `${key}=${encodeURIComponent(value)}`).join("&");
   return `mailto:${INSTRUCTOR_EMAIL}?${query}`;
 };
 
 const RecipientList = ({ title, people, muted = false }) => (
   <section className={"recipient-group" + (muted ? " is-muted" : "")}>
-    <h4>{title}<span>{people.length}</span></h4>
+    <h4>
+      {title}
+      <span>{people.length}</span>
+    </h4>
     {people.map((person) => (
       <div key={person.email} className="recipient-card">
         <span>
@@ -250,32 +270,52 @@ const RecipientList = ({ title, people, muted = false }) => (
   </section>
 );
 
-const useDistribution = (projects, responses) => React.useMemo(() => {
-  const idx = Object.fromEntries(projects.map((p, i) => [p.id, i]));
-  const dist = projects.map(p => ({ id: p.id, num: p.num, title: p.title, advisor: p.advisor, ranks: Array(projects.length).fill(0), total: 0 }));
-  responses.forEach(r => {
-    r.ranking.forEach((pid, rank) => {
-      const i = idx[pid];
-      if (i !== undefined) {
-        dist[i].ranks[rank]++;
-        if (rank < 3) dist[i].total++;
-      }
+const useDistribution = (projects, responses) =>
+  React.useMemo(() => {
+    const idx = Object.fromEntries(projects.map((p, i) => [p.id, i]));
+    const dist = projects.map((p) => ({
+      id: p.id,
+      num: p.num,
+      title: p.title,
+      advisor: p.advisor,
+      ranks: Array(projects.length).fill(0),
+      total: 0,
+    }));
+    responses.forEach((r) => {
+      r.ranking.forEach((pid, rank) => {
+        const i = idx[pid];
+        if (i !== undefined) {
+          dist[i].ranks[rank]++;
+          if (rank < 3) dist[i].total++;
+        }
+      });
     });
-  });
-  return dist.sort((a, b) => a.num - b.num);
-}, [projects, responses]);
+    return dist.sort((a, b) => a.num - b.num);
+  }, [projects, responses]);
 
 const DistributionView = ({ projects, responses }) => {
   const dist = useDistribution(projects, responses);
   return (
     <div>
       <div className="dist-legend">
-        <span className="lg"><span className="sw" style={{background: "oklch(46% 0.075 18)"}}/> 1st choice</span>
-        <span className="lg"><span className="sw" style={{background: "oklch(56% 0.065 25)"}}/> 2nd</span>
-        <span className="lg"><span className="sw" style={{background: "oklch(64% 0.05 40)"}}/> 3rd</span>
-        <span className="lg"><span className="sw" style={{background: "oklch(72% 0.04 60)"}}/> 4th</span>
-        <span className="lg"><span className="sw" style={{background: "oklch(78% 0.03 80)"}}/> 5th</span>
-        <span className="lg"><span className="sw" style={{background: "oklch(82% 0.02 100)"}}/> 6th+</span>
+        <span className="lg">
+          <span className="sw" style={{ background: "oklch(46% 0.075 18)" }} /> 1st choice
+        </span>
+        <span className="lg">
+          <span className="sw" style={{ background: "oklch(56% 0.065 25)" }} /> 2nd
+        </span>
+        <span className="lg">
+          <span className="sw" style={{ background: "oklch(64% 0.05 40)" }} /> 3rd
+        </span>
+        <span className="lg">
+          <span className="sw" style={{ background: "oklch(72% 0.04 60)" }} /> 4th
+        </span>
+        <span className="lg">
+          <span className="sw" style={{ background: "oklch(78% 0.03 80)" }} /> 5th
+        </span>
+        <span className="lg">
+          <span className="sw" style={{ background: "oklch(82% 0.02 100)" }} /> 6th+
+        </span>
       </div>
       <div className="dist-grid">
         {dist.map((row, i) => {
@@ -283,12 +323,16 @@ const DistributionView = ({ projects, responses }) => {
             <Reveal as="div" key={row.id} className="dist-row" delay={i * 30}>
               <span className="dist-num">{String(row.num).padStart(2, "0")}</span>
               <div>
-                <div className="dist-title" title={row.title}>{row.title}</div>
-                <div className="dist-advisor"><PersonLink name={row.advisor}>{row.advisor}</PersonLink></div>
+                <div className="dist-title" title={row.title}>
+                  {row.title}
+                </div>
+                <div className="dist-advisor">
+                  <PersonLink name={row.advisor}>{row.advisor}</PersonLink>
+                </div>
               </div>
               <div className="dist-bar" title={`${row.title} ranking distribution`}>
                 {row.ranks.map((c, r) => {
-                  const cls = r < 5 ? `r${r+1}` : "rN";
+                  const cls = r < 5 ? `r${r + 1}` : "rN";
                   return (
                     <span
                       key={r}
@@ -311,7 +355,7 @@ const DistributionView = ({ projects, responses }) => {
 };
 
 const StudentsView = ({ currentYear, projects, responses, students }) => {
-  const map = Object.fromEntries(projects.map(p => [p.id, p]));
+  const map = Object.fromEntries(projects.map((p) => [p.id, p]));
   const [expanded, setExpanded] = React.useState(new Set());
   const [reminderStatus, setReminderStatus] = React.useState("");
   const responseEmails = React.useMemo(
@@ -319,33 +363,44 @@ const StudentsView = ({ currentYear, projects, responses, students }) => {
     [responses]
   );
   const missingStudents = React.useMemo(
-    () => students.filter((student) => student.email && !responseEmails.has(normalizeEmail(student.email))),
+    () =>
+      students.filter(
+        (student) => student.email && !responseEmails.has(normalizeEmail(student.email))
+      ),
     [responseEmails, students]
   );
   const missingRecipients = React.useMemo(
-    () => uniqueRecipients(missingStudents.map((student) => ({
-      name: student.name,
-      email: student.email,
-      role: student.honorsProject ? "honors student" : "student",
-    }))),
+    () =>
+      uniqueRecipients(
+        missingStudents.map((student) => ({
+          name: student.name,
+          email: student.email,
+          role: student.honorsProject ? "honors student" : "student",
+        }))
+      ),
     [missingStudents]
   );
 
-  const toggle = (email) => setExpanded(prev => {
-    const next = new Set(prev);
-    if (next.has(email)) {
-      next.delete(email);
-    } else {
-      next.add(email);
-    }
-    return next;
-  });
+  const toggle = (email) =>
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(email)) {
+        next.delete(email);
+      } else {
+        next.add(email);
+      }
+      return next;
+    });
 
   const copyMissingEmails = async () => {
     if (!missingRecipients.length) return;
     try {
-      await navigator.clipboard.writeText(missingRecipients.map((person) => person.email).join(", "));
-      setReminderStatus(`Copied ${missingRecipients.length} email${missingRecipients.length === 1 ? "" : "s"}.`);
+      await navigator.clipboard.writeText(
+        missingRecipients.map((person) => person.email).join(", ")
+      );
+      setReminderStatus(
+        `Copied ${missingRecipients.length} email${missingRecipients.length === 1 ? "" : "s"}.`
+      );
     } catch {
       setReminderStatus("Copy failed. Select the emails manually.");
     }
@@ -364,21 +419,33 @@ const StudentsView = ({ currentYear, projects, responses, students }) => {
     document.body.appendChild(link);
     link.click();
     link.remove();
-    setReminderStatus(`Opening a reminder draft for ${missingRecipients.length} student${missingRecipients.length === 1 ? "" : "s"}.`);
+    setReminderStatus(
+      `Opening a reminder draft for ${missingRecipients.length} student${missingRecipients.length === 1 ? "" : "s"}.`
+    );
   };
 
   return (
     <div className="student-response-view">
       {students.length > 0 ? (
-        <section className={"response-roster-card" + (missingStudents.length === 0 ? " is-complete" : "")}>
+        <section
+          className={"response-roster-card" + (missingStudents.length === 0 ? " is-complete" : "")}
+        >
           <div className="response-roster-head">
             <div>
               <p className="field-label">Poll roster</p>
-              <h3>{missingStudents.length ? `${missingStudents.length} awaiting response` : "All students responded"}</h3>
+              <h3>
+                {missingStudents.length
+                  ? `${missingStudents.length} awaiting response`
+                  : "All students responded"}
+              </h3>
             </div>
             <div className="response-roster-metrics">
-              <span><strong>{responses.length}</strong> answered</span>
-              <span><strong>{students.length}</strong> expected</span>
+              <span>
+                <strong>{responses.length}</strong> answered
+              </span>
+              <span>
+                <strong>{students.length}</strong> expected
+              </span>
             </div>
           </div>
 
@@ -395,7 +462,12 @@ const StudentsView = ({ currentYear, projects, responses, students }) => {
               </div>
               <div className="missing-student-list">
                 {missingStudents.map((student, i) => (
-                  <Reveal as="div" key={student.email} className="missing-student-card" delay={i * 20}>
+                  <Reveal
+                    as="div"
+                    key={student.email}
+                    className="missing-student-card"
+                    delay={i * 20}
+                  >
                     <strong>{student.name || student.email}</strong>
                     <span className="mono">{student.email}</span>
                     {student.honorsProject && (
@@ -416,7 +488,9 @@ const StudentsView = ({ currentYear, projects, responses, students }) => {
       )}
 
       {!responses.length ? (
-        <div className="recipient-empty">No submitted rankings yet. This tab will fill as students complete the poll.</div>
+        <div className="recipient-empty">
+          No submitted rankings yet. This tab will fill as students complete the poll.
+        </div>
       ) : (
         <div className="students-grid">
           <div className="student-row head">
@@ -437,9 +511,13 @@ const StudentsView = ({ currentYear, projects, responses, students }) => {
                   {visible.map((pid, idx) => {
                     const p = map[pid];
                     return p ? (
-                      <span key={pid} className={"pref-chip" + (idx >= 4 ? " pref-chip-lower" : "")}>
+                      <span
+                        key={pid}
+                        className={"pref-chip" + (idx >= 4 ? " pref-chip-lower" : "")}
+                      >
                         <span className="n">#{idx + 1}</span>{" "}
-                        {p.title.split(":")[0].split("(")[0].slice(0, 28)}{p.title.length > 28 ? "…" : ""}
+                        {p.title.split(":")[0].split("(")[0].slice(0, 28)}
+                        {p.title.length > 28 ? "…" : ""}
                       </span>
                     ) : null;
                   })}
@@ -453,7 +531,11 @@ const StudentsView = ({ currentYear, projects, responses, students }) => {
                     </button>
                   )}
                 </div>
-                <div style={{ fontSize: 12, color: "var(--muted)", maxWidth: 220, textAlign: "right" }}>{r.notes || "—"}</div>
+                <div
+                  style={{ fontSize: 12, color: "var(--muted)", maxWidth: 220, textAlign: "right" }}
+                >
+                  {r.notes || "—"}
+                </div>
               </Reveal>
             );
           })}
@@ -470,17 +552,19 @@ const HeatmapView = ({ projects, responses }) => {
   const studentsByCell = projects.map(() => projects.map(() => []));
   const [selectedCell, setSelectedCell] = React.useState(null);
 
-  responses.forEach(r => r.ranking.forEach((pid, rank) => {
-    const i = idx[pid];
-    if (i !== undefined) {
-      matrix[i][rank]++;
-      studentsByCell[i][rank].push({
-        name: r.name,
-        email: r.email,
-        submittedAt: r.submittedAt,
-      });
-    }
-  }));
+  responses.forEach((r) =>
+    r.ranking.forEach((pid, rank) => {
+      const i = idx[pid];
+      if (i !== undefined) {
+        matrix[i][rank]++;
+        studentsByCell[i][rank].push({
+          name: r.name,
+          email: r.email,
+          submittedAt: r.submittedAt,
+        });
+      }
+    })
+  );
   const max = Math.max(1, ...matrix.flat());
   const selectedProject = selectedCell ? projects[selectedCell.projectIndex] : null;
   const selectedStudents = selectedCell
@@ -492,15 +576,22 @@ const HeatmapView = ({ projects, responses }) => {
       <div className="heatmap-wrap">
         <div className="heatmap" style={{ "--cols": projects.length }}>
           <div className="h-corner">PROJECT \ RANK</div>
-          {projects.map((_, c) => <div key={c} className="h-label" style={{ textAlign: "center" }}>#{c+1}</div>)}
+          {projects.map((_, c) => (
+            <div key={c} className="h-label" style={{ textAlign: "center" }}>
+              #{c + 1}
+            </div>
+          ))}
           {projects.map((p, r) => (
             <React.Fragment key={p.id}>
-              <div className="h-row-label" title={p.title}>{p.title.split(":")[0].split("(")[0].slice(0, 32)}</div>
+              <div className="h-row-label" title={p.title}>
+                {p.title.split(":")[0].split("(")[0].slice(0, 32)}
+              </div>
               {projects.map((_, c) => {
                 const v = matrix[r][c];
                 const t = v / max;
                 const bg = `color-mix(in oklch, var(--pink) ${Math.round(t * 70)}%, var(--paper-3))`;
-                const isSelected = selectedCell?.projectIndex === r && selectedCell?.rankIndex === c;
+                const isSelected =
+                  selectedCell?.projectIndex === r && selectedCell?.rankIndex === c;
                 return (
                   <button
                     key={c}
@@ -511,7 +602,9 @@ const HeatmapView = ({ projects, responses }) => {
                     title={`${p.title} -> rank #${c + 1}: ${v}`}
                     aria-pressed={isSelected}
                     aria-label={`${v} student${v === 1 ? "" : "s"} ranked ${p.title} number ${c + 1}`}
-                    onClick={() => setSelectedCell(isSelected ? null : { projectIndex: r, rankIndex: c })}
+                    onClick={() =>
+                      setSelectedCell(isSelected ? null : { projectIndex: r, rankIndex: c })
+                    }
                   >
                     {v || ""}
                   </button>
@@ -530,17 +623,23 @@ const HeatmapView = ({ projects, responses }) => {
                 <p className="field-label">Selected square</p>
                 <h3>Rank #{selectedCell.rankIndex + 1}</h3>
               </div>
-              <button className="ann-btn" onClick={() => setSelectedCell(null)}>Clear</button>
+              <button className="ann-btn" onClick={() => setSelectedCell(null)}>
+                Clear
+              </button>
             </div>
             <p className="heatmap-project-title">{selectedProject?.title}</p>
             <div className="heatmap-student-list">
-              {selectedStudents.length > 0 ? selectedStudents.map((student) => (
-                <div key={student.email} className="heatmap-student-card">
-                  <strong>{student.name || student.email}</strong>
-                  <span className="mono">{student.email}</span>
+              {selectedStudents.length > 0 ? (
+                selectedStudents.map((student) => (
+                  <div key={student.email} className="heatmap-student-card">
+                    <strong>{student.name || student.email}</strong>
+                    <span className="mono">{student.email}</span>
+                  </div>
+                ))
+              ) : (
+                <div className="recipient-empty">
+                  No students selected this project at rank #{selectedCell.rankIndex + 1}.
                 </div>
-              )) : (
-                <div className="recipient-empty">No students selected this project at rank #{selectedCell.rankIndex + 1}.</div>
               )}
             </div>
           </>
@@ -563,7 +662,16 @@ const teamSaveErrorMessage = (error) => {
   return `Could not save teams: ${error?.message || "unknown live data error"}`;
 };
 
-const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows, setTeamMemberRows, teamRowsError, onDraftStateChange }) => {
+const TeamsView = ({
+  currentYear,
+  projects,
+  responses,
+  students,
+  teamMemberRows,
+  setTeamMemberRows,
+  teamRowsError,
+  onDraftStateChange,
+}) => {
   const [seed, setSeed] = React.useState(0);
   const [teams, setTeams] = React.useState(null);
   const [draggedStudent, setDraggedStudent] = React.useState(null);
@@ -577,18 +685,26 @@ const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows,
   const [saving, setSaving] = React.useState(false);
   const [saveStatus, setSaveStatus] = React.useState("");
   const [matchingCopyStatus, setMatchingCopyStatus] = React.useState("");
-  const autoResultsByMode = React.useMemo(() => (
-    Object.fromEntries(MATCHING_MODE_OPTIONS.map((option) => [
-      option.id,
-      buildTeams({ projects, responses, students, seed, mode: option.id }),
-    ]))
-  ), [projects, responses, students, seed]);
-  const matchingDiscussionText = React.useMemo(() => buildMatchingDiscussionText({
-    currentYear,
-    projects,
-    responses,
-    resultsByMode: autoResultsByMode,
-  }), [autoResultsByMode, currentYear, projects, responses]);
+  const autoResultsByMode = React.useMemo(
+    () =>
+      Object.fromEntries(
+        MATCHING_MODE_OPTIONS.map((option) => [
+          option.id,
+          buildTeams({ projects, responses, students, seed, mode: option.id }),
+        ])
+      ),
+    [projects, responses, students, seed]
+  );
+  const matchingDiscussionText = React.useMemo(
+    () =>
+      buildMatchingDiscussionText({
+        currentYear,
+        projects,
+        responses,
+        resultsByMode: autoResultsByMode,
+      }),
+    [autoResultsByMode, currentYear, projects, responses]
+  );
 
   React.useEffect(() => {
     onDraftStateChange?.(dirty || saving);
@@ -605,7 +721,13 @@ const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows,
   }, [activeMatchingMode, matchingMode]);
 
   React.useEffect(() => {
-    const autoResult = buildTeams({ projects, responses, students, seed, mode: activeMatchingMode });
+    const autoResult = buildTeams({
+      projects,
+      responses,
+      students,
+      seed,
+      mode: activeMatchingMode,
+    });
     const savedStudentRows = (teamMemberRows || []).filter((row) => row.member_type === "student");
 
     if (savedStudentRows.length && teamViewMode === "current") {
@@ -626,10 +748,18 @@ const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows,
   if (!teams) return null;
 
   const matchingOption = matchingOptionFor(matchingMode);
-  const missLabel = teams.topChoiceWindow === 1 ? "Missed top choice" : `Moved below top-${teams.topChoiceWindow}`;
+  const missLabel =
+    teams.topChoiceWindow === 1 ? "Missed top choice" : `Moved below top-${teams.topChoiceWindow}`;
   const sizeErrors = activeTeamSizeErrors(teams.teams, teams.minTeamSize, teams.maxTeamSize);
-  const activeStudentCount = Object.values(teams.teams).reduce((total, roster) => total + roster.length, 0);
-  const canSave = activeStudentCount > 0 && !saving && sizeErrors.length === 0 && (dirty || teamSource !== "current");
+  const activeStudentCount = Object.values(teams.teams).reduce(
+    (total, roster) => total + roster.length,
+    0
+  );
+  const canSave =
+    activeStudentCount > 0 &&
+    !saving &&
+    sizeErrors.length === 0 &&
+    (dirty || teamSource !== "current");
   const hasSavedRoster = (teamMemberRows || []).some((row) => row.member_type === "student");
 
   const selectMatchingMode = (nextMode) => {
@@ -642,15 +772,27 @@ const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows,
   };
 
   const showCurrentTeams = () => {
-    if (dirty && !window.confirm("Discard the unsaved manual draft and return to the locked current teams?")) return;
+    if (
+      dirty &&
+      !window.confirm("Discard the unsaved manual draft and return to the locked current teams?")
+    )
+      return;
     setTeamViewMode("current");
-    setSaveStatus("Showing locked current teams. Auto-match previews are still available separately.");
+    setSaveStatus(
+      "Showing locked current teams. Auto-match previews are still available separately."
+    );
   };
 
   const showAutoPreview = () => {
-    if (dirty && !window.confirm("Discard the unsaved manual draft and open an auto-match preview?")) return;
+    if (
+      dirty &&
+      !window.confirm("Discard the unsaved manual draft and open an auto-match preview?")
+    )
+      return;
     setTeamViewMode("auto");
-    setSaveStatus(`Showing ${matchingOption.label} auto preview. Locked current teams are unchanged.`);
+    setSaveStatus(
+      `Showing ${matchingOption.label} auto preview. Locked current teams are unchanged.`
+    );
   };
 
   const moveStudent = (email, fromProjectId, toProjectId) => {
@@ -658,11 +800,11 @@ const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows,
     if ((teams.teams[toProjectId] || []).length >= teams.maxTeamSize) return;
     const next = JSON.parse(JSON.stringify(teams.teams));
     const fromList = next[fromProjectId] || [];
-    const i = fromList.findIndex(s => s.email === email);
+    const i = fromList.findIndex((s) => s.email === email);
     if (i < 0) return;
     const [stu] = fromList.splice(i, 1);
     // Recompute prefRank for new project
-    const r = responses.find(x => x.email === email);
+    const r = responses.find((x) => x.email === email);
     if (r) stu.prefRank = r.ranking.indexOf(toProjectId);
     stu.locked = false;
     next[toProjectId].push(stu);
@@ -674,7 +816,9 @@ const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows,
 
   const saveFinalTeams = async () => {
     if (!isSupabaseConfigured) {
-      setSaveStatus("The live database is not configured for this build, so the final teams cannot be saved yet.");
+      setSaveStatus(
+        "The live database is not configured for this build, so the final teams cannot be saved yet."
+      );
       return;
     }
     if (sizeErrors.length) {
@@ -703,9 +847,7 @@ const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows,
       return;
     }
 
-    const { error: insertError } = await supabase
-      .from("cohort_team_members")
-      .insert(rows);
+    const { error: insertError } = await supabase.from("cohort_team_members").insert(rows);
 
     setSaving(false);
 
@@ -732,7 +874,9 @@ const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows,
     setTeamViewMode("current");
     setTeamSource("current");
     setDirty(false);
-    setSaveStatus(`Saved locked current teams with ${activeStudentCount} students and ${rows.filter((row) => row.member_type === "mentor" && row.person_email).length} mentors. Auto-match previews remain separate.`);
+    setSaveStatus(
+      `Saved locked current teams with ${activeStudentCount} students and ${rows.filter((row) => row.member_type === "mentor" && row.person_email).length} mentors. Auto-match previews remain separate.`
+    );
   };
 
   const copyMatchingDiscussion = async () => {
@@ -754,7 +898,9 @@ const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows,
       <div className="teams-controls">
         <div className="field">
           <span className="field-label">Team size</span>
-          <div className="mono" style={{ fontSize: 13 }}>2–3 students</div>
+          <div className="mono" style={{ fontSize: 13 }}>
+            2–3 students
+          </div>
         </div>
         <div className="field matching-field">
           <span className="field-label">Matching logic</span>
@@ -777,11 +923,21 @@ const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows,
         </div>
         <div className="field">
           <span className="field-label">Preference rule</span>
-          <div className="mono" style={{ fontSize: 13 }}>{matchingOption.description}</div>
+          <div className="mono" style={{ fontSize: 13 }}>
+            {matchingOption.description}
+          </div>
         </div>
         <div className="field">
           <span className="field-label">Source</span>
-          <div className="mono" style={{ fontSize: 13 }}>{computingTeams ? "Computing preview..." : teamSource === "current" ? "Locked current teams" : teamSource === "manual" ? "Manual draft" : `${matchingOption.label} auto preview`}</div>
+          <div className="mono" style={{ fontSize: 13 }}>
+            {computingTeams
+              ? "Computing preview..."
+              : teamSource === "current"
+                ? "Locked current teams"
+                : teamSource === "manual"
+                  ? "Manual draft"
+                  : `${matchingOption.label} auto preview`}
+          </div>
         </div>
         {hasSavedRoster && (
           <button
@@ -793,24 +949,57 @@ const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows,
             {teamSource === "current" ? "View auto preview" : "View locked current teams"}
           </button>
         )}
-        <button className="btn btn-ghost" onClick={() => { setTeamViewMode("auto"); setSaveStatus(`Showing a new ${matchingOption.label} auto preview. Locked current teams are unchanged.`); setSeed(s => s + 1); }} disabled={teamSource === "current" || saving || computingTeams} data-spark>
+        <button
+          className="btn btn-ghost"
+          onClick={() => {
+            setTeamViewMode("auto");
+            setSaveStatus(
+              `Showing a new ${matchingOption.label} auto preview. Locked current teams are unchanged.`
+            );
+            setSeed((s) => s + 1);
+          }}
+          disabled={teamSource === "current" || saving || computingTeams}
+          data-spark
+        >
           {teamSource === "current" ? "Current teams locked" : "Re-roll preview"}
         </button>
-        <button className="btn btn-primary" onClick={saveFinalTeams} disabled={!canSave || computingTeams} data-spark>
-          {saving ? "Saving..." : dirty || teamSource !== "current" ? "Save as current teams" : "Current teams saved"}
+        <button
+          className="btn btn-primary"
+          onClick={saveFinalTeams}
+          disabled={!canSave || computingTeams}
+          data-spark
+        >
+          {saving
+            ? "Saving..."
+            : dirty || teamSource !== "current"
+              ? "Save as current teams"
+              : "Current teams saved"}
         </button>
         <div className="satisfaction">
           <div>
-            <div style={{ fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase" }}>Cohort satisfaction</div>
+            <div style={{ fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase" }}>
+              Cohort satisfaction
+            </div>
             <div className="big">{teams.satisfaction}%</div>
           </div>
           <div>
-            <div style={{ fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase" }}>{missLabel}</div>
-            <div className="big" style={{ color: teams.unhappyCount > 4 ? "var(--pink-ink)" : "var(--olive-ink)" }}>{teams.unhappyCount}</div>
+            <div style={{ fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase" }}>
+              {missLabel}
+            </div>
+            <div
+              className="big"
+              style={{ color: teams.unhappyCount > 4 ? "var(--pink-ink)" : "var(--olive-ink)" }}
+            >
+              {teams.unhappyCount}
+            </div>
           </div>
           <div>
-            <div style={{ fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase" }}>Inactive projects</div>
-            <div className="big" style={{ color: "var(--muted)" }}>{teams.inactiveProjectIds.length}</div>
+            <div style={{ fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase" }}>
+              Inactive projects
+            </div>
+            <div className="big" style={{ color: "var(--muted)" }}>
+              {teams.inactiveProjectIds.length}
+            </div>
           </div>
         </div>
       </div>
@@ -828,49 +1017,69 @@ const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows,
       )}
 
       <div className="teams-grid">
-        {[...projects].sort((a, b) => a.num - b.num).map((p) => {
-          const roster = teams.teams[p.id] || [];
-          return (
-            <Reveal as="div" key={p.id} className="team-card" delay={(p.num - 1) * 30}>
-              <div className="team-num mono">TEAM {String(p.num).padStart(2, "0")}</div>
-              <h4 className="team-title">{p.title}</h4>
-              <div className="team-advisor"><PersonLink name={p.advisor}>{p.advisor}</PersonLink> · {p.affiliation}</div>
-              <ul
-                className={"team-roster" + (dropTarget === p.id ? " is-drop-target" : "")}
-                onDragOver={(e) => { e.preventDefault(); setDropTarget(p.id); }}
-                onDragLeave={() => setDropTarget(null)}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  if (draggedStudent) {
-                    moveStudent(draggedStudent.email, draggedStudent.fromProject, p.id);
-                  }
-                  setDropTarget(null);
-                  setDraggedStudent(null);
-                }}
-              >
-                {roster.length === 0 && <li className="team-empty">Inactive · no team this pass</li>}
-                {roster.map(s => {
-                  const preferenceLabel = s.prefRank >= 0 ? `#${s.prefRank + 1}` : "Unranked";
-                  const markerLabel = s.honorsProject ? `${preferenceLabel} · Honors` : preferenceLabel;
+        {[...projects]
+          .sort((a, b) => a.num - b.num)
+          .map((p) => {
+            const roster = teams.teams[p.id] || [];
+            return (
+              <Reveal as="div" key={p.id} className="team-card" delay={(p.num - 1) * 30}>
+                <div className="team-num mono">TEAM {String(p.num).padStart(2, "0")}</div>
+                <h4 className="team-title">{p.title}</h4>
+                <div className="team-advisor">
+                  <PersonLink name={p.advisor}>{p.advisor}</PersonLink> · {p.affiliation}
+                </div>
+                <ul
+                  className={"team-roster" + (dropTarget === p.id ? " is-drop-target" : "")}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setDropTarget(p.id);
+                  }}
+                  onDragLeave={() => setDropTarget(null)}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    if (draggedStudent) {
+                      moveStudent(draggedStudent.email, draggedStudent.fromProject, p.id);
+                    }
+                    setDropTarget(null);
+                    setDraggedStudent(null);
+                  }}
+                >
+                  {roster.length === 0 && (
+                    <li className="team-empty">Inactive · no team this pass</li>
+                  )}
+                  {roster.map((s) => {
+                    const preferenceLabel = s.prefRank >= 0 ? `#${s.prefRank + 1}` : "Unranked";
+                    const markerLabel = s.honorsProject
+                      ? `${preferenceLabel} · Honors`
+                      : preferenceLabel;
 
-                  return (
-                    <li
-                      key={s.email}
-                      draggable
-                      className={(draggedStudent?.email === s.email ? "dragging" : "") + (s.locked ? " is-locked" : "")}
-                      onDragStart={() => setDraggedStudent({ email: s.email, fromProject: p.id })}
-                      onDragEnd={() => setDraggedStudent(null)}
-                      title={s.honorsProject ? "Honors default; drag to override manually" : s.locked ? "Saved final assignment; drag to revise" : "Drag for manual override"}
-                    >
-                      <span>{s.name}</span>
-                      <span className="pref-marker">{markerLabel}</span>
-                    </li>
-                  );
-                })}
-              </ul>
-            </Reveal>
-          );
-        })}
+                    return (
+                      <li
+                        key={s.email}
+                        draggable
+                        className={
+                          (draggedStudent?.email === s.email ? "dragging" : "") +
+                          (s.locked ? " is-locked" : "")
+                        }
+                        onDragStart={() => setDraggedStudent({ email: s.email, fromProject: p.id })}
+                        onDragEnd={() => setDraggedStudent(null)}
+                        title={
+                          s.honorsProject
+                            ? "Honors default; drag to override manually"
+                            : s.locked
+                              ? "Saved final assignment; drag to revise"
+                              : "Drag for manual override"
+                        }
+                      >
+                        <span>{s.name}</span>
+                        <span className="pref-marker">{markerLabel}</span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </Reveal>
+            );
+          })}
       </div>
 
       <section className="matching-export-panel">
@@ -879,7 +1088,12 @@ const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows,
             <p className="field-label">Plain-text shareout</p>
             <h3>Matching comparison</h3>
           </div>
-          <button className="btn btn-ghost" onClick={copyMatchingDiscussion} disabled={!responses.length} data-spark>
+          <button
+            className="btn btn-ghost"
+            onClick={copyMatchingDiscussion}
+            disabled={!responses.length}
+            data-spark
+          >
             Copy both methods
           </button>
         </div>
@@ -896,9 +1110,19 @@ const TeamsView = ({ currentYear, projects, responses, students, teamMemberRows,
   );
 };
 
-const EmailDraftView = ({ data, projects, responses, students, teamMemberRows, onAnnouncementsChange }) => {
+const EmailDraftView = ({
+  data,
+  projects,
+  responses,
+  students,
+  teamMemberRows,
+  onAnnouncementsChange,
+}) => {
   const announcements = React.useMemo(
-    () => sortAnnouncements((data.announcements || []).filter(item => item.cohortYear === data.currentYear)),
+    () =>
+      sortAnnouncements(
+        (data.announcements || []).filter((item) => item.cohortYear === data.currentYear)
+      ),
     [data.announcements, data.currentYear]
   );
   const audienceOptions = React.useMemo(() => {
@@ -939,11 +1163,12 @@ const EmailDraftView = ({ data, projects, responses, students, teamMemberRows, o
     [projects, responses, students]
   );
   const fallbackStudentRecipients = React.useMemo(
-    () => responses.map((response) => ({
-      name: response.name,
-      email: response.email,
-      honorsProject: null,
-    })),
+    () =>
+      responses.map((response) => ({
+        name: response.name,
+        email: response.email,
+        honorsProject: null,
+      })),
     [responses]
   );
   const emailStudents = students.length ? students : fallbackStudentRecipients;
@@ -962,9 +1187,12 @@ const EmailDraftView = ({ data, projects, responses, students, teamMemberRows, o
   const isTeamAudience = TEAM_AUDIENCES.has(audience);
 
   const project = projects.find((p) => p.id === projectId);
-  const audienceLabel = audienceOptions.find((option) => option.id === audience)?.label || "Selected group";
+  const audienceLabel =
+    audienceOptions.find((option) => option.id === audience)?.label || "Selected group";
   const hasSavedTeams = (teamMemberRows || []).some((row) => row.member_type === "student");
-  const teamRecipientSource = hasSavedTeams ? "Saved team assignments" : "Current auto-match preview";
+  const teamRecipientSource = hasSavedTeams
+    ? "Saved team assignments"
+    : "Current auto-match preview";
 
   React.useEffect(() => {
     if (!isTeamAudience) return;
@@ -973,7 +1201,11 @@ const EmailDraftView = ({ data, projects, responses, students, teamMemberRows, o
   }, [emailProjectOptions, isTeamAudience, projectId, projects]);
 
   const recipients = React.useMemo(() => {
-    const studentRecipients = emailStudents.map((student) => ({ name: student.name, email: student.email, role: "student" }));
+    const studentRecipients = emailStudents.map((student) => ({
+      name: student.name,
+      email: student.email,
+      role: "student",
+    }));
     const honorsRecipients = emailStudents
       .filter((student) => student.honorsProject)
       .map((student) => ({ name: student.name, email: student.email, role: "student" }));
@@ -984,10 +1216,10 @@ const EmailDraftView = ({ data, projects, responses, students, teamMemberRows, o
     const teamStudents = hasSavedTeams
       ? peopleFromTeamRows(teamMemberRows || [], projectId, "student")
       : (teams.teams[projectId] || []).map((student) => ({
-        name: student.name,
-        email: student.email,
-        role: "student",
-      }));
+          name: student.name,
+          email: student.email,
+          role: "student",
+        }));
     const catalogTeamMentors = mentorsForProject(project);
     const savedTeamMentors = hasSavedTeams
       ? peopleFromTeamRows(teamMemberRows || [], projectId, "mentor")
@@ -1006,7 +1238,19 @@ const EmailDraftView = ({ data, projects, responses, students, teamMemberRows, o
     if (audience === "team_mentors") return uniqueRecipients(teamMentors);
     if (audience === "team") return uniqueRecipients([...teamStudents, ...teamMentors]);
     return uniqueRecipients([...studentRecipients, ...mentorRecipients]);
-  }, [activeProjectIds, audience, emailStudents, hasSavedTeams, mentorDirectory.activeMentors, project, projectId, responseEmailSet, students, teamMemberRows, teams]);
+  }, [
+    activeProjectIds,
+    audience,
+    emailStudents,
+    hasSavedTeams,
+    mentorDirectory.activeMentors,
+    project,
+    projectId,
+    responseEmailSet,
+    students,
+    teamMemberRows,
+    teams,
+  ]);
 
   const studentRecipients = recipients.filter((person) => person.role === "student");
   const mentorRecipients = recipients.filter((person) => person.role === "mentor");
@@ -1020,22 +1264,31 @@ const EmailDraftView = ({ data, projects, responses, students, teamMemberRows, o
   const visibleRecipientGroups = [
     { id: "student", title: "Students", people: studentRecipients, filters: ["all", "student"] },
     { id: "mentor", title: "Active mentors", people: mentorRecipients, filters: ["all", "mentor"] },
-    { id: "inactive_mentor", title: "Inactive mentors (not emailed)", people: inactiveMentorPreview, muted: true, filters: ["all", "mentor", "inactive_mentor"] },
-  ].filter((group) => (
-    group.people.length > 0 && group.filters.includes(recipientFilter)
-  ));
+    {
+      id: "inactive_mentor",
+      title: "Inactive mentors (not emailed)",
+      people: inactiveMentorPreview,
+      muted: true,
+      filters: ["all", "mentor", "inactive_mentor"],
+    },
+  ].filter((group) => group.people.length > 0 && group.filters.includes(recipientFilter));
 
   React.useEffect(() => {
     if (recipientFilter === "student" && studentCount === 0) setRecipientFilter("all");
     if (recipientFilter === "mentor" && mentorCount === 0) setRecipientFilter("all");
-    if (recipientFilter === "inactive_mentor" && inactiveMentorCount === 0) setRecipientFilter("all");
+    if (recipientFilter === "inactive_mentor" && inactiveMentorCount === 0)
+      setRecipientFilter("all");
   }, [inactiveMentorCount, mentorCount, recipientFilter, studentCount]);
 
   const selectSource = (nextSourceId) => {
     setSourceId(nextSourceId);
-    const draft = nextSourceId === CUSTOM_DRAFT_ID
-      ? draftFromAnnouncement(null, data.currentYear)
-      : draftFromAnnouncement(announcements.find((item) => item.id === nextSourceId), data.currentYear);
+    const draft =
+      nextSourceId === CUSTOM_DRAFT_ID
+        ? draftFromAnnouncement(null, data.currentYear)
+        : draftFromAnnouncement(
+            announcements.find((item) => item.id === nextSourceId),
+            data.currentYear
+          );
     setSubject(draft.subject);
     setBody(draft.body);
     setStatus("");
@@ -1061,7 +1314,9 @@ const EmailDraftView = ({ data, projects, responses, students, teamMemberRows, o
     document.body.appendChild(link);
     link.click();
     link.remove();
-    setStatus(`Opening your mail composer with ${recipients.length} BCC recipients. Review, choose the W&M account, then send.`);
+    setStatus(
+      `Opening your mail composer with ${recipients.length} BCC recipients. Review, choose the W&M account, then send.`
+    );
   };
 
   const rewriteDraft = async () => {
@@ -1092,7 +1347,7 @@ const EmailDraftView = ({ data, projects, responses, students, teamMemberRows, o
     setRewriting(false);
 
     if (error || rewrittenDraft?.error) {
-      setStatus(rewrittenDraft?.error || await functionErrorMessage(error, "AI rewrite failed."));
+      setStatus(rewrittenDraft?.error || (await functionErrorMessage(error, "AI rewrite failed.")));
       return;
     }
     if (!rewrittenDraft?.subject || !rewrittenDraft?.body) {
@@ -1114,7 +1369,11 @@ const EmailDraftView = ({ data, projects, responses, students, teamMemberRows, o
       setStatus("Add a subject and message before posting a news update.");
       return;
     }
-    if (!window.confirm("Post this draft as the public Now update? It will replace the current pinned Now item.")) {
+    if (
+      !window.confirm(
+        "Post this draft as the public Now update? It will replace the current pinned Now item."
+      )
+    ) {
       return;
     }
 
@@ -1132,7 +1391,9 @@ const EmailDraftView = ({ data, projects, responses, students, teamMemberRows, o
         createdByEmail: userData?.user?.email,
       });
       onAnnouncementsChange?.();
-      setStatus("Posted as the Now update. The front page, Updates page, and news source list will refresh from the live announcement.");
+      setStatus(
+        "Posted as the Now update. The front page, Updates page, and news source list will refresh from the live announcement."
+      );
     } catch (error) {
       setStatus(error?.message || "Could not post the Now update.");
     } finally {
@@ -1145,7 +1406,9 @@ const EmailDraftView = ({ data, projects, responses, students, teamMemberRows, o
       <section className="email-composer">
         <div className="email-section-head">
           <div>
-            <p className="kicker"><span className="dot">●</span> &nbsp; Dashboard-only</p>
+            <p className="kicker">
+              <span className="dot">●</span> &nbsp; Dashboard-only
+            </p>
             <h3>Draft cohort email</h3>
           </div>
           <span className="email-mode mono">Mail app draft</span>
@@ -1156,7 +1419,9 @@ const EmailDraftView = ({ data, projects, responses, students, teamMemberRows, o
             <span className="field-label">Send to</span>
             <select value={audience} onChange={(e) => setAudience(e.target.value)}>
               {audienceOptions.map((option) => (
-                <option key={option.id} value={option.id}>{option.label}</option>
+                <option key={option.id} value={option.id}>
+                  {option.label}
+                </option>
               ))}
             </select>
           </label>
@@ -1165,9 +1430,13 @@ const EmailDraftView = ({ data, projects, responses, students, teamMemberRows, o
             <label className="field">
               <span className="field-label">Project team</span>
               <select value={projectId} onChange={(e) => setProjectId(e.target.value)}>
-                {[...emailProjectOptions].sort((a, b) => a.num - b.num).map((item) => (
-                  <option key={item.id} value={item.id}>{projectLabel(item)}</option>
-                ))}
+                {[...emailProjectOptions]
+                  .sort((a, b) => a.num - b.num)
+                  .map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {projectLabel(item)}
+                    </option>
+                  ))}
               </select>
             </label>
           )}
@@ -1176,7 +1445,9 @@ const EmailDraftView = ({ data, projects, responses, students, teamMemberRows, o
             <span className="field-label">Use news item</span>
             <select value={sourceId} onChange={(e) => selectSource(e.target.value)}>
               {announcements.map((item) => (
-                <option key={item.id} value={item.id}>{item.label} · {item.title}</option>
+                <option key={item.id} value={item.id}>
+                  {item.label} · {item.title}
+                </option>
               ))}
               <option value={CUSTOM_DRAFT_ID}>Draft something new</option>
             </select>
@@ -1194,16 +1465,36 @@ const EmailDraftView = ({ data, projects, responses, students, teamMemberRows, o
         </label>
 
         <div className="email-actions">
-          <button className="btn btn-pink" onClick={rewriteDraft} disabled={rewriting || (!subject.trim() && !body.trim())} data-spark>
+          <button
+            className="btn btn-pink"
+            onClick={rewriteDraft}
+            disabled={rewriting || (!subject.trim() && !body.trim())}
+            data-spark
+          >
             {rewriting ? "Rewriting..." : "Rewrite with AI"}
           </button>
-          <button className="btn btn-primary" onClick={postAsNowNews} disabled={postingNews || (!subject.trim() || !body.trim())} data-spark>
+          <button
+            className="btn btn-primary"
+            onClick={postAsNowNews}
+            disabled={postingNews || !subject.trim() || !body.trim()}
+            data-spark
+          >
             {postingNews ? "Posting..." : "Post as Now news"}
           </button>
-          <button className="btn btn-primary" onClick={openMailDraft} disabled={!recipients.length} data-spark>
+          <button
+            className="btn btn-primary"
+            onClick={openMailDraft}
+            disabled={!recipients.length}
+            data-spark
+          >
             Open in Mail
           </button>
-          <button className="btn btn-ghost" onClick={() => copyText(recipients.map((person) => person.email).join(", "), "Recipient list")}>
+          <button
+            className="btn btn-ghost"
+            onClick={() =>
+              copyText(recipients.map((person) => person.email).join(", "), "Recipient list")
+            }
+          >
             Copy recipients
           </button>
           <button className="btn btn-ghost" onClick={() => copyText(body, "Message body")}>
@@ -1212,16 +1503,19 @@ const EmailDraftView = ({ data, projects, responses, students, teamMemberRows, o
         </div>
 
         <p className="email-note">
-          This prepares a draft with BCC recipients. It does not auto-send, attach files, or choose the sender account for you.
+          This prepares a draft with BCC recipients. It does not auto-send, attach files, or choose
+          the sender account for you.
         </p>
         {showMentorDirectory && inactiveMentorCount > 0 && (
           <p className="email-note">
-            Inactive project mentors are shown in the preview for reference and are not included in BCC recipients.
+            Inactive project mentors are shown in the preview for reference and are not included in
+            BCC recipients.
           </p>
         )}
         {selectedAnnouncement?.resources?.length > 0 && (
           <p className="email-note">
-            Attachments still need to be added in Mail. Linked resources are included in the message text.
+            Attachments still need to be added in Mail. Linked resources are included in the message
+            text.
           </p>
         )}
         {status && <p className="email-status">{status}</p>}
@@ -1260,7 +1554,9 @@ const EmailDraftView = ({ data, projects, responses, students, teamMemberRows, o
             <strong>{mentorCount}</strong> mentors
           </button>
           <button
-            className={"recipient-stat" + (recipientFilter === "inactive_mentor" ? " is-active" : "")}
+            className={
+              "recipient-stat" + (recipientFilter === "inactive_mentor" ? " is-active" : "")
+            }
             type="button"
             aria-pressed={recipientFilter === "inactive_mentor"}
             onClick={() => setRecipientFilter("inactive_mentor")}
@@ -1276,11 +1572,20 @@ const EmailDraftView = ({ data, projects, responses, students, teamMemberRows, o
         )}
         <div className="recipient-list">
           {visibleRecipientGroups.map((group) => (
-            <RecipientList key={group.id} title={group.title} people={group.people} muted={group.muted} />
+            <RecipientList
+              key={group.id}
+              title={group.title}
+              people={group.people}
+              muted={group.muted}
+            />
           ))}
-          {!recipients.length && <div className="recipient-empty">No recipients found for this selection.</div>}
+          {!recipients.length && (
+            <div className="recipient-empty">No recipients found for this selection.</div>
+          )}
           {recipients.length > 0 && visibleRecipientGroups.length === 0 && (
-            <div className="recipient-empty">No {recipientFilter === "student" ? "students" : "mentors"} in this selection.</div>
+            <div className="recipient-empty">
+              No {recipientFilter === "student" ? "students" : "mentors"} in this selection.
+            </div>
           )}
         </div>
       </aside>
@@ -1292,19 +1597,34 @@ const ArchiveView = ({ archive, currentYear, onSwitch }) => (
   <div className="archive-wrap">
     {archive.map((y, i) => (
       <Reveal as="div" key={y.year} className={"archive-year " + y.status} delay={i * 50}>
-        <div className="yr">{y.year.split("-").map(s => s.slice(-2)).join("·")}</div>
+        <div className="yr">
+          {y.year
+            .split("-")
+            .map((s) => s.slice(-2))
+            .join("·")}
+        </div>
         <div className="body">
           <h3>{y.title}</h3>
           <p>{y.summary}</p>
           <div className="stats-row">
-            <span><strong>{y.projects ?? "—"}</strong> projects</span>
-            <span><strong>{y.teams ?? "—"}</strong> teams</span>
-            <span><strong>{y.students ?? "—"}</strong> students</span>
+            <span>
+              <strong>{y.projects ?? "—"}</strong> projects
+            </span>
+            <span>
+              <strong>{y.teams ?? "—"}</strong> teams
+            </span>
+            <span>
+              <strong>{y.students ?? "—"}</strong> students
+            </span>
             {y.status === "current" && <span style={{ color: "var(--pink-ink)" }}>● live</span>}
             {y.status === "future" && <span style={{ color: "var(--muted)" }}>placeholder</span>}
           </div>
           {y.status !== "future" && (
-            <button className="btn btn-ghost" style={{ marginTop: 12 }} onClick={() => onSwitch?.(y.year)}>
+            <button
+              className="btn btn-ghost"
+              style={{ marginTop: 12 }}
+              onClick={() => onSwitch?.(y.year)}
+            >
               {y.year === currentYear ? "Currently viewing" : "Switch to " + y.year}
             </button>
           )}
@@ -1316,7 +1636,8 @@ const ArchiveView = ({ archive, currentYear, onSwitch }) => (
 
 /* ── Announcements (Updates tab) ─────────────────────────────────── */
 
-const ANN_COLUMNS = "id,cohort_year,slug,title,summary,body,resources,audience_label,label,pinned,display_order,event_date,publish_at,status,created_at,updated_at";
+const ANN_COLUMNS =
+  "id,cohort_year,slug,title,summary,body,resources,audience_label,label,pinned,display_order,event_date,publish_at,status,created_at,updated_at";
 
 const BLANK = (cohortYear) => ({
   cohortYear,
@@ -1335,16 +1656,26 @@ const BLANK = (cohortYear) => ({
 
 const annToRow = (ann, instructorEmail) => ({
   cohort_year: ann.cohortYear,
-  slug: ann.slug || ann.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || `update-${Date.now()}`,
+  slug:
+    ann.slug ||
+    ann.title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "") ||
+    `update-${Date.now()}`,
   title: ann.title,
   summary: ann.summary,
   body: ann.body,
-  resources: normalizeAnnouncementResources((ann.resources || []).map((resource) => ({
-    ...resource,
-    label: resource.label || "",
-    kind: resource.kind || "Link",
-    href: resource.href || resource.url || resource.page || "",
-  })).filter((resource) => resource.href || resource.page || resource.label)),
+  resources: normalizeAnnouncementResources(
+    (ann.resources || [])
+      .map((resource) => ({
+        ...resource,
+        label: resource.label || "",
+        kind: resource.kind || "Link",
+        href: resource.href || resource.url || resource.page || "",
+      }))
+      .filter((resource) => resource.href || resource.page || resource.label)
+  ),
   audience_label: ann.audience || null,
   label: ann.label || null,
   pinned: Boolean(ann.pinned),
@@ -1363,26 +1694,46 @@ const missingAnnouncementSourceItems = (rows, sourceItems) => {
   });
 };
 
-const bodyText = (body) => (Array.isArray(body) ? body.join("\n\n") : (body || ""));
-const textToBody = (text) => text.split(/\n{2,}/).map(s => s.trim()).filter(Boolean);
+const bodyText = (body) => (Array.isArray(body) ? body.join("\n\n") : body || "");
+const textToBody = (text) =>
+  text
+    .split(/\n{2,}/)
+    .map((s) => s.trim())
+    .filter(Boolean);
 
 const ResourcesEditor = ({ value, onChange }) => {
   const add = () => onChange([...value, { label: "", kind: "Link", href: "" }]);
   const remove = (i) => onChange(value.filter((_, idx) => idx !== i));
-  const set = (i, field, val) => onChange(value.map((r, idx) => idx === i
-    ? { ...r, [field]: val, ...(field === "href" ? { page: undefined, url: undefined } : {}) }
-    : r
-  ));
+  const set = (i, field, val) =>
+    onChange(
+      value.map((r, idx) =>
+        idx === i
+          ? { ...r, [field]: val, ...(field === "href" ? { page: undefined, url: undefined } : {}) }
+          : r
+      )
+    );
   return (
     <div className="ann-resources-editor">
       {value.map((r, i) => (
         <div key={i} className="ann-resource-row">
-          <input placeholder="Label" value={r.label} onChange={e => set(i, "label", e.target.value)} />
-          <input placeholder="URL or page" value={r.href || r.url || r.page || ""} onChange={e => set(i, "href", e.target.value)} />
-          <button className="ann-res-remove" onClick={() => remove(i)} title="Remove">×</button>
+          <input
+            placeholder="Label"
+            value={r.label}
+            onChange={(e) => set(i, "label", e.target.value)}
+          />
+          <input
+            placeholder="URL or page"
+            value={r.href || r.url || r.page || ""}
+            onChange={(e) => set(i, "href", e.target.value)}
+          />
+          <button className="ann-res-remove" onClick={() => remove(i)} title="Remove">
+            ×
+          </button>
         </div>
       ))}
-      <button className="btn btn-ghost" style={{ fontSize: 12, padding: "4px 10px" }} onClick={add}>+ Add resource</button>
+      <button className="btn btn-ghost" style={{ fontSize: 12, padding: "4px 10px" }} onClick={add}>
+        + Add resource
+      </button>
     </div>
   );
 };
@@ -1394,19 +1745,31 @@ const AnnForm = ({ value, onChange, onSave, onCancel, saving }) => {
       <div className="ann-form-grid">
         <label className="ann-label">
           Title
-          <input value={value.title} onChange={e => set("title", e.target.value)} placeholder="Update title" />
+          <input
+            value={value.title}
+            onChange={(e) => set("title", e.target.value)}
+            placeholder="Update title"
+          />
         </label>
         <label className="ann-label">
           Label <span className="ann-hint">(e.g. "Now", "May 13")</span>
-          <input value={value.label} onChange={e => set("label", e.target.value)} placeholder="Short date/label" />
+          <input
+            value={value.label}
+            onChange={(e) => set("label", e.target.value)}
+            placeholder="Short date/label"
+          />
         </label>
         <label className="ann-label">
           Date
-          <input type="date" value={value.date || ""} onChange={e => set("date", e.target.value)} />
+          <input
+            type="date"
+            value={value.date || ""}
+            onChange={(e) => set("date", e.target.value)}
+          />
         </label>
         <label className="ann-label">
           Status
-          <select value={value.status} onChange={e => set("status", e.target.value)}>
+          <select value={value.status} onChange={(e) => set("status", e.target.value)}>
             <option value="published">Published</option>
             <option value="draft">Draft</option>
             <option value="archived">Archived</option>
@@ -1415,7 +1778,11 @@ const AnnForm = ({ value, onChange, onSave, onCancel, saving }) => {
       </div>
       <label className="ann-label">
         Summary <span className="ann-hint">(first sentence shown in card)</span>
-        <input value={value.summary} onChange={e => set("summary", e.target.value)} placeholder="One sentence summary" />
+        <input
+          value={value.summary}
+          onChange={(e) => set("summary", e.target.value)}
+          placeholder="One sentence summary"
+        />
       </label>
       <label className="ann-label">
         Body paragraphs <span className="ann-hint">(separate paragraphs with a blank line)</span>
@@ -1423,17 +1790,25 @@ const AnnForm = ({ value, onChange, onSave, onCancel, saving }) => {
           className="ann-body-input"
           rows={6}
           value={bodyText(value.body)}
-          onChange={e => set("body", textToBody(e.target.value))}
+          onChange={(e) => set("body", textToBody(e.target.value))}
           placeholder={"First paragraph.\n\nSecond paragraph."}
         />
       </label>
       <label className="ann-label">
         Audience <span className="ann-hint">(optional)</span>
-        <input value={value.audience} onChange={e => set("audience", e.target.value)} placeholder="e.g. All students" />
+        <input
+          value={value.audience}
+          onChange={(e) => set("audience", e.target.value)}
+          placeholder="e.g. All students"
+        />
       </label>
       <div className="ann-form-row">
         <label className="ann-checkbox-label">
-          <input type="checkbox" checked={value.pinned} onChange={e => set("pinned", e.target.checked)} />
+          <input
+            type="checkbox"
+            checked={value.pinned}
+            onChange={(e) => set("pinned", e.target.checked)}
+          />
           Pinned
         </label>
         <label className="ann-label" style={{ flex: 1 }}>
@@ -1441,7 +1816,7 @@ const AnnForm = ({ value, onChange, onSave, onCancel, saving }) => {
           <input
             type="number"
             value={value.order ?? ""}
-            onChange={e => set("order", e.target.value === "" ? null : Number(e.target.value))}
+            onChange={(e) => set("order", e.target.value === "" ? null : Number(e.target.value))}
             placeholder="e.g. 1"
             style={{ width: 80 }}
           />
@@ -1449,13 +1824,19 @@ const AnnForm = ({ value, onChange, onSave, onCancel, saving }) => {
       </div>
       <div className="ann-label">
         Resources
-        <ResourcesEditor value={value.resources || []} onChange={v => set("resources", v)} />
+        <ResourcesEditor value={value.resources || []} onChange={(v) => set("resources", v)} />
       </div>
       <div className="ann-form-actions">
-        <button className="btn btn-primary" onClick={onSave} disabled={saving || !value.title.trim()}>
+        <button
+          className="btn btn-primary"
+          onClick={onSave}
+          disabled={saving || !value.title.trim()}
+        >
           {saving ? "Saving…" : "Save"}
         </button>
-        <button className="btn btn-ghost" onClick={onCancel} disabled={saving}>Cancel</button>
+        <button className="btn btn-ghost" onClick={onCancel} disabled={saving}>
+          Cancel
+        </button>
       </div>
     </div>
   );
@@ -1474,22 +1855,31 @@ const AnnouncementsView = ({ data, seedAnnouncements = [], onAnnouncementsChange
   const [confirmDelete, setConfirmDelete] = React.useState(null);
   const [importing, setImporting] = React.useState(false);
   const sourceItems = React.useMemo(
-    () => (seedAnnouncements || []).filter(a => a.cohortYear === cohortYear),
+    () => (seedAnnouncements || []).filter((a) => a.cohortYear === cohortYear),
     [cohortYear, seedAnnouncements]
   );
 
   const load = React.useCallback(async () => {
-    if (!isSupabaseConfigured) { setLoading(false); return; }
-    setLoading(true); setError("");
+    if (!isSupabaseConfigured) {
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    setError("");
 
-    const fetchRows = () => supabase
-      .from("cohort_announcements")
-      .select(ANN_COLUMNS)
-      .eq("cohort_year", cohortYear)
-      .order("display_order", { ascending: true, nullsFirst: false });
+    const fetchRows = () =>
+      supabase
+        .from("cohort_announcements")
+        .select(ANN_COLUMNS)
+        .eq("cohort_year", cohortYear)
+        .order("display_order", { ascending: true, nullsFirst: false });
 
     let { data: rows, error: err } = await fetchRows();
-    if (err) { setError(err.message); setLoading(false); return; }
+    if (err) {
+      setError(err.message);
+      setLoading(false);
+      return;
+    }
 
     const missingSourceItems = missingAnnouncementSourceItems(rows || [], sourceItems);
     if (missingSourceItems.length) {
@@ -1498,10 +1888,18 @@ const AnnouncementsView = ({ data, seedAnnouncements = [], onAnnouncementsChange
         const { error: syncError } = await supabase
           .from("cohort_announcements")
           .upsert(row, { onConflict: "cohort_year,slug" });
-        if (syncError) { setError(syncError.message); setLoading(false); return; }
+        if (syncError) {
+          setError(syncError.message);
+          setLoading(false);
+          return;
+        }
       }
       ({ data: rows, error: err } = await fetchRows());
-      if (err) { setError(err.message); setLoading(false); return; }
+      if (err) {
+        setError(err.message);
+        setLoading(false);
+        return;
+      }
       onAnnouncementsChange?.();
     }
 
@@ -1509,23 +1907,37 @@ const AnnouncementsView = ({ data, seedAnnouncements = [], onAnnouncementsChange
     setLoading(false);
   }, [cohortYear, onAnnouncementsChange, sourceItems]);
 
-  React.useEffect(() => { load(); }, [load]);
+  React.useEffect(() => {
+    load();
+  }, [load]);
 
   const handleSave = async (ann, isNew) => {
-    setSaving(true); setError("");
+    setSaving(true);
+    setError("");
     try {
       const row = annToRow(ann, INSTRUCTOR_EMAIL);
       let result;
       if (isNew) {
-        result = await supabase.from("cohort_announcements").insert(row).select(ANN_COLUMNS).single();
+        result = await supabase
+          .from("cohort_announcements")
+          .insert(row)
+          .select(ANN_COLUMNS)
+          .single();
       } else {
-        result = await supabase.from("cohort_announcements").update(row).eq("id", ann.id).select(ANN_COLUMNS).single();
+        result = await supabase
+          .from("cohort_announcements")
+          .update(row)
+          .eq("id", ann.id)
+          .select(ANN_COLUMNS)
+          .single();
       }
       if (result.error) throw result.error;
       await load();
       onAnnouncementsChange?.();
-      setEditingId(null); setEditDraft(null);
-      setCreating(false); setNewDraft(null);
+      setEditingId(null);
+      setEditDraft(null);
+      setCreating(false);
+      setNewDraft(null);
     } catch (err) {
       setError(err.message || "Save failed");
     }
@@ -1533,9 +1945,14 @@ const AnnouncementsView = ({ data, seedAnnouncements = [], onAnnouncementsChange
   };
 
   const handleDelete = async (id) => {
-    setSaving(true); setError("");
+    setSaving(true);
+    setError("");
     const { error: err } = await supabase.from("cohort_announcements").delete().eq("id", id);
-    if (err) { setError(err.message); setSaving(false); return; }
+    if (err) {
+      setError(err.message);
+      setSaving(false);
+      return;
+    }
     setConfirmDelete(null);
     await load();
     onAnnouncementsChange?.();
@@ -1544,7 +1961,8 @@ const AnnouncementsView = ({ data, seedAnnouncements = [], onAnnouncementsChange
 
   const handleImport = async () => {
     if (!isSupabaseConfigured) return;
-    setImporting(true); setError("");
+    setImporting(true);
+    setError("");
     try {
       for (const item of sourceItems) {
         const row = staticAnnouncementToRow(item);
@@ -1564,20 +1982,30 @@ const AnnouncementsView = ({ data, seedAnnouncements = [], onAnnouncementsChange
   const startEdit = (item) => {
     setEditingId(item.id);
     setEditDraft({ ...item });
-    setCreating(false); setNewDraft(null);
+    setCreating(false);
+    setNewDraft(null);
   };
   const startCreate = () => {
     setCreating(true);
     setNewDraft(BLANK(cohortYear));
-    setEditingId(null); setEditDraft(null);
+    setEditingId(null);
+    setEditDraft(null);
   };
-  const cancelEdit = () => { setEditingId(null); setEditDraft(null); };
-  const cancelCreate = () => { setCreating(false); setNewDraft(null); };
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditDraft(null);
+  };
+  const cancelCreate = () => {
+    setCreating(false);
+    setNewDraft(null);
+  };
 
   if (!isSupabaseConfigured) {
     return (
       <div className="ann-empty">
-        <p>Supabase is not configured — announcements editing is only available with a live database.</p>
+        <p>
+          Supabase is not configured — announcements editing is only available with a live database.
+        </p>
       </div>
     );
   }
@@ -1585,14 +2013,18 @@ const AnnouncementsView = ({ data, seedAnnouncements = [], onAnnouncementsChange
   return (
     <div className="ann-view">
       <div className="ann-toolbar">
-        <span className="ann-count">{items ? `${items.length} update${items.length !== 1 ? "s" : ""}` : "Loading…"}</span>
+        <span className="ann-count">
+          {items ? `${items.length} update${items.length !== 1 ? "s" : ""}` : "Loading…"}
+        </span>
         <div className="ann-toolbar-actions">
           {items != null && sourceItems.length > 0 && (
             <button className="btn btn-ghost" onClick={handleImport} disabled={importing}>
               {importing ? "Syncing…" : "Sync all updates"}
             </button>
           )}
-          <button className="btn btn-primary" onClick={startCreate} disabled={creating}>+ New update</button>
+          <button className="btn btn-primary" onClick={startCreate} disabled={creating}>
+            + New update
+          </button>
         </div>
       </div>
 
@@ -1600,7 +2032,9 @@ const AnnouncementsView = ({ data, seedAnnouncements = [], onAnnouncementsChange
 
       {creating && newDraft && (
         <div className="ann-card ann-card-new">
-          <div className="ann-card-head"><span className="ann-pill ann-pill-new">New</span></div>
+          <div className="ann-card-head">
+            <span className="ann-pill ann-pill-new">New</span>
+          </div>
           <AnnForm
             value={newDraft}
             onChange={setNewDraft}
@@ -1615,13 +2049,22 @@ const AnnouncementsView = ({ data, seedAnnouncements = [], onAnnouncementsChange
 
       {!loading && items && items.length === 0 && !creating && (
         <div className="ann-empty">
-          <p>No updates in Supabase yet for <strong>{cohortYear}</strong>.</p>
+          <p>
+            No updates in Supabase yet for <strong>{cohortYear}</strong>.
+          </p>
           <p>Create one above, or import from the static data in data.js.</p>
         </div>
       )}
 
-      {(items || []).map(item => (
-        <div key={item.id} className={"ann-card" + (item.status !== "published" ? " ann-card-dim" : "") + (item.pinned ? " ann-card-pinned" : "")}>
+      {(items || []).map((item) => (
+        <div
+          key={item.id}
+          className={
+            "ann-card" +
+            (item.status !== "published" ? " ann-card-dim" : "") +
+            (item.pinned ? " ann-card-pinned" : "")
+          }
+        >
           {editingId === item.id && editDraft ? (
             <>
               <div className="ann-card-head">
@@ -1645,10 +2088,16 @@ const AnnouncementsView = ({ data, seedAnnouncements = [], onAnnouncementsChange
                 {item.label && <span className="ann-date-label">{item.label}</span>}
                 <span className="ann-date">{item.date}</span>
                 <div className="ann-card-btns">
-                  <button className="ann-btn" onClick={() => startEdit(item)}>Edit</button>
+                  <button className="ann-btn" onClick={() => startEdit(item)}>
+                    Edit
+                  </button>
                   <button
-                    className={"ann-btn ann-btn-del" + (confirmDelete === item.id ? " is-confirm" : "")}
-                    onClick={() => confirmDelete === item.id ? handleDelete(item.id) : setConfirmDelete(item.id)}
+                    className={
+                      "ann-btn ann-btn-del" + (confirmDelete === item.id ? " is-confirm" : "")
+                    }
+                    onClick={() =>
+                      confirmDelete === item.id ? handleDelete(item.id) : setConfirmDelete(item.id)
+                    }
                     onBlur={() => setConfirmDelete(null)}
                     disabled={saving}
                   >
@@ -1660,8 +2109,12 @@ const AnnouncementsView = ({ data, seedAnnouncements = [], onAnnouncementsChange
               <p className="ann-summary">{item.summary}</p>
               {item.body?.length > 0 && (
                 <details className="ann-body-details">
-                  <summary>Body ({item.body.length} paragraph{item.body.length !== 1 ? "s" : ""})</summary>
-                  {item.body.map((p, i) => <p key={i}>{p}</p>)}
+                  <summary>
+                    Body ({item.body.length} paragraph{item.body.length !== 1 ? "s" : ""})
+                  </summary>
+                  {item.body.map((p, i) => (
+                    <p key={i}>{p}</p>
+                  ))}
                 </details>
               )}
               {item.resources?.length > 0 && (
@@ -1672,7 +2125,11 @@ const AnnouncementsView = ({ data, seedAnnouncements = [], onAnnouncementsChange
                     const label = resourceLabel(r);
                     return (
                       <span key={i} className="ann-resource-chip">
-                        {href ? <ExternalLink href={href}>{label || href}</ExternalLink> : label || page}
+                        {href ? (
+                          <ExternalLink href={href}>{label || href}</ExternalLink>
+                        ) : (
+                          label || page
+                        )}
                       </span>
                     );
                   })}
@@ -1731,17 +2188,16 @@ const DashboardPage = ({ data, seedAnnouncements, onNavigate, onAnnouncementsCha
             .select("*")
             .eq("cohort_year", data.currentYear)
             .order("student_name", { ascending: true }),
-          supabase
-            .from("cohort_team_members")
-            .select("*")
-            .eq("cohort_year", data.currentYear),
+          supabase.from("cohort_team_members").select("*").eq("cohort_year", data.currentYear),
         ]);
       } catch (error) {
         if (!alive) return;
         setResponses([]);
         setStudents([]);
         setTeamMemberRows([]);
-        setDashboardError(`Live dashboard data could not load: ${error?.message || "unknown error"}`);
+        setDashboardError(
+          `Live dashboard data could not load: ${error?.message || "unknown error"}`
+        );
         hasLoadedDashboardRef.current = true;
         setLoadingDashboard(false);
         setSyncingDashboard(false);
@@ -1755,10 +2211,11 @@ const DashboardPage = ({ data, seedAnnouncements, onNavigate, onAnnouncementsCha
 
       if (allowedResult.error) {
         setStudents([]);
-        setDashboardError((previous) => [
-          previous,
-          dashboardReadError("Private student allowlist", allowedResult.error),
-        ].filter(Boolean).join(" "));
+        setDashboardError((previous) =>
+          [previous, dashboardReadError("Private student allowlist", allowedResult.error)]
+            .filter(Boolean)
+            .join(" ")
+        );
       } else {
         normalizedStudents = (allowedResult.data || [])
           .map((row) => normalizeAllowedStudentRow(row, data.projects))
@@ -1776,7 +2233,9 @@ const DashboardPage = ({ data, seedAnnouncements, onNavigate, onAnnouncementsCha
 
         if (!allowedResult.error && normalizedStudents.length) {
           const rosterEmails = new Set(normalizedStudents.map((student) => student.email));
-          normalizedResponses = normalizedResponses.filter((response) => rosterEmails.has(response.email));
+          normalizedResponses = normalizedResponses.filter((response) =>
+            rosterEmails.has(response.email)
+          );
         }
 
         setResponses(normalizedResponses);
@@ -1787,14 +2246,18 @@ const DashboardPage = ({ data, seedAnnouncements, onNavigate, onAnnouncementsCha
         setTeamRowsError(teamSaveErrorMessage(teamResult.error));
       } else {
         const activeResponseEmails = new Set(normalizedResponses.map((response) => response.email));
-        const rows = (teamResult.data || []).filter((row) => (
-          row.member_type !== "student" || activeResponseEmails.has(normalizeEmail(row.person_email))
-        ));
+        const rows = (teamResult.data || []).filter(
+          (row) =>
+            row.member_type !== "student" ||
+            activeResponseEmails.has(normalizeEmail(row.person_email))
+        );
         const hiddenRows = (teamResult.data || []).length - rows.length;
 
         setTeamMemberRows(rows);
         if (hiddenRows > 0) {
-          setTeamRowsError(`Hidden ${hiddenRows} saved team row${hiddenRows === 1 ? "" : "s"} for student${hiddenRows === 1 ? "" : "s"} no longer in the active ranking roster.`);
+          setTeamRowsError(
+            `Hidden ${hiddenRows} saved team row${hiddenRows === 1 ? "" : "s"} for student${hiddenRows === 1 ? "" : "s"} no longer in the active ranking roster.`
+          );
         }
       }
 
@@ -1826,22 +2289,57 @@ const DashboardPage = ({ data, seedAnnouncements, onNavigate, onAnnouncementsCha
     <div className="page">
       <section className="dashboard-hero">
         <div>
-          <p className="kicker"><span className="dot">●</span> &nbsp; Instructor view · <YangLink>Prof. Ran Yang</YangLink></p>
-          <h1>Cohort dashboard <span style={{ color: "var(--muted)", fontStyle: "italic" }}>{data.shortYearLabel}</span></h1>
-          <p style={{ color: "var(--ink-soft)", fontSize: 16, maxWidth: 580 }}>
-            Live poll submissions power the ranking distribution, individual responses, conflict heatmap,
-            locked current teams, optional auto-match previews, and BCC email drafts.
+          <p className="kicker">
+            <span className="dot">●</span> &nbsp; Instructor view ·{" "}
+            <YangLink>Prof. Ran Yang</YangLink>
           </p>
-          <p className="construction-note">Instructor-only · private student data stays in the live database</p>
-          <button className="btn btn-ghost" onClick={() => setRefreshKey((key) => key + 1)} disabled={loadingDashboard || syncingDashboard} style={{ marginTop: 12 }}>
+          <h1>
+            Cohort dashboard{" "}
+            <span style={{ color: "var(--muted)", fontStyle: "italic" }}>
+              {data.shortYearLabel}
+            </span>
+          </h1>
+          <p style={{ color: "var(--ink-soft)", fontSize: 16, maxWidth: 580 }}>
+            Live poll submissions power the ranking distribution, individual responses, conflict
+            heatmap, locked current teams, optional auto-match previews, and BCC email drafts.
+          </p>
+          <p className="construction-note">
+            Instructor-only · private student data stays in the live database
+          </p>
+          <button
+            className="btn btn-ghost"
+            onClick={() => setRefreshKey((key) => key + 1)}
+            disabled={loadingDashboard || syncingDashboard}
+            style={{ marginTop: 12 }}
+          >
             {loadingDashboard || syncingDashboard ? "Refreshing..." : "Refresh live data"}
           </button>
         </div>
         <Reveal as="dl" className="stats">
-          <div><dt>Responses</dt><dd>{loadingDashboard ? "…" : responses.length}</dd></div>
-          <div><dt>Awaiting</dt><dd>{loadingDashboard ? "…" : students.length ? Math.max(students.length - responses.length, 0) : "—"}</dd></div>
-          <div><dt>Projects</dt><dd>{data.projects.length}</dd></div>
-          <div><dt>Coverage</dt><dd><span className="pink">{loadingDashboard ? "…" : coverage}</span></dd></div>
+          <div>
+            <dt>Responses</dt>
+            <dd>{loadingDashboard ? "…" : responses.length}</dd>
+          </div>
+          <div>
+            <dt>Awaiting</dt>
+            <dd>
+              {loadingDashboard
+                ? "…"
+                : students.length
+                  ? Math.max(students.length - responses.length, 0)
+                  : "—"}
+            </dd>
+          </div>
+          <div>
+            <dt>Projects</dt>
+            <dd>{data.projects.length}</dd>
+          </div>
+          <div>
+            <dt>Coverage</dt>
+            <dd>
+              <span className="pink">{loadingDashboard ? "…" : coverage}</span>
+            </dd>
+          </div>
         </Reveal>
       </section>
 
@@ -1849,7 +2347,8 @@ const DashboardPage = ({ data, seedAnnouncements, onNavigate, onAnnouncementsCha
       {dashboardError && <div className="team-save-status is-warning">{dashboardError}</div>}
       {!loadingDashboard && !dashboardError && !responses.length && (
         <div className="team-save-status">
-          No live ranking submissions yet. The public poll can still accept responses while this dashboard waits.
+          No live ranking submissions yet. The public poll can still accept responses while this
+          dashboard waits.
         </div>
       )}
 
@@ -1867,11 +2366,15 @@ const DashboardPage = ({ data, seedAnnouncements, onNavigate, onAnnouncementsCha
             className={"dash-tab" + (tab === k ? " is-active" : "")}
             onClick={() => setTab(k)}
             data-spark
-          >{label}</button>
+          >
+            {label}
+          </button>
         ))}
       </div>
 
-      {tab === "distribution" && <DistributionView projects={data.projects} responses={responses} />}
+      {tab === "distribution" && (
+        <DistributionView projects={data.projects} responses={responses} />
+      )}
       {tab === "heatmap" && <HeatmapView projects={data.projects} responses={responses} />}
       {tab === "students" && (
         <StudentsView
@@ -1918,16 +2421,30 @@ const ArchivePage = ({ data, onNavigate, currentYear, setYear }) => (
   <div className="page">
     <section className="dashboard-hero">
       <div>
-        <p className="kicker"><span className="dot">●</span> &nbsp; Engineering Physics archive</p>
-        <h1>Every cohort, <span className="ital">held&nbsp;together.</span></h1>
-        <p style={{ color: "var(--ink-soft)", fontSize: 16, maxWidth: 580 }}>
-          A growing record of EP capstones at William &amp; Mary. The current year is live; past years archive
-          themselves once teams ship; future years are placeholders waiting for a slate.
+        <p className="kicker">
+          <span className="dot">●</span> &nbsp; Engineering Physics archive
         </p>
-        <p className="archive-dev-note">Archive records are under development while earlier cohort details are being cleaned up.</p>
+        <h1>
+          Every cohort, <span className="ital">held&nbsp;together.</span>
+        </h1>
+        <p style={{ color: "var(--ink-soft)", fontSize: 16, maxWidth: 580 }}>
+          A growing record of EP capstones at William &amp; Mary. The current year is live; past
+          years archive themselves once teams ship; future years are placeholders waiting for a
+          slate.
+        </p>
+        <p className="archive-dev-note">
+          Archive records are under development while earlier cohort details are being cleaned up.
+        </p>
       </div>
     </section>
-    <ArchiveView archive={data.archive} currentYear={currentYear} onSwitch={(y) => { setYear(y); onNavigate("catalog"); }} />
+    <ArchiveView
+      archive={data.archive}
+      currentYear={currentYear}
+      onSwitch={(y) => {
+        setYear(y);
+        onNavigate("catalog");
+      }}
+    />
   </div>
 );
 

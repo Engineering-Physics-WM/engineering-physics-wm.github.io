@@ -12,20 +12,20 @@ const formatDate = (date) => {
   });
 };
 
-const sortAnnouncements = (items = []) => [...items].sort((a, b) => {
-  if (Number.isFinite(a.order) && Number.isFinite(b.order)) return a.order - b.order;
-  if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
-  return (b.date || "").localeCompare(a.date || "");
-});
+const sortAnnouncements = (items = []) =>
+  [...items].sort((a, b) => {
+    if (Number.isFinite(a.order) && Number.isFinite(b.order)) return a.order - b.order;
+    if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
+    return (b.date || "").localeCompare(a.date || "");
+  });
 
 const currentCourseAnnouncement = (items = []) => {
   const today = new Date().toISOString().slice(0, 10);
   const dated = [...items]
     .filter((item) => item.date && item.date <= today)
-    .sort((a, b) => (
-      (b.date || "").localeCompare(a.date || "") ||
-      (a.order ?? 999) - (b.order ?? 999)
-    ));
+    .sort(
+      (a, b) => (b.date || "").localeCompare(a.date || "") || (a.order ?? 999) - (b.order ?? 999)
+    );
 
   return dated[0] || sortAnnouncements(items)[0] || null;
 };
@@ -39,14 +39,16 @@ const ResourceLink = ({ resource, onNavigate }) => {
   if (page) {
     return (
       <button type="button" className="news-resource" onClick={() => onNavigate(page)}>
-        <span>{kind}</span>{label}
+        <span>{kind}</span>
+        {label}
       </button>
     );
   }
   if (!href) return null;
   return (
     <ExternalLink className="news-resource" href={href}>
-      <span>{kind}</span>{label}
+      <span>{kind}</span>
+      {label}
     </ExternalLink>
   );
 };
@@ -61,11 +63,17 @@ const AnnouncementItem = ({ item, onNavigate, compact = false, defaultOpen = fal
       </span>
     </summary>
     <div className="news-body">
-      {item.body?.map((paragraph, index) => <p key={index}>{paragraph}</p>)}
+      {item.body?.map((paragraph, index) => (
+        <p key={index}>{paragraph}</p>
+      ))}
       {item.resources?.length > 0 && (
         <div className="news-resources" aria-label="Announcement resources">
           {item.resources.map((resource, index) => (
-            <ResourceLink key={resource.label || resource.href || resource.url || resource.page || index} resource={resource} onNavigate={onNavigate} />
+            <ResourceLink
+              key={resource.label || resource.href || resource.url || resource.page || index}
+              resource={resource}
+              onNavigate={onNavigate}
+            />
           ))}
         </div>
       )}
@@ -80,12 +88,7 @@ const AnnouncementPanel = ({ announcements, onNavigate }) => {
     <>
       <div className="hero-timeline" aria-label="Cohort timeline">
         {items.map((item, index) => (
-          <AnnouncementItem
-            key={item.id}
-            item={item}
-            onNavigate={onNavigate}
-            compact
-          />
+          <AnnouncementItem key={item.id} item={item} onNavigate={onNavigate} compact />
         ))}
       </div>
       <button className="btn btn-ghost btn-news-all" onClick={() => onNavigate("news")}>
@@ -96,13 +99,20 @@ const AnnouncementPanel = ({ announcements, onNavigate }) => {
 };
 
 const NewsPage = ({ data, currentYear, onNavigate, anchor }) => {
-  const announcements = sortAnnouncements((data.announcements || []).filter(item => item.cohortYear === currentYear));
-  const shortYear = currentYear.split("-").map(y => `'${y.slice(-2)}`).join("·");
+  const announcements = sortAnnouncements(
+    (data.announcements || []).filter((item) => item.cohortYear === currentYear)
+  );
+  const shortYear = currentYear
+    .split("-")
+    .map((y) => `'${y.slice(-2)}`)
+    .join("·");
 
   React.useEffect(() => {
     if (!anchor) return;
     const id = setTimeout(() => {
-      document.getElementById(`ann-${anchor}`)?.scrollIntoView({ behavior: "instant", block: "start" });
+      document
+        .getElementById(`ann-${anchor}`)
+        ?.scrollIntoView({ behavior: "instant", block: "start" });
     }, 0);
     return () => clearTimeout(id);
   }, [anchor]);
@@ -111,16 +121,28 @@ const NewsPage = ({ data, currentYear, onNavigate, anchor }) => {
     <div className="page news-page">
       <section className="news-hero">
         <div>
-          <p className="kicker"><span className="dot">●</span> &nbsp; Cohort updates · {currentYear}</p>
-          <h1>News, files,<br />and weekly notes.</h1>
+          <p className="kicker">
+            <span className="dot">●</span> &nbsp; Cohort updates · {currentYear}
+          </p>
+          <h1>
+            News, files,
+            <br />
+            and weekly notes.
+          </h1>
           <p>
-            Public announcements for the Engineering Physics cohort. Each item can hold links, PDFs, slides,
-            forms, recordings, and longer context without cluttering the front page.
+            Public announcements for the Engineering Physics cohort. Each item can hold links, PDFs,
+            slides, forms, recordings, and longer context without cluttering the front page.
           </p>
         </div>
         <Reveal as="dl" className="news-hero-stats">
-          <div><dt>Updates</dt><dd>{announcements.length || "—"}</dd></div>
-          <div><dt>Cohort</dt><dd className="pink">{shortYear}</dd></div>
+          <div>
+            <dt>Updates</dt>
+            <dd>{announcements.length || "—"}</dd>
+          </div>
+          <div>
+            <dt>Cohort</dt>
+            <dd className="pink">{shortYear}</dd>
+          </div>
         </Reveal>
       </section>
 
@@ -142,7 +164,12 @@ const NewsPage = ({ data, currentYear, onNavigate, anchor }) => {
         </section>
 
         <aside className="news-side">
-          <h2>{announcements.length} <span className="ital" style={{ color: "var(--pink-ink)", fontWeight: 400 }}>updates</span></h2>
+          <h2>
+            {announcements.length}{" "}
+            <span className="ital" style={{ color: "var(--pink-ink)", fontWeight: 400 }}>
+              updates
+            </span>
+          </h2>
           <p>Announcements and files for the {currentYear} Engineering Physics cohort.</p>
           {announcements.length > 0 && (
             <ul>
@@ -155,10 +182,19 @@ const NewsPage = ({ data, currentYear, onNavigate, anchor }) => {
             </ul>
           )}
           <div className="news-side-actions">
-            <button className="btn btn-primary" data-spark style={{ width: "100%" }} onClick={() => onNavigate("ranking")}>
+            <button
+              className="btn btn-primary"
+              data-spark
+              style={{ width: "100%" }}
+              onClick={() => onNavigate("ranking")}
+            >
               Take the poll
             </button>
-            <button className="btn btn-ghost" style={{ width: "100%" }} onClick={() => onNavigate("catalog")}>
+            <button
+              className="btn btn-ghost"
+              style={{ width: "100%" }}
+              onClick={() => onNavigate("catalog")}
+            >
               Browse projects
             </button>
           </div>

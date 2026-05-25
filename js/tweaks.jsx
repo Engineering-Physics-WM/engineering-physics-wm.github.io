@@ -1,23 +1,27 @@
 /* Tweaks panel — color/sparks/fonts/density/ranking */
 
 import * as React from "react";
-import {
-  TweaksPanel,
-  TweakRadio,
-  TweakSection,
-  TweakSlider,
-  useTweaks,
-} from "../tweaks-panel.jsx";
+import { TweaksPanel, TweakRadio, TweakSection, TweakSlider, useTweaks } from "../tweaks-panel.jsx";
 
 const TweakPanelInline = () => {
-  const defaults = /*EDITMODE-BEGIN*/{
-    "paper": "olive",
-    "pinkOliveMix": 55,
-    "sparkIntensity": 1.0,
-    "fontPair": "grotesk",
-    "density": "cozy",
-    "rankingStyle": "drag"
-  }/*EDITMODE-END*/;
+  // Only available in Vite dev mode or when ?tweaks=1 is in the URL.
+  // On the live GitHub Pages site this renders nothing.
+  const isEnabled = React.useMemo(() => {
+    if (import.meta.env.DEV) return true;
+    try {
+      return new URLSearchParams(window.location.search).get("tweaks") === "1";
+    } catch {
+      return false;
+    }
+  }, []);
+
+  const defaults = /*EDITMODE-BEGIN*/ {
+    paper: "olive",
+    pinkOliveMix: 55,
+    sparkIntensity: 1.0,
+    fontPair: "grotesk",
+    density: "cozy",
+  }; /*EDITMODE-END*/
   const [tw, setTweak] = useTweaks(defaults);
 
   // Apply globally
@@ -42,6 +46,8 @@ const TweakPanelInline = () => {
     window.dispatchEvent(new CustomEvent("ep:sparks", { detail: tw.sparkIntensity }));
   }, [tw]);
 
+  if (!isEnabled) return null;
+
   return (
     <TweaksPanel title="Tweaks">
       <TweakSection title="Background" subtitle="Pick the paper">
@@ -52,14 +58,28 @@ const TweakPanelInline = () => {
             { label: "Grey", value: "grey" },
             { label: "Cream", value: "cream" },
           ]}
-          value={tw.paper} onChange={(v) => setTweak("paper", v)}
+          value={tw.paper}
+          onChange={(v) => setTweak("paper", v)}
         />
       </TweakSection>
       <TweakSection title="Accent" subtitle="Pink ↔ Olive ratio">
-        <TweakSlider label="Dusty pink" min={0} max={100} value={tw.pinkOliveMix} onChange={(v) => setTweak("pinkOliveMix", v)} />
+        <TweakSlider
+          label="Dusty pink"
+          min={0}
+          max={100}
+          value={tw.pinkOliveMix}
+          onChange={(v) => setTweak("pinkOliveMix", v)}
+        />
       </TweakSection>
       <TweakSection title="Sparks" subtitle="Cursor + hover particles">
-        <TweakSlider label="Intensity" min={0} max={1.6} step={0.1} value={tw.sparkIntensity} onChange={(v) => setTweak("sparkIntensity", v)} />
+        <TweakSlider
+          label="Intensity"
+          min={0}
+          max={1.6}
+          step={0.1}
+          value={tw.sparkIntensity}
+          onChange={(v) => setTweak("sparkIntensity", v)}
+        />
       </TweakSection>
       <TweakSection title="Type">
         <TweakRadio
@@ -69,23 +89,20 @@ const TweakPanelInline = () => {
             { label: "Serif", value: "serif" },
             { label: "Mono mix", value: "mono-mix" },
           ]}
-          value={tw.fontPair} onChange={(v) => setTweak("fontPair", v)}
+          value={tw.fontPair}
+          onChange={(v) => setTweak("fontPair", v)}
         />
       </TweakSection>
       <TweakSection title="Card density">
         <TweakRadio
-          options={[{label: "Compact", value: "compact"}, {label: "Cozy", value: "cozy"}, {label: "Spacious", value: "spacious"}]}
-          value={tw.density} onChange={(v) => setTweak("density", v)}
+          options={[
+            { label: "Compact", value: "compact" },
+            { label: "Cozy", value: "cozy" },
+            { label: "Spacious", value: "spacious" },
+          ]}
+          value={tw.density}
+          onChange={(v) => setTweak("density", v)}
         />
-      </TweakSection>
-      <TweakSection title="Ranking interaction">
-        <TweakRadio
-          options={[{label: "Drag list", value: "drag"}, {label: "Bracket", value: "bracket"}, {label: "Tier", value: "tier"}]}
-          value={tw.rankingStyle} onChange={(v) => setTweak("rankingStyle", v)}
-        />
-        <p style={{ fontSize: 11, color: "var(--muted)", margin: "8px 0 0" }}>
-          Drag is live now. Bracket/Tier are placeholders for future iterations.
-        </p>
       </TweakSection>
     </TweaksPanel>
   );

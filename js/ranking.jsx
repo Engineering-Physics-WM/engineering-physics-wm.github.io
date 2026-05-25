@@ -4,6 +4,7 @@ import * as React from "react";
 import { Reveal } from "./motion.jsx";
 import { isSupabaseConfigured } from "./supabaseClient.js";
 import { PersonLink, YangLink } from "./links.jsx";
+import { INSTRUCTOR_EMAIL } from "./config.js";
 import {
   DEFAULT_POLL_CLOSED_MESSAGE,
   WM_EMAIL_RE,
@@ -14,7 +15,17 @@ import {
   submitRankingLive,
 } from "../src/lib/rankingSubmissions";
 
-const RankItem = ({ project, idx, total, onMove, onDragStart, onDragOver, onDrop, onDragEnd, dragging }) => (
+const RankItem = ({
+  project,
+  idx,
+  total,
+  onMove,
+  onDragStart,
+  onDragOver,
+  onDrop,
+  onDragEnd,
+  dragging,
+}) => (
   <li
     className={"ranking-item" + (dragging ? " dragging" : "")}
     draggable
@@ -24,15 +35,35 @@ const RankItem = ({ project, idx, total, onMove, onDragStart, onDragOver, onDrop
     onDragEnd={onDragEnd}
     data-spark="rank"
   >
-    <span className="rank-num">{idx + 1}</span>
+    <span className="rank-num" aria-hidden="true">
+      {idx + 1}
+    </span>
     <div className="rank-body">
       <h4 className="rank-title">{project.title}</h4>
-      <span className="rank-meta"><PersonLink name={project.advisor}>{project.advisor}</PersonLink> · {project.affiliation}</span>
+      <span className="rank-meta">
+        <PersonLink name={project.advisor}>{project.advisor}</PersonLink> · {project.affiliation}
+      </span>
     </div>
     <div className="rank-controls">
-      <span className="drag-handle" aria-hidden="true">⋮⋮</span>
-      <button className="rank-btn" disabled={idx === 0} onClick={() => onMove(idx, idx - 1)} aria-label="Move up">↑</button>
-      <button className="rank-btn" disabled={idx === total - 1} onClick={() => onMove(idx, idx + 1)} aria-label="Move down">↓</button>
+      <span className="drag-handle" aria-hidden="true">
+        ⋮⋮
+      </span>
+      <button
+        className="rank-btn"
+        disabled={idx === 0}
+        onClick={() => onMove(idx, idx - 1)}
+        aria-label={`Move "${project.title}" up one position`}
+      >
+        ↑
+      </button>
+      <button
+        className="rank-btn"
+        disabled={idx === total - 1}
+        onClick={() => onMove(idx, idx + 1)}
+        aria-label={`Move "${project.title}" down one position`}
+      >
+        ↓
+      </button>
     </div>
   </li>
 );
@@ -48,30 +79,85 @@ const PrivacyNotice = () => (
     </summary>
     <div className="privacy-notice-body">
       <h3>What this tool collects</h3>
-      <p>Student name, W&amp;M email address, and a ranked list of capstone project preferences. Nothing else. No grades, no GPA, no Banner ID, no other academic record content.</p>
+      <p>
+        Student name, W&amp;M email address, and a ranked list of capstone project preferences.
+        Nothing else. No grades, no GPA, no Banner ID, no other academic record content.
+      </p>
 
       <h3>Why this is permitted under W&amp;M policy and FERPA</h3>
-      <p>This poll is a routine course-administration tool used by the instructor of record to form project teams. Two provisions of W&amp;M&apos;s FERPA Policy support this internal course use:</p>
+      <p>
+        This poll is a routine course-administration tool used by the instructor of record to form
+        project teams. Two provisions of W&amp;M&apos;s FERPA Policy support this internal course
+        use:
+      </p>
       <ul>
-        <li><strong>Legitimate educational interest.</strong> W&amp;M&apos;s FERPA Policy provides that a faculty member, acting as a school official, may access student information when they need it to fulfill professional responsibilities for the university. This standard cross-references 34 CFR § 99.31(a)(1) of FERPA.</li>
-        <li><strong>Directory information.</strong> Section II.B.13 of W&amp;M&apos;s FERPA Policy designates student name and university email address as directory information. This tool uses those fields to identify eligible poll submissions; individual responses are not publicly disclosed.</li>
+        <li>
+          <strong>Legitimate educational interest.</strong> W&amp;M&apos;s FERPA Policy provides
+          that a faculty member, acting as a school official, may access student information when
+          they need it to fulfill professional responsibilities for the university. This standard
+          cross-references 34 CFR § 99.31(a)(1) of FERPA.
+        </li>
+        <li>
+          <strong>Directory information.</strong> Section II.B.13 of W&amp;M&apos;s FERPA Policy
+          designates student name and university email address as directory information. This tool
+          uses those fields to identify eligible poll submissions; individual responses are not
+          publicly disclosed.
+        </li>
       </ul>
 
       <h3>What this tool does not do</h3>
-      <p>No third-party sharing. Individual responses are visible only to the instructor. Only the final team rosters are shared with the class, which is standard course practice. No advertising, no resale, no use outside team formation.</p>
+      <p>
+        No third-party sharing. Individual responses are visible only to the instructor. Only the
+        final team rosters are shared with the class, which is standard course practice. No
+        advertising, no resale, no use outside team formation.
+      </p>
 
       <h3>Data security and retention</h3>
-      <p>The database uses Row-Level Security, so students cannot read each other&apos;s submissions. The administrative dashboard requires authenticated login. Poll data is retained for course administration and access remains limited to the instructor dashboard.</p>
+      <p>
+        The database uses Row-Level Security, so students cannot read each other&apos;s submissions.
+        The administrative dashboard requires authenticated login. Poll data is retained for course
+        administration and access remains limited to the instructor dashboard.
+      </p>
 
       <h3>References</h3>
       <ul className="privacy-links">
-        <li><a href="https://www.wm.edu/offices/registrar/confidentiality-privacy/ferpa-policy/" target="_blank" rel="noopener">W&amp;M FERPA Policy</a></li>
-        <li><a href="https://www.wm.edu/offices/registrar/confidentiality-privacy/" target="_blank" rel="noopener">W&amp;M Confidentiality &amp; Privacy</a></li>
-        <li><a href="https://www.ecfr.gov/current/title-34/subtitle-A/part-99/subpart-D/section-99.31" target="_blank" rel="noopener">34 CFR § 99.31</a></li>
-        <li><a href="https://studentprivacy.ed.gov/ferpa" target="_blank" rel="noopener">U.S. Dept. of Education, Student Privacy</a></li>
+        <li>
+          <a
+            href="https://www.wm.edu/offices/registrar/confidentiality-privacy/ferpa-policy/"
+            target="_blank"
+            rel="noopener"
+          >
+            W&amp;M FERPA Policy
+          </a>
+        </li>
+        <li>
+          <a
+            href="https://www.wm.edu/offices/registrar/confidentiality-privacy/"
+            target="_blank"
+            rel="noopener"
+          >
+            W&amp;M Confidentiality &amp; Privacy
+          </a>
+        </li>
+        <li>
+          <a
+            href="https://www.ecfr.gov/current/title-34/subtitle-A/part-99/subpart-D/section-99.31"
+            target="_blank"
+            rel="noopener"
+          >
+            34 CFR § 99.31
+          </a>
+        </li>
+        <li>
+          <a href="https://studentprivacy.ed.gov/ferpa" target="_blank" rel="noopener">
+            U.S. Dept. of Education, Student Privacy
+          </a>
+        </li>
       </ul>
 
-      <p className="privacy-questions">Questions: <a href="mailto:rxyan2@wm.edu">rxyan2@wm.edu</a></p>
+      <p className="privacy-questions">
+        Questions: <a href={`mailto:${INSTRUCTOR_EMAIL}`}>{INSTRUCTOR_EMAIL}</a>
+      </p>
     </div>
   </details>
 );
@@ -83,7 +169,7 @@ const RankingPage = ({ data, onNavigate }) => {
   const [name, setName] = React.useState("");
   const [email, setEmail] = React.useState("");
   const [order, setOrder] = React.useState(() => {
-    const ids = data.projects.map(p => p.id);
+    const ids = data.projects.map((p) => p.id);
     for (let i = ids.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [ids[i], ids[j]] = [ids[j], ids[i]];
@@ -105,9 +191,9 @@ const RankingPage = ({ data, onNavigate }) => {
       setName(d.name || "");
       setEmail(d.email || "");
       if (Array.isArray(d.order)) {
-        const ids = new Set(data.projects.map(p => p.id));
-        const restored = d.order.filter(id => ids.has(id));
-        const missing = data.projects.map(p => p.id).filter(id => !restored.includes(id));
+        const ids = new Set(data.projects.map((p) => p.id));
+        const restored = d.order.filter((id) => ids.has(id));
+        const missing = data.projects.map((p) => p.id).filter((id) => !restored.includes(id));
         setOrder([...restored, ...missing]);
       }
     } catch {}
@@ -125,7 +211,10 @@ const RankingPage = ({ data, onNavigate }) => {
     else setStep(1);
   }, [name, email, order, submitted]);
 
-  const projectsById = React.useMemo(() => Object.fromEntries(data.projects.map(p => [p.id, p])), [data.projects]);
+  const projectsById = React.useMemo(
+    () => Object.fromEntries(data.projects.map((p) => [p.id, p])),
+    [data.projects]
+  );
   const move = (from, to) => {
     if (to < 0 || to >= order.length || from === to) return;
     const next = order.slice();
@@ -137,9 +226,14 @@ const RankingPage = ({ data, onNavigate }) => {
   const handleDragStart = (e, idx) => {
     setDragIdx(idx);
     e.dataTransfer.effectAllowed = "move";
-    try { e.dataTransfer.setData("text/plain", String(idx)); } catch {}
+    try {
+      e.dataTransfer.setData("text/plain", String(idx));
+    } catch {}
   };
-  const handleDragOver = (e) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; };
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  };
   const handleDrop = (e, idx) => {
     e.preventDefault();
     if (dragIdx === null) return;
@@ -149,7 +243,7 @@ const RankingPage = ({ data, onNavigate }) => {
   const handleDragEnd = () => setDragIdx(null);
 
   const reset = () => {
-    const ids = data.projects.map(p => p.id);
+    const ids = data.projects.map((p) => p.id);
     for (let i = ids.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [ids[i], ids[j]] = [ids[j], ids[i]];
@@ -214,12 +308,16 @@ const RankingPage = ({ data, onNavigate }) => {
       if (result.error) {
         setSubmitting(false);
         if (isPolicyError(result.error)) {
-          setStatus(/allowed student list/i.test(result.error.message || "")
-            ? "This email is not on the allowed student list for this cohort."
-            : "The live database needs the latest poll update before this can save. Please contact Prof. Yang.");
+          setStatus(
+            /allowed student list/i.test(result.error.message || "")
+              ? "This email is not on the allowed student list for this cohort."
+              : "The live database needs the latest poll update before this can save. Please contact Prof. Yang."
+          );
           return;
         }
-        setStatus(`The live database could not save yet: ${result.error.message || "unknown error"}`);
+        setStatus(
+          `The live database could not save yet: ${result.error.message || "unknown error"}`
+        );
         return;
       }
 
@@ -232,9 +330,10 @@ const RankingPage = ({ data, onNavigate }) => {
     setTimeout(() => {
       setStatus("");
       const all = JSON.parse(localStorage.getItem("ep-mock-submissions") || "[]");
-      const existingIndex = all.findIndex((item) => (
-        item.email === receipt.email && (item.cohortYear || data.currentYear) === data.currentYear
-      ));
+      const existingIndex = all.findIndex(
+        (item) =>
+          item.email === receipt.email && (item.cohortYear || data.currentYear) === data.currentYear
+      );
       const localReceipt = { ...receipt, cohortYear: data.currentYear };
       if (existingIndex >= 0) {
         localReceipt.mode = "updated";
@@ -253,11 +352,20 @@ const RankingPage = ({ data, onNavigate }) => {
       <div className="page">
         <section className="ranking-hero">
           <div>
-            <p className="kicker"><span className="dot">●</span> &nbsp; Ranking poll · {data.currentYear}</p>
-            <h1>Project slate <span className="ital">coming soon.</span></h1>
-            <p>{data.placeholderSummary || "This cohort is ready for a ranking poll once project materials are loaded."}</p>
+            <p className="kicker">
+              <span className="dot">●</span> &nbsp; Ranking poll · {data.currentYear}
+            </p>
+            <h1>
+              Project slate <span className="ital">coming soon.</span>
+            </h1>
+            <p>
+              {data.placeholderSummary ||
+                "This cohort is ready for a ranking poll once project materials are loaded."}
+            </p>
             <p className="construction-note">{pollClosedMessage}</p>
-            <button className="btn btn-primary" onClick={() => onNavigate("catalog")}>Back to cohort home</button>
+            <button className="btn btn-primary" onClick={() => onNavigate("catalog")}>
+              Back to cohort home
+            </button>
           </div>
         </section>
       </div>
@@ -269,31 +377,82 @@ const RankingPage = ({ data, onNavigate }) => {
       <div className="page">
         <section className="ranking-hero">
           <div>
-            <p className="kicker"><span className="dot">●</span> &nbsp; Submission received</p>
-            <h1>Your ranking is <span className="ital">in.</span></h1>
-            <p>{submitted.source === "live" ? (submitted.mode === "updated" ? "Your existing saved response has been updated." : "Your preferences are saved to the live poll database.") : "This local mock receipt stays in your browser until the live database is enabled."} You'll hear back as teams are formed.</p>
+            <p className="kicker">
+              <span className="dot">●</span> &nbsp; Submission received
+            </p>
+            <h1>
+              Your ranking is <span className="ital">in.</span>
+            </h1>
+            <p>
+              {submitted.source === "live"
+                ? submitted.mode === "updated"
+                  ? "Your existing saved response has been updated."
+                  : "Your preferences are saved to the live poll database."
+                : "This local mock receipt stays in your browser until the live database is enabled."}{" "}
+              You'll hear back as teams are formed.
+            </p>
           </div>
         </section>
         <Reveal as="div" className="submitted-card">
-          <h3>Submitted to <YangLink>Prof. Ran Yang</YangLink></h3>
-          <p className="receipt-mono">RECEIPT {submitted.id} · {new Date(submitted.ts).toLocaleString()}</p>
-          <p style={{ margin: 0, color: "var(--ink-soft)" }}>Name: {submitted.name} · {submitted.email}</p>
+          <h3>
+            Submitted to <YangLink>Prof. Ran Yang</YangLink>
+          </h3>
+          <p className="receipt-mono">
+            RECEIPT {submitted.id} · {new Date(submitted.ts).toLocaleString()}
+          </p>
+          <p style={{ margin: 0, color: "var(--ink-soft)" }}>
+            Name: {submitted.name} · {submitted.email}
+          </p>
           <ol>
-            {submitted.order.slice(0, 3).map((id, i) => <li key={i}>{projectsById[id]?.title}</li>)}
-            <li style={{ listStyle: "none", color: "var(--muted)", marginLeft: "-24px" }}>… plus {submitted.order.length - 3} more in your full ranking.</li>
+            {submitted.order.slice(0, 3).map((id, i) => (
+              <li key={i}>{projectsById[id]?.title}</li>
+            ))}
+            <li style={{ listStyle: "none", color: "var(--muted)", marginLeft: "-24px" }}>
+              … plus {submitted.order.length - 3} more in your full ranking.
+            </li>
           </ol>
           <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-            <button className="btn btn-ghost" onClick={() => { setSubmitted(null); }}>Edit response</button>
-            <button className="btn btn-primary" onClick={() => onNavigate("catalog")}>Back to catalog</button>
+            <button
+              className="btn btn-ghost"
+              onClick={() => {
+                setSubmitted(null);
+              }}
+            >
+              Edit response
+            </button>
+            <button className="btn btn-primary" onClick={() => onNavigate("catalog")}>
+              Back to catalog
+            </button>
           </div>
         </Reveal>
         <Reveal as="div" className="submission-mock" style={{ marginTop: 32 }}>
           <h3>What happens next</h3>
-          <p style={{ color: "var(--ink-soft)", margin: "0 0 12px" }}>The form keeps one saved response per student email. Submitting again with the same email updates that response.</p>
+          <p style={{ color: "var(--ink-soft)", margin: "0 0 12px" }}>
+            The form keeps one saved response per student email. Submitting again with the same
+            email updates that response.
+          </p>
           <div className="endpoints">
-            <div className="endpoint"><div><span className="ep-method">POST</span><span className="ep-path">/api/rankings</span></div><div className="ep-desc">Stores or updates ranking against a year + student.</div></div>
-            <div className="endpoint"><div><span className="ep-method">GET</span><span className="ep-path">/api/cohort/{data.currentYear}</span></div><div className="ep-desc">Returns the live response set for the instructor view.</div></div>
-            <div className="endpoint"><div><span className="ep-method">POST</span><span className="ep-path">/api/teams/auto</span></div><div className="ep-desc">Runs the matching algorithm and returns a team draft.</div></div>
+            <div className="endpoint">
+              <div>
+                <span className="ep-method">POST</span>
+                <span className="ep-path">/api/rankings</span>
+              </div>
+              <div className="ep-desc">Stores or updates ranking against a year + student.</div>
+            </div>
+            <div className="endpoint">
+              <div>
+                <span className="ep-method">GET</span>
+                <span className="ep-path">/api/cohort/{data.currentYear}</span>
+              </div>
+              <div className="ep-desc">Returns the live response set for the instructor view.</div>
+            </div>
+            <div className="endpoint">
+              <div>
+                <span className="ep-method">POST</span>
+                <span className="ep-path">/api/teams/auto</span>
+              </div>
+              <div className="ep-desc">Runs the matching algorithm and returns a team draft.</div>
+            </div>
           </div>
         </Reveal>
       </div>
@@ -304,10 +463,26 @@ const RankingPage = ({ data, onNavigate }) => {
     <div className="page">
       <section className="ranking-hero">
         <div>
-          <p className="kicker"><span className="dot">●</span> &nbsp; Step into your capstone year</p>
-          <h1>Rank the projects that <span className="ital">pull&nbsp;you&nbsp;in.</span></h1>
-          <p>Drag the slate into your preferred order. Top three carry the most weight, and the full ranking helps when teams need balancing.</p>
-          <p className="construction-note">{pollClosed ? pollClosedMessage : isSupabaseConfigured ? "Student polling live · one saved response per W&M email" : "Student polling mockup · under construction · submissions stay local for now"}</p>
+          <p className="kicker">
+            <span className="dot">●</span> &nbsp; Step into your capstone year
+          </p>
+          <h1>
+            Rank the projects that <span className="ital">pull&nbsp;you&nbsp;in.</span>
+          </h1>
+          <p>
+            Drag the slate into your preferred order. Top three carry the most weight, and the full
+            ranking helps when teams need balancing.
+          </p>
+          <p style={{ color: "var(--muted)", fontSize: "0.9em", marginTop: 8 }}>
+            Projects appear in a randomized order when this page loads to reduce position bias.
+          </p>
+          <p className="construction-note">
+            {pollClosed
+              ? pollClosedMessage
+              : isSupabaseConfigured
+                ? "Student polling live · one saved response per W&M email"
+                : "Student polling mockup · under construction · submissions stay local for now"}
+          </p>
         </div>
       </section>
 
@@ -330,24 +505,49 @@ const RankingPage = ({ data, onNavigate }) => {
           <h3>You</h3>
           <label className="field">
             <span className="helper">Full name</span>
-            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="First Last" autoComplete="name" />
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="First Last"
+              autoComplete="name"
+            />
           </label>
           <label className="field">
             <span className="helper">William &amp; Mary email</span>
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="username@wm.edu" autoComplete="email" />
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="username@wm.edu"
+              autoComplete="email"
+            />
           </label>
+          <p style={{ fontSize: "0.82em", color: "var(--muted)", margin: "6px 0 0" }}>
+            Your progress is saved automatically in this browser.
+          </p>
           <PrivacyNotice />
-          <p className="status-line">{pollClosed ? pollClosedMessage : status}</p>
+          <p className="status-line" role="status" aria-live="polite">
+            {pollClosed ? pollClosedMessage : status}
+          </p>
           <div className="button-row">
-            <button className="btn btn-primary" data-spark onClick={submit} disabled={pollClosed || submitting}>
+            <button
+              className="btn btn-primary"
+              data-spark
+              onClick={submit}
+              disabled={pollClosed || submitting}
+            >
               {pollClosed ? "Poll closed" : submitting ? "Submitting…" : "Submit ranking"}
             </button>
-            <button className="btn btn-ghost" onClick={reset}>Reset order</button>
+            <button className="btn btn-ghost" onClick={reset}>
+              Reset order
+            </button>
           </div>
         </aside>
 
         <div>
-          <p className="kicker" style={{ marginBottom: 12 }}>Drag or use arrows to reorder · all choices matter</p>
+          <p className="kicker" style={{ marginBottom: 12 }}>
+            Drag to reorder, or use the ↑ / ↓ buttons to move one step — all choices matter
+          </p>
           <ol className="ranking-list">
             {order.map((id, idx) => (
               <RankItem

@@ -24,10 +24,7 @@ const SITE_PAGE_ALIASES = {
   archive: "archive",
 };
 
-const KNOWN_SITE_HOSTS = new Set([
-  "ep.yangran.org",
-  "engineering-physics-wm.github.io",
-]);
+const KNOWN_SITE_HOSTS = new Set(["ep.yangran.org", "engineering-physics-wm.github.io"]);
 
 const cleanResourceText = (value) => (typeof value === "string" ? value.trim() : "");
 
@@ -48,7 +45,9 @@ const currentHost = () => {
 };
 
 const resourcePageFromTarget = (target = "") => {
-  const raw = trimTargetPunctuation(target).replace(/^(page|site):/i, "").trim();
+  const raw = trimTargetPunctuation(target)
+    .replace(/^(page|site):/i, "")
+    .trim();
   if (!raw) return "";
 
   const direct = pageAlias(raw);
@@ -84,10 +83,8 @@ const resourcePageFromTarget = (target = "") => {
   return "";
 };
 
-const resourcePage = (resource = {}) => (
-  pageAlias(resource.page) ||
-  resourcePageFromTarget(resource.href || resource.url || "")
-);
+const resourcePage = (resource = {}) =>
+  pageAlias(resource.page) || resourcePageFromTarget(resource.href || resource.url || "");
 
 const resourceHref = (resource) => {
   if (resourcePage(resource)) return "";

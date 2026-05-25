@@ -16,28 +16,46 @@ const Monogram = ({ size = 40, color = "currentColor", decorative = true }) => {
       {/* E: left bar + 3 horizontals (top, middle, bottom) */}
       <path
         d="M 12 8 L 12 56"
-        fill="none" stroke={color} strokeWidth={stroke} strokeLinecap="square"
+        fill="none"
+        stroke={color}
+        strokeWidth={stroke}
+        strokeLinecap="square"
       />
       <path
         d="M 12 8 L 36 8"
-        fill="none" stroke={color} strokeWidth={stroke} strokeLinecap="square"
+        fill="none"
+        stroke={color}
+        strokeWidth={stroke}
+        strokeLinecap="square"
       />
       <path
         d="M 12 32 L 30 32"
-        fill="none" stroke={color} strokeWidth={stroke} strokeLinecap="square"
+        fill="none"
+        stroke={color}
+        strokeWidth={stroke}
+        strokeLinecap="square"
       />
       <path
         d="M 12 56 L 36 56"
-        fill="none" stroke={color} strokeWidth={stroke} strokeLinecap="square"
+        fill="none"
+        stroke={color}
+        strokeWidth={stroke}
+        strokeLinecap="square"
       />
       {/* P: shares a stem with the E's right side; bowl interlocks with E's middle bar */}
       <path
         d="M 36 8 L 36 56"
-        fill="none" stroke={color} strokeWidth={stroke} strokeLinecap="square"
+        fill="none"
+        stroke={color}
+        strokeWidth={stroke}
+        strokeLinecap="square"
       />
       <path
         d="M 36 8 Q 56 8 56 20 Q 56 32 36 32"
-        fill="none" stroke={color} strokeWidth={stroke} strokeLinecap="square"
+        fill="none"
+        stroke={color}
+        strokeWidth={stroke}
+        strokeLinecap="square"
       />
     </svg>
   );

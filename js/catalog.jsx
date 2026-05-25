@@ -3,7 +3,13 @@
 import * as React from "react";
 import { HeroParticles, Reveal } from "./motion.jsx";
 import { ExternalLink, LinkedText, PersonLink, YangLink, isYangName } from "./links.jsx";
-import { currentCourseAnnouncement, resourceHref, resourceKind, resourceLabel, sortAnnouncements } from "./news.jsx";
+import {
+  currentCourseAnnouncement,
+  resourceHref,
+  resourceKind,
+  resourceLabel,
+  sortAnnouncements,
+} from "./news.jsx";
 import { resourcePage } from "./resources.js";
 
 const AREA_COLORS = {
@@ -14,12 +20,19 @@ const AREA_COLORS = {
   "AI-driven measurement or analysis": "oklch(42% 0.060 270)",
   "Public-facing / installation / outreach": "oklch(60% 0.075 60)",
   "Quantum science and technology": "oklch(46% 0.080 290)",
-  "Materials": "oklch(50% 0.050 100)",
+  Materials: "oklch(50% 0.050 100)",
   "Plasma / high-energy adjacent": "oklch(56% 0.075 340)",
 };
 const ALL_AREAS = Object.keys(AREA_COLORS);
 
-const ProjectCard = ({ project, displayIdx, onOpen, status = "", statusLabel = "", revealDelay = 0 }) => {
+const ProjectCard = ({
+  project,
+  displayIdx,
+  onOpen,
+  status = "",
+  statusLabel = "",
+  revealDelay = 0,
+}) => {
   const railColor = AREA_COLORS[project.areas[0]] || "var(--pink)";
   const cardClass = "project-card" + (status ? ` is-${status}` : "");
   const openFromKeyboard = (event) => {
@@ -46,13 +59,18 @@ const ProjectCard = ({ project, displayIdx, onOpen, status = "", statusLabel = "
         <span className="project-card-num mono">No. {String(displayIdx + 1).padStart(2, "0")}</span>
         <span className="project-card-areas">
           {project.areas.slice(0, 2).map((a, i) => (
-            <span key={i}>{a.split(" / ")[0]}{i < Math.min(project.areas.length, 2) - 1 ? " · " : ""}</span>
+            <span key={i}>
+              {a.split(" / ")[0]}
+              {i < Math.min(project.areas.length, 2) - 1 ? " · " : ""}
+            </span>
           ))}
         </span>
       </div>
       <h3 className="project-card-title">{project.title}</h3>
       <p className="project-card-advisor">
-        <PersonLink name={project.advisor} onClick={(event) => event.stopPropagation()}>{project.advisor}</PersonLink>{" "}
+        <PersonLink name={project.advisor} onClick={(event) => event.stopPropagation()}>
+          {project.advisor}
+        </PersonLink>{" "}
         <span className="aff">/ {project.affiliation}</span>
       </p>
       <p className="project-card-pitch">{project.pitch}</p>
@@ -85,34 +103,51 @@ const ProjectDialog = ({ project, displayIdx, onClose, yearLabel = "", shortYear
       <div className="dialog-inner">
         <div className="dialog-head">
           <div>
-            <span className="num">PROJECT NO. {String(displayIdx + 1).padStart(2, "0")} · {shortYearLabel}</span>
+            <span className="num">
+              PROJECT NO. {String(displayIdx + 1).padStart(2, "0")} · {shortYearLabel}
+            </span>
             <h2>{project.title}</h2>
-            <p className="advisor"><PersonLink name={project.advisor}>{project.advisor}</PersonLink> · {project.affiliation}</p>
+            <p className="advisor">
+              <PersonLink name={project.advisor}>{project.advisor}</PersonLink> ·{" "}
+              {project.affiliation}
+            </p>
           </div>
-          <button className="dialog-close" onClick={onClose} aria-label="Close">✕</button>
+          <button className="dialog-close" onClick={onClose} aria-label="Close">
+            ✕
+          </button>
         </div>
         <div className="dialog-body">
           <div className="tag-row">
             {project.areas.map((a, i) => (
-              <span key={i} className={"tag" + (i === 0 ? " tag-accent" : "")}>{a}</span>
+              <span key={i} className={"tag" + (i === 0 ? " tag-accent" : "")}>
+                {a}
+              </span>
             ))}
           </div>
           <dl className="detail-grid">
             <dt>Advisor</dt>
             <dd>
-              {isYangName(project.advisor)
-                ? <PersonLink name={project.advisor}>{project.advisor}</PersonLink>
-                : project.advisorEmail
-                ? <a href={"mailto:" + project.advisorEmail}>{project.advisor}</a>
-                : project.advisor}
+              {isYangName(project.advisor) ? (
+                <PersonLink name={project.advisor}>{project.advisor}</PersonLink>
+              ) : project.advisorEmail ? (
+                <a href={"mailto:" + project.advisorEmail}>{project.advisor}</a>
+              ) : (
+                project.advisor
+              )}
             </dd>
-            <dt>Affiliation</dt><dd>{project.affiliation}</dd>
+            <dt>Affiliation</dt>
+            <dd>{project.affiliation}</dd>
             {project.partners && (
-              <><dt>Partners</dt><dd>{project.partners.map((p, i) => (
-                <span key={i} style={{ display: "block" }}>
-                  <ExternalLink href={p.url}>{p.name} ↗</ExternalLink>
-                </span>
-              ))}</dd></>
+              <>
+                <dt>Partners</dt>
+                <dd>
+                  {project.partners.map((p, i) => (
+                    <span key={i} style={{ display: "block" }}>
+                      <ExternalLink href={p.url}>{p.name} ↗</ExternalLink>
+                    </span>
+                  ))}
+                </dd>
+              </>
             )}
             {project.coadvisors && (
               <>
@@ -120,36 +155,58 @@ const ProjectDialog = ({ project, displayIdx, onClose, yearLabel = "", shortYear
                 <dd>
                   {project.coadvisors.map((c, i) => (
                     <span key={i} style={{ display: "block" }}>
-                      {isYangName(c.name)
-                        ? <PersonLink name={c.name}>{c.name}</PersonLink>
-                        : c.email
-                        ? <a href={"mailto:" + c.email}>{c.name}</a>
-                        : c.name}
-                      {" "}({c.affiliation})
+                      {isYangName(c.name) ? (
+                        <PersonLink name={c.name}>{c.name}</PersonLink>
+                      ) : c.email ? (
+                        <a href={"mailto:" + c.email}>{c.name}</a>
+                      ) : (
+                        c.name
+                      )}{" "}
+                      ({c.affiliation})
                     </span>
                   ))}
                 </dd>
               </>
             )}
-            <dt>Year</dt><dd className="mono">{yearLabel}</dd>
-            <dt>Team size</dt><dd>2 – 3 students</dd>
+            <dt>Year</dt>
+            <dd className="mono">{yearLabel}</dd>
+            <dt>Team size</dt>
+            <dd>2 – 3 students</dd>
           </dl>
           <section className="dialog-section">
             <h3>Student pitch</h3>
-            {project.pitch.split("\n").map((para, i) => para.trim() && <p key={i}><LinkedText text={para} /></p>)}
+            {project.pitch.split("\n").map(
+              (para, i) =>
+                para.trim() && (
+                  <p key={i}>
+                    <LinkedText text={para} />
+                  </p>
+                )
+            )}
           </section>
           <section className="dialog-section">
             <h3>Background, objectives &amp; deliverables</h3>
-            {project.background.split("\n").map((para, i) => para.trim() && <p key={i}><LinkedText text={para} /></p>)}
+            {project.background.split("\n").map(
+              (para, i) =>
+                para.trim() && (
+                  <p key={i}>
+                    <LinkedText text={para} />
+                  </p>
+                )
+            )}
           </section>
           <section className="dialog-section">
             <h3>Workspace &amp; access</h3>
-            <p><LinkedText text={project.workspace} /></p>
+            <p>
+              <LinkedText text={project.workspace} />
+            </p>
           </section>
           {project.notes && (
             <section className="dialog-section">
               <h3>Advisor notes</h3>
-              <p><LinkedText text={project.notes} /></p>
+              <p>
+                <LinkedText text={project.notes} />
+              </p>
             </section>
           )}
         </div>
@@ -161,15 +218,21 @@ const ProjectDialog = ({ project, displayIdx, onClose, yearLabel = "", shortYear
 const ThemeMap = ({ projects, activeArea, onPick }) => {
   const counts = React.useMemo(() => {
     const m = {};
-    projects.forEach(p => p.areas.forEach(a => { m[a] = (m[a] || 0) + 1; }));
+    projects.forEach((p) =>
+      p.areas.forEach((a) => {
+        m[a] = (m[a] || 0) + 1;
+      })
+    );
     return m;
   }, [projects]);
-  const themes = ALL_AREAS.filter(a => counts[a]);
+  const themes = ALL_AREAS.filter((a) => counts[a]);
 
   return (
     <div className="theme-row">
       {themes.map((a) => {
-        const [name, sub] = a.includes(" / ") ? [a.split(" / ")[0], a.split(" / ").slice(1).join(" / ")] : [a, ""];
+        const [name, sub] = a.includes(" / ")
+          ? [a.split(" / ")[0], a.split(" / ").slice(1).join(" / ")]
+          : [a, ""];
         return (
           <button
             key={a}
@@ -179,7 +242,9 @@ const ThemeMap = ({ projects, activeArea, onPick }) => {
           >
             <span className="theme-tag-name">{name}</span>
             {sub && <span className="theme-tag-sub">{sub}</span>}
-            <span className="theme-tag-count" aria-label={counts[a] + " projects"}>×{counts[a]}</span>
+            <span className="theme-tag-count" aria-label={counts[a] + " projects"}>
+              ×{counts[a]}
+            </span>
           </button>
         );
       })}
@@ -190,13 +255,22 @@ const ThemeMap = ({ projects, activeArea, onPick }) => {
 const DirectorQuote = ({ className = "" }) => (
   <blockquote className={"hero-pull" + (className ? ` ${className}` : "")}>
     <span className="hp-mark">"</span>
-    <p>You might already know why it works. This year, you find out whether you can build it and make it matter.</p>
+    <p>
+      You might already know why it works. This year, you find out whether you can build it and make
+      it matter.
+    </p>
     <footer className="hero-faculty">
-      <div className="hf-avatar" aria-hidden="true">RY</div>
+      <div className="hf-avatar" aria-hidden="true">
+        RY
+      </div>
       <div>
-        <div className="hf-name"><YangLink>Prof. Ran Yang</YangLink></div>
+        <div className="hf-name">
+          <YangLink>Prof. Ran Yang</YangLink>
+        </div>
         <div className="hf-role">Capstone Instructor · Engineering Physics</div>
-        <ExternalLink href="https://yangran.org" className="hf-link">yangran.org ↗</ExternalLink>
+        <ExternalLink href="https://yangran.org" className="hf-link">
+          yangran.org ↗
+        </ExternalLink>
       </div>
     </footer>
   </blockquote>
@@ -211,14 +285,16 @@ const CourseResource = ({ resource, onNavigate }) => {
   if (page) {
     return (
       <button type="button" className="course-now-resource" onClick={() => onNavigate(page)}>
-        <span>{kind}</span>{label}
+        <span>{kind}</span>
+        {label}
       </button>
     );
   }
   if (!href) return null;
   return (
     <ExternalLink className="course-now-resource" href={href}>
-      <span>{kind}</span>{label}
+      <span>{kind}</span>
+      {label}
     </ExternalLink>
   );
 };
@@ -229,7 +305,11 @@ const CourseNow = ({ announcement, referenceItems = [], onNavigate }) => {
   return (
     <Reveal as="section" className="course-now" aria-label="Latest course update">
       <div className="course-now-main">
-        <button type="button" className="course-now-body" onClick={() => onNavigate("news", announcement.id)}>
+        <button
+          type="button"
+          className="course-now-body"
+          onClick={() => onNavigate("news", announcement.id)}
+        >
           <p className="cn-dateline">
             <span className="live" />
             <span>Now</span>
@@ -248,12 +328,18 @@ const CourseNow = ({ announcement, referenceItems = [], onNavigate }) => {
           </p>
           <h2>{announcement.title}</h2>
           <p className="course-now-summary">{announcement.summary}</p>
-          <span className="course-now-readmore" aria-hidden="true">Read more</span>
+          <span className="course-now-readmore" aria-hidden="true">
+            Read more
+          </span>
         </button>
         {announcement.resources?.length > 0 && (
           <div className="course-now-resources" aria-label="Update resources">
             {announcement.resources.map((resource, index) => (
-              <CourseResource key={resource.label || resource.href || resource.url || resource.page || index} resource={resource} onNavigate={onNavigate} />
+              <CourseResource
+                key={resource.label || resource.href || resource.url || resource.page || index}
+                resource={resource}
+                onNavigate={onNavigate}
+              />
             ))}
           </div>
         )}
@@ -265,7 +351,11 @@ const CourseNow = ({ announcement, referenceItems = [], onNavigate }) => {
             <ul>
               {referenceItems.map((item) => (
                 <li key={item.id}>
-                  <button type="button" className="course-reference-btn" onClick={() => onNavigate("news", item.id)}>
+                  <button
+                    type="button"
+                    className="course-reference-btn"
+                    onClick={() => onNavigate("news", item.id)}
+                  >
                     <span>{item.label || item.date}</span>
                     <strong>{item.title}</strong>
                   </button>
@@ -276,7 +366,10 @@ const CourseNow = ({ announcement, referenceItems = [], onNavigate }) => {
           <a
             className="cn-viewall"
             href="#"
-            onClick={(e) => { e.preventDefault(); onNavigate("news"); }}
+            onClick={(e) => {
+              e.preventDefault();
+              onNavigate("news");
+            }}
           >
             View all updates →
           </a>
@@ -290,7 +383,12 @@ const HeroLatest = ({ announcement, onNavigate }) => {
   if (!announcement) return null;
 
   return (
-    <button type="button" className="hero-latest" onClick={() => onNavigate("news", announcement.id)} data-spark>
+    <button
+      type="button"
+      className="hero-latest"
+      onClick={() => onNavigate("news", announcement.id)}
+      data-spark
+    >
       <span className="hero-latest-label">Latest update</span>
       <strong>{announcement.title}</strong>
       <span className="hero-latest-meta">{announcement.label || announcement.date}</span>
@@ -303,13 +401,21 @@ const CohortPendingPage = ({ data, onNavigate }) => (
     <section className="hero cohort-pending-hero" style={{ position: "relative" }}>
       <HeroParticles count={12} intensity={window.__epTweakSparks ?? 1} />
       <div className="hero-main" style={{ position: "relative", zIndex: 1 }}>
-        <p className="kicker"><span className="dot">●</span> &nbsp; {data.currentYear} cohort</p>
-        <h1>{data.placeholderTitle || data.archiveItem?.title || "Cohort materials coming soon."}</h1>
+        <p className="kicker">
+          <span className="dot">●</span> &nbsp; {data.currentYear} cohort
+        </p>
+        <h1>
+          {data.placeholderTitle || data.archiveItem?.title || "Cohort materials coming soon."}
+        </h1>
         <p className="cohort-pending-copy">
-          {data.placeholderSummary || data.archiveItem?.summary || "This cohort is ready for materials once the records are available."}
+          {data.placeholderSummary ||
+            data.archiveItem?.summary ||
+            "This cohort is ready for materials once the records are available."}
         </p>
         <div className="cohort-pending-actions">
-          <button className="btn btn-primary" onClick={() => onNavigate("archive")}>Back to archive</button>
+          <button className="btn btn-primary" onClick={() => onNavigate("archive")}>
+            Back to archive
+          </button>
         </div>
       </div>
     </section>
@@ -324,7 +430,7 @@ const CurrentCatalogPage = ({ data, onNavigate }) => {
   const [openProject, setOpenProject] = React.useState(null);
 
   const affiliations = React.useMemo(
-    () => [...new Set(data.projects.map(p => p.affiliation))].sort(),
+    () => [...new Set(data.projects.map((p) => p.affiliation))].sort(),
     [data.projects]
   );
   const activeProjectIds = data.cohortStatus?.activeProjectIds || [];
@@ -337,9 +443,13 @@ const CurrentCatalogPage = ({ data, onNavigate }) => {
   const slateCopy = hasProjectStatus
     ? "Browse the active team briefs and the full proposal slate for this cohort."
     : "Browse the project briefs and proposal slate for this cohort.";
-  const currentAnnouncements = React.useMemo(() => (
-    sortAnnouncements((data.announcements || []).filter(item => item.cohortYear === data.currentYear))
-  ), [data.announcements, data.currentYear]);
+  const currentAnnouncements = React.useMemo(
+    () =>
+      sortAnnouncements(
+        (data.announcements || []).filter((item) => item.cohortYear === data.currentYear)
+      ),
+    [data.announcements, data.currentYear]
+  );
   const currentUpdate = currentCourseAnnouncement(currentAnnouncements);
   const referenceUpdates = React.useMemo(() => {
     const today = new Date().toISOString().slice(0, 10);
@@ -352,29 +462,51 @@ const CurrentCatalogPage = ({ data, onNavigate }) => {
   const filtered = React.useMemo(() => {
     const q = search.trim().toLowerCase();
     return data.projects
-      .filter(p => {
-        const hay = (p.title + " " + p.advisor + " " + p.affiliation + " " + p.areas.join(" ") + " " + p.pitch).toLowerCase();
-        return (!q || hay.includes(q)) &&
-               (!areaFilter || p.areas.includes(areaFilter)) &&
-               (!affiliationFilter || p.affiliation === affiliationFilter);
+      .filter((p) => {
+        const hay = (
+          p.title +
+          " " +
+          p.advisor +
+          " " +
+          p.affiliation +
+          " " +
+          p.areas.join(" ") +
+          " " +
+          p.pitch
+        ).toLowerCase();
+        return (
+          (!q || hay.includes(q)) &&
+          (!areaFilter || p.areas.includes(areaFilter)) &&
+          (!affiliationFilter || p.affiliation === affiliationFilter)
+        );
       })
       .sort((a, b) => {
         if (hasProjectStatus) {
-          const activeDelta = Number(!activeProjectSet.has(a.id)) - Number(!activeProjectSet.has(b.id));
+          const activeDelta =
+            Number(!activeProjectSet.has(a.id)) - Number(!activeProjectSet.has(b.id));
           if (activeDelta) return activeDelta;
         }
         if (sort === "advisor") return a.advisor.localeCompare(b.advisor);
         return a.title.localeCompare(b.title);
       });
-  }, [activeProjectSet, data.projects, hasProjectStatus, search, areaFilter, affiliationFilter, sort]);
-
+  }, [
+    activeProjectSet,
+    data.projects,
+    hasProjectStatus,
+    search,
+    areaFilter,
+    affiliationFilter,
+    sort,
+  ]);
 
   return (
     <div className="page catalog-page">
       <section className="hero" style={{ position: "relative" }}>
         <HeroParticles count={18} intensity={window.__epTweakSparks ?? 1} />
         <div className="hero-main" style={{ position: "relative", zIndex: 1 }}>
-          <p className="kicker"><span className="dot">●</span> &nbsp; {data.yearLabel} cohort</p>
+          <p className="kicker">
+            <span className="dot">●</span> &nbsp; {data.yearLabel} cohort
+          </p>
           <h1>Engineering Physics Capstone</h1>
           <div className="hero-split">
             <DirectorQuote className="hero-pull-banner" />
@@ -382,7 +514,11 @@ const CurrentCatalogPage = ({ data, onNavigate }) => {
         </div>
       </section>
 
-      <CourseNow announcement={currentUpdate} referenceItems={referenceUpdates} onNavigate={onNavigate} />
+      <CourseNow
+        announcement={currentUpdate}
+        referenceItems={referenceUpdates}
+        onNavigate={onNavigate}
+      />
 
       <Reveal as="section" id="projects">
         <div className="section-heading">
@@ -393,26 +529,45 @@ const CurrentCatalogPage = ({ data, onNavigate }) => {
               {slateCopy}
             </p>
           </div>
-          <p className="meta mono">{String(filtered.length).padStart(2, "0")} / {String(data.projects.length).padStart(2, "0")} shown</p>
+          <p className="meta mono">
+            {String(filtered.length).padStart(2, "0")} /{" "}
+            {String(data.projects.length).padStart(2, "0")} shown
+          </p>
         </div>
 
         <div className="filters">
           <label className="field">
             <span className="field-label">Search</span>
-            <input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Project, advisor, topic" />
+            <input
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Project, advisor, topic"
+            />
           </label>
           <label className="field">
             <span className="field-label">Theme</span>
             <select value={areaFilter} onChange={(e) => setAreaFilter(e.target.value)}>
               <option value="">All themes</option>
-              {ALL_AREAS.filter(a => data.projects.some(p => p.areas.includes(a))).map(a => <option key={a} value={a}>{a}</option>)}
+              {ALL_AREAS.filter((a) => data.projects.some((p) => p.areas.includes(a))).map((a) => (
+                <option key={a} value={a}>
+                  {a}
+                </option>
+              ))}
             </select>
           </label>
           <label className="field">
             <span className="field-label">Affiliation</span>
-            <select value={affiliationFilter} onChange={(e) => setAffiliationFilter(e.target.value)}>
+            <select
+              value={affiliationFilter}
+              onChange={(e) => setAffiliationFilter(e.target.value)}
+            >
               <option value="">All</option>
-              {affiliations.map(a => <option key={a} value={a}>{a}</option>)}
+              {affiliations.map((a) => (
+                <option key={a} value={a}>
+                  {a}
+                </option>
+              ))}
             </select>
           </label>
           <label className="field">
@@ -427,25 +582,32 @@ const CurrentCatalogPage = ({ data, onNavigate }) => {
         <div className="project-grid">
           {filtered.length === 0 ? (
             <div className="empty">No projects match those filters yet.</div>
-          ) : filtered.map((p, index) => {
-            const status = hasProjectStatus ? (activeProjectSet.has(p.id) ? "active" : "inactive") : "";
-            const statusLabel = status === "active"
-              ? data.cohortStatus?.activeLabel || "Active team"
-              : status === "inactive"
-              ? data.cohortStatus?.inactiveLabel || "Inactive this year"
-              : "";
-            return (
-              <ProjectCard
-                key={p.id}
-                project={p}
-                displayIdx={p.num - 1}
-                onOpen={setOpenProject}
-                status={status}
-                statusLabel={statusLabel}
-                revealDelay={Math.min(360, index * 45)}
-              />
-            );
-          })}
+          ) : (
+            filtered.map((p, index) => {
+              const status = hasProjectStatus
+                ? activeProjectSet.has(p.id)
+                  ? "active"
+                  : "inactive"
+                : "";
+              const statusLabel =
+                status === "active"
+                  ? data.cohortStatus?.activeLabel || "Active team"
+                  : status === "inactive"
+                    ? data.cohortStatus?.inactiveLabel || "Inactive this year"
+                    : "";
+              return (
+                <ProjectCard
+                  key={p.id}
+                  project={p}
+                  displayIdx={p.num - 1}
+                  onOpen={setOpenProject}
+                  status={status}
+                  statusLabel={statusLabel}
+                  revealDelay={Math.min(360, index * 45)}
+                />
+              );
+            })
+          )}
         </div>
       </Reveal>
 
@@ -455,12 +617,25 @@ const CurrentCatalogPage = ({ data, onNavigate }) => {
             <p className="kicker">Idea network</p>
             <h2>The threads connecting the cohort.</h2>
           </div>
-          <button className="btn btn-ghost" onClick={() => setAreaFilter("")} disabled={!areaFilter}>Clear</button>
+          <button
+            className="btn btn-ghost"
+            onClick={() => setAreaFilter("")}
+            disabled={!areaFilter}
+          >
+            Clear
+          </button>
         </div>
-        <ThemeMap projects={data.projects} activeArea={areaFilter} onPick={(a) => {
-          setAreaFilter(a);
-          setTimeout(() => document.getElementById("projects")?.scrollIntoView({ behavior: "smooth" }), 100);
-        }} />
+        <ThemeMap
+          projects={data.projects}
+          activeArea={areaFilter}
+          onPick={(a) => {
+            setAreaFilter(a);
+            setTimeout(
+              () => document.getElementById("projects")?.scrollIntoView({ behavior: "smooth" }),
+              100
+            );
+          }}
+        />
       </Reveal>
 
       <ProjectDialog

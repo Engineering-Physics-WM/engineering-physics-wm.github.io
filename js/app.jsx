@@ -13,8 +13,11 @@ import { YangLink } from "./links.jsx";
 import { NewsPage, currentCourseAnnouncement } from "./news.jsx";
 import { TweakPanelInline } from "./tweaks.jsx";
 import { loadPublishedAnnouncements } from "./announcements.js";
+import { hashForPage, parseHashToPage } from "./routes.js";
 
-const Header = ({ page, onNavigate, year, setYear, years, currentYear, latestAnnouncement }) => {
+// ── Header ────────────────────────────────────────────────────────────────────
+
+const Header = ({ page, onNavigate, year, setYear, years, currentYear }) => {
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [compactHeader, setCompactHeader] = React.useState(false);
   const selectedYearLabel = formatAcademicYear(year, "-");
@@ -32,48 +35,77 @@ const Header = ({ page, onNavigate, year, setYear, years, currentYear, latestAnn
     if (!compactHeader) setMobileOpen(false);
   }, [compactHeader]);
 
-  const handleBrandClick = () => {
-    if (compactHeader) {
-      setMobileOpen(open => !open);
-      return;
-    }
-    onNavigate("catalog");
-  };
+  const closeMobileMenu = () => setMobileOpen(false);
+
+  const brandEl = compactHeader ? (
+    <button
+      className="brand"
+      onClick={() => setMobileOpen((open) => !open)}
+      aria-label={mobileOpen ? "Close site menu" : "Open site menu"}
+      aria-expanded={mobileOpen}
+      aria-controls="site-menu"
+    >
+      <Monogram size={36} />
+    </button>
+  ) : (
+    <div className="brand-wrap">
+      <a
+        className="brand"
+        href={hashForPage("catalog")}
+        onClick={(e) => {
+          e.preventDefault();
+          onNavigate("catalog");
+        }}
+        aria-label="Engineering Physics Capstone — home"
+      >
+        <Monogram size={36} />
+        <span className="brand-mono">
+          Engineering Physics<em>Capstone HQ</em>
+        </span>
+      </a>
+      <span className="brand-links">
+        <span>
+          {selectedYearLabel} {year === currentYear ? "course home" : "cohort"}
+        </span>
+        <span className="brand-sep">·</span>
+        <a href="https://www.wm.edu/as/physics/" target="_blank" rel="noopener">
+          Physics
+        </a>
+        <span className="brand-sep">·</span>
+        <a href="https://cdsp.wm.edu/about/" target="_blank" rel="noopener">
+          CDSP
+        </a>
+        <span className="brand-sep">·</span>
+        <a href="https://www.wm.edu/" target="_blank" rel="noopener">
+          William &amp; Mary
+        </a>
+      </span>
+    </div>
+  );
 
   return (
     <header className={"site-header" + (mobileOpen ? " is-open" : "")}>
-      <button
-        className="brand"
-        onClick={handleBrandClick}
-        aria-label={compactHeader ? (mobileOpen ? "Close site menu" : "Open site menu") : "Engineering Physics home"}
-        aria-expanded={compactHeader ? mobileOpen : undefined}
-        aria-controls={compactHeader ? "site-menu" : undefined}
-      >
-        <Monogram size={36} />
-        <div className="brand-stack">
-          <span className="brand-mono">Engineering Physics<em>Capstone HQ</em></span>
-          <span className="brand-links">
-            <span>{selectedYearLabel} {year === currentYear ? "course home" : "cohort"}</span>
-            <span className="brand-sep">·</span>
-            <a href="https://www.wm.edu/as/physics/" target="_blank" rel="noopener" onClick={e => e.stopPropagation()}>Physics</a>
-            <span className="brand-sep">·</span>
-            <a href="https://cdsp.wm.edu/about/" target="_blank" rel="noopener" onClick={e => e.stopPropagation()}>CDSP</a>
-            <span className="brand-sep">·</span>
-            <a href="https://www.wm.edu/" target="_blank" rel="noopener" onClick={e => e.stopPropagation()}>William &amp; Mary</a>
-          </span>
-        </div>
-      </button>
+      {brandEl}
 
       <div id="site-menu" className="header-menu">
         <div className="year-switcher" role="tablist" aria-label="Year">
-          {years.map(y => (
+          {years.map((y) => (
             <button
               key={y.id}
               className="year-pill"
               aria-current={y.id === year}
               disabled={false}
-              onClick={() => { setYear(y.id); setMobileOpen(false); }}
-              title={y.status === "future" ? "Reserved cohort" : y.id === currentYear ? "Current cohort" : "Archive"}
+              onClick={() => {
+                setYear(y.id);
+                closeMobileMenu();
+              }}
+              title={
+                y.status === "future"
+                  ? "Reserved cohort"
+                  : y.id === currentYear
+                    ? "Current cohort"
+                    : "Archive"
+              }
             >
               {y.status === "future" && <span className="future-dot" />}
               {y.label}
@@ -82,15 +114,49 @@ const Header = ({ page, onNavigate, year, setYear, years, currentYear, latestAnn
         </div>
 
         <nav className="site-nav" aria-label="Sections">
-          <button aria-current={page === "catalog"} onClick={() => { onNavigate("catalog"); setMobileOpen(false); }}>Home</button>
-          <button aria-current={page === "news"} onClick={() => { onNavigate("news"); setMobileOpen(false); }}>Updates</button>
-          <button aria-current={page === "dashboard"} onClick={() => { onNavigate("dashboard"); setMobileOpen(false); }}>Dashboard</button>
-          <button aria-current={page === "archive"} onClick={() => { onNavigate("archive"); setMobileOpen(false); }}>Archive</button>
+          <button
+            aria-current={page === "catalog"}
+            onClick={() => {
+              onNavigate("catalog");
+              closeMobileMenu();
+            }}
+          >
+            Home
+          </button>
+          <button
+            aria-current={page === "news"}
+            onClick={() => {
+              onNavigate("news");
+              closeMobileMenu();
+            }}
+          >
+            Updates
+          </button>
+          <button
+            aria-current={page === "dashboard"}
+            onClick={() => {
+              onNavigate("dashboard");
+              closeMobileMenu();
+            }}
+          >
+            Dashboard
+          </button>
+          <button
+            aria-current={page === "archive"}
+            onClick={() => {
+              onNavigate("archive");
+              closeMobileMenu();
+            }}
+          >
+            Archive
+          </button>
         </nav>
       </div>
     </header>
   );
 };
+
+// ── Footer ────────────────────────────────────────────────────────────────────
 
 const Footer = ({ onNavigate, yearLabel }) => (
   <footer className="site-footer">
@@ -98,9 +164,16 @@ const Footer = ({ onNavigate, yearLabel }) => (
       <div className="footer-brand">
         <Monogram size={44} />
         <div>
-          <p className="kicker" style={{ marginBottom: 6 }}><span className="dot">●</span> &nbsp; William &amp; Mary</p>
-          <p className="footer-display">Engineering Physics, <span className="ital">in practice.</span></p>
-          <p className="footer-tag">A capstone home for students, families, campus partners, and supporters following the work of EP students at William &amp; Mary.</p>
+          <p className="kicker" style={{ marginBottom: 6 }}>
+            <span className="dot">●</span> &nbsp; William &amp; Mary
+          </p>
+          <p className="footer-display">
+            Engineering Physics, <span className="ital">in practice.</span>
+          </p>
+          <p className="footer-tag">
+            A capstone home for students, families, campus partners, and supporters following the
+            work of EP students at William &amp; Mary.
+          </p>
         </div>
       </div>
 
@@ -108,27 +181,107 @@ const Footer = ({ onNavigate, yearLabel }) => (
         <div className="footer-col">
           <h4>Cohort</h4>
           <ul>
-            <li><a href="#" onClick={(e) => { e.preventDefault(); onNavigate("catalog"); }}>Project catalog</a></li>
-            <li><a href="#" onClick={(e) => { e.preventDefault(); onNavigate("news"); }}>Cohort updates</a></li>
-            <li><a href="#" onClick={(e) => { e.preventDefault(); onNavigate("ranking"); }}>Ranking poll</a></li>
-            <li><a href="#" onClick={(e) => { e.preventDefault(); onNavigate("dashboard"); }}>Instructor dashboard</a></li>
-            <li><a href="#" onClick={(e) => { e.preventDefault(); onNavigate("archive"); }}>Archive</a></li>
+            <li>
+              <a
+                href={hashForPage("catalog")}
+                onClick={(e) => {
+                  e.preventDefault();
+                  onNavigate("catalog");
+                }}
+              >
+                Project catalog
+              </a>
+            </li>
+            <li>
+              <a
+                href={hashForPage("news")}
+                onClick={(e) => {
+                  e.preventDefault();
+                  onNavigate("news");
+                }}
+              >
+                Cohort updates
+              </a>
+            </li>
+            <li>
+              <a
+                href={hashForPage("ranking")}
+                onClick={(e) => {
+                  e.preventDefault();
+                  onNavigate("ranking");
+                }}
+              >
+                Ranking poll
+              </a>
+            </li>
+            <li>
+              <a
+                href={hashForPage("dashboard")}
+                onClick={(e) => {
+                  e.preventDefault();
+                  onNavigate("dashboard");
+                }}
+              >
+                Instructor dashboard
+              </a>
+            </li>
+            <li>
+              <a
+                href={hashForPage("archive")}
+                onClick={(e) => {
+                  e.preventDefault();
+                  onNavigate("archive");
+                }}
+              >
+                Archive
+              </a>
+            </li>
           </ul>
         </div>
         <div className="footer-col">
           <h4>Faculty</h4>
           <ul>
-            <li><a href="https://yangran.org" target="_blank" rel="noopener">Ran Yang ↗</a></li>
-            <li><a href="https://www.wm.edu/as/physics/" target="_blank" rel="noopener">Physics dept ↗</a></li>
-            <li><a href="https://cdsp.wm.edu/about/" target="_blank" rel="noopener">CDSP ↗</a></li>
+            <li>
+              <a href="https://yangran.org" target="_blank" rel="noopener">
+                Ran Yang ↗
+              </a>
+            </li>
+            <li>
+              <a href="https://www.wm.edu/as/physics/" target="_blank" rel="noopener">
+                Physics dept ↗
+              </a>
+            </li>
+            <li>
+              <a href="https://cdsp.wm.edu/about/" target="_blank" rel="noopener">
+                CDSP ↗
+              </a>
+            </li>
           </ul>
         </div>
         <div className="footer-col">
           <h4>Connect</h4>
           <ul>
-            <li><a href="https://www.instagram.com/physics_wm/" target="_blank" rel="noopener">@physics_wm ↗</a></li>
-            <li><a href="https://www.wm.edu/" target="_blank" rel="noopener">wm.edu ↗</a></li>
-            <li><a href="#" onClick={(e) => { e.preventDefault(); window.scrollTo({top:0, behavior:"smooth"}); }}>Back to top</a></li>
+            <li>
+              <a href="https://www.instagram.com/physics_wm/" target="_blank" rel="noopener">
+                @physics_wm ↗
+              </a>
+            </li>
+            <li>
+              <a href="https://www.wm.edu/" target="_blank" rel="noopener">
+                wm.edu ↗
+              </a>
+            </li>
+            <li>
+              <a
+                href="#top"
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+              >
+                Back to top
+              </a>
+            </li>
           </ul>
         </div>
       </div>
@@ -142,9 +295,10 @@ const Footer = ({ onNavigate, yearLabel }) => (
   </footer>
 );
 
-const isNowAnnouncement = (item) => (
-  Boolean(item?.pinned) || (item?.label || "").trim().toLowerCase() === "now"
-);
+// ── Announcement merge helpers ────────────────────────────────────────────────
+
+const isNowAnnouncement = (item) =>
+  Boolean(item?.pinned) || (item?.label || "").trim().toLowerCase() === "now";
 
 const announcementKey = (item) => item.slug || item.id;
 
@@ -159,19 +313,50 @@ const demoteNowAnnouncement = (item) => ({
   label: (item.label || "").trim().toLowerCase() === "now" ? "" : item.label,
 });
 
+// ── App ───────────────────────────────────────────────────────────────────────
+
 const App = () => {
   const [liveAnnouncements, setLiveAnnouncements] = React.useState(null);
   const [announcementRefreshKey, setAnnouncementRefreshKey] = React.useState(0);
-  const [page, setPage] = React.useState("catalog");
+  const [page, setPage] = React.useState(() => parseHashToPage(window.location.hash));
   const [year, setYear] = React.useState(EP_DATA.currentYear);
   const [sparks, setSparks] = React.useState(1);
+  const [newsAnchor, setNewsAnchor] = React.useState(null);
+
+  // Sync URL hash → page on browser back/forward
+  React.useEffect(() => {
+    const onPopState = () => {
+      setPage(parseHashToPage(window.location.hash));
+      setNewsAnchor(null);
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
+
+  // Set initial hash if the page loaded with no hash
+  React.useEffect(() => {
+    if (!window.location.hash) {
+      history.replaceState(null, "", hashForPage("catalog"));
+    }
+  }, []);
+
+  const onNavigate = React.useCallback((p, anchor = null) => {
+    setPage(p);
+    setNewsAnchor(anchor);
+    const nextHash = hashForPage(p);
+    if (window.location.hash !== nextHash) {
+      history.pushState(null, "", nextHash);
+    }
+  }, []);
 
   React.useEffect(() => {
     let active = true;
     loadPublishedAnnouncements().then(({ announcements }) => {
       if (active && announcements?.length) setLiveAnnouncements(announcements);
     });
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [announcementRefreshKey]);
 
   const allData = React.useMemo(() => {
@@ -199,18 +384,19 @@ const App = () => {
       liveSlugs.add(slug);
       const seeded = seededBySlug.get(slug);
       const activeNow = liveNowByCohort.get(item.cohortYear);
-      const normalizedItem = activeNow && isNowAnnouncement(item) && announcementKey(activeNow) !== slug
-        ? demoteNowAnnouncement(item)
-        : item;
+      const normalizedItem =
+        activeNow && isNowAnnouncement(item) && announcementKey(activeNow) !== slug
+          ? demoteNowAnnouncement(item)
+          : item;
       return seeded ? { ...seeded, ...normalizedItem, live: true } : normalizedItem;
     });
     const seededOnly = seedAnnouncements
       .filter((item) => !liveSlugs.has(announcementKey(item)))
-      .map((item) => (
+      .map((item) =>
         liveNowCohorts.has(item.cohortYear) && isNowAnnouncement(item)
           ? demoteNowAnnouncement(item)
           : item
-      ));
+      );
 
     return {
       ...EP_DATA,
@@ -219,13 +405,15 @@ const App = () => {
     };
   }, [liveAnnouncements]);
 
-  const data = React.useMemo(() => (
-    resolveCohortData(allData, year)
-  ), [allData, year]);
+  const data = React.useMemo(() => resolveCohortData(allData, year), [allData, year]);
 
-  const latestAnnouncement = React.useMemo(() => (
-    currentCourseAnnouncement((data.announcements || []).filter(item => item.cohortYear === data.currentYear))
-  ), [data.announcements, data.currentYear]);
+  const latestAnnouncement = React.useMemo(
+    () =>
+      currentCourseAnnouncement(
+        (data.announcements || []).filter((item) => item.cohortYear === data.currentYear)
+      ),
+    [data.announcements, data.currentYear]
+  );
 
   React.useEffect(() => {
     const h = (e) => setSparks(e.detail);
@@ -237,8 +425,6 @@ const App = () => {
     window.scrollTo({ top: 0, behavior: "instant" });
   }, [page, year]);
 
-  const [newsAnchor, setNewsAnchor] = React.useState(null);
-  const onNavigate = (p, anchor = null) => { setPage(p); setNewsAnchor(anchor); };
   const refreshAnnouncements = React.useCallback(() => {
     setAnnouncementRefreshKey((key) => key + 1);
   }, []);
@@ -259,7 +445,9 @@ const App = () => {
       />
       <main key={page + year}>
         {page === "catalog" && <CatalogPage data={data} onNavigate={onNavigate} />}
-        {page === "news" && <NewsPage data={data} currentYear={year} onNavigate={onNavigate} anchor={newsAnchor} />}
+        {page === "news" && (
+          <NewsPage data={data} currentYear={year} onNavigate={onNavigate} anchor={newsAnchor} />
+        )}
         {page === "ranking" && <RankingPage data={data} onNavigate={onNavigate} />}
         {page === "dashboard" && (
           <AuthGate>
@@ -271,7 +459,9 @@ const App = () => {
             />
           </AuthGate>
         )}
-        {page === "archive" && <ArchivePage data={data} onNavigate={onNavigate} currentYear={year} setYear={setYear} />}
+        {page === "archive" && (
+          <ArchivePage data={data} onNavigate={onNavigate} currentYear={year} setYear={setYear} />
+        )}
       </main>
       <Footer onNavigate={onNavigate} yearLabel={data.yearLabel} />
       <TweakPanelInline />

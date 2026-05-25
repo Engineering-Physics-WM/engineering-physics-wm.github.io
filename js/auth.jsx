@@ -1,8 +1,7 @@
 import * as React from "react";
 import { isSupabaseConfigured, supabase } from "./supabaseClient.js";
 import { YangLink } from "./links.jsx";
-
-const INSTRUCTOR_EMAIL = "rxyan2@wm.edu";
+import { INSTRUCTOR_EMAIL } from "./config.js";
 
 const cleanEmail = (email) => email.trim().toLowerCase();
 
@@ -89,7 +88,9 @@ const AuthGate = ({ children }) => {
     return (
       <div className="page">
         <section className="auth-panel">
-          <p className="kicker"><span className="dot">●</span> &nbsp; Instructor dashboard</p>
+          <p className="kicker">
+            <span className="dot">●</span> &nbsp; Instructor dashboard
+          </p>
           <h1>Checking access</h1>
           <p>Loading the dashboard session.</p>
         </section>
@@ -101,9 +102,14 @@ const AuthGate = ({ children }) => {
     return (
       <div className="page">
         <section className="auth-panel">
-          <p className="kicker"><span className="dot">●</span> &nbsp; Instructor dashboard</p>
+          <p className="kicker">
+            <span className="dot">●</span> &nbsp; Instructor dashboard
+          </p>
           <h1>Dashboard login is not configured</h1>
-          <p>Add the live database URL and publishable key to the Vite environment before viewing this page.</p>
+          <p>
+            Add the live database URL and publishable key to the Vite environment before viewing
+            this page.
+          </p>
         </section>
       </div>
     );
@@ -113,9 +119,14 @@ const AuthGate = ({ children }) => {
     return (
       <div className="page">
         <section className="auth-panel">
-          <p className="kicker"><span className="dot">●</span> &nbsp; Instructor dashboard</p>
+          <p className="kicker">
+            <span className="dot">●</span> &nbsp; Instructor dashboard
+          </p>
           <h1>Sign in to view the dashboard</h1>
-          <p>The project catalog and student ranking poll stay public. The dashboard is limited to <YangLink>Ran Yang</YangLink>.</p>
+          <p>
+            The project catalog and student ranking poll stay public. The dashboard is limited to{" "}
+            <YangLink>Ran Yang</YangLink>.
+          </p>
           <form className="auth-form" onSubmit={signIn}>
             <label className="field">
               <span className="field-label">W&amp;M email</span>
@@ -148,8 +159,12 @@ const AuthGate = ({ children }) => {
   return (
     <>
       <div className="auth-strip">
-        <span>Signed in as <strong>{userEmail}</strong></span>
-        <button className="btn btn-ghost" onClick={signOut}>Sign out</button>
+        <span>
+          Signed in as <strong>{userEmail}</strong>
+        </span>
+        <button className="btn btn-ghost" onClick={signOut}>
+          Sign out
+        </button>
       </div>
       {children}
     </>

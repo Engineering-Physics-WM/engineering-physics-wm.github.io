@@ -27,15 +27,14 @@ type RewriteResult = {
   body: string;
 };
 
-const jsonResponse = (body: unknown, status = 200) => (
+const jsonResponse = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
     status,
     headers: {
       ...CORS_HEADERS,
       "Content-Type": "application/json",
     },
-  })
-);
+  });
 
 const requiredEnv = (name: string) => {
   const value = Deno.env.get(name);
@@ -54,33 +53,24 @@ const providerName = () => {
   throw new Error("Set AI_EMAIL_PROVIDER and the matching provider API key.");
 };
 
-const modelName = (provider: string) => (
+const modelName = (provider: string) =>
   Deno.env.get("AI_EMAIL_MODEL") ||
   Deno.env.get(`${provider.toUpperCase()}_MODEL`) ||
-  DEFAULT_MODELS[provider]
-);
+  DEFAULT_MODELS[provider];
 
 const maxOutputTokens = () => {
   const raw = Number(Deno.env.get("AI_EMAIL_MAX_OUTPUT_TOKENS") || 2400);
   return Number.isFinite(raw) ? Math.max(500, Math.min(4096, raw)) : 2400;
 };
 
-const normalizeDraft = (value: unknown) => (
-  typeof value === "string" ? value.trim() : ""
-);
+const normalizeDraft = (value: unknown) => (typeof value === "string" ? value.trim() : "");
 
 const decodeLooseJsonString = (value: string) => {
-  const normalized = value
-    .replace(/\r?\n/g, "\\n")
-    .replace(/\t/g, "\\t");
+  const normalized = value.replace(/\r?\n/g, "\\n").replace(/\t/g, "\\t");
   try {
     return JSON.parse(`"${normalized}"`);
   } catch {
-    return value
-      .replace(/\\n/g, "\n")
-      .replace(/\\t/g, "\t")
-      .replace(/\\"/g, "\"")
-      .trim();
+    return value.replace(/\\n/g, "\n").replace(/\\t/g, "\t").replace(/\\"/g, '"').trim();
   }
 };
 
@@ -146,7 +136,9 @@ const buildPrompt = (request: RewriteRequest) => {
     "",
     "Current body:",
     request.body || "(none)",
-  ].filter(Boolean).join("\n");
+  ]
+    .filter(Boolean)
+    .join("\n");
 };
 
 const instructions = [
@@ -159,7 +151,7 @@ const rewriteWithOpenAi = async (prompt: string, model: string) => {
   const response = await fetch("https://api.openai.com/v1/responses", {
     method: "POST",
     headers: {
-      "Authorization": `Bearer ${requiredEnv("OPENAI_API_KEY")}`,
+      Authorization: `Bearer ${requiredEnv("OPENAI_API_KEY")}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
@@ -243,8 +235,8 @@ const assertInstructor = async (request: Request) => {
 
   const response = await fetch(`${requiredEnv("SUPABASE_URL")}/auth/v1/user`, {
     headers: {
-      "Authorization": authHeader,
-      "apikey": requiredEnv("SUPABASE_ANON_KEY"),
+      Authorization: authHeader,
+      apikey: requiredEnv("SUPABASE_ANON_KEY"),
     },
   });
   if (!response.ok) throw new Error("Could not verify dashboard access.");
@@ -265,29 +257,33 @@ Deno.serve(async (request) => {
 
   try {
     await assertInstructor(request);
-    const payload = await request.json() as RewriteRequest;
+    const payload = (await request.json()) as RewriteRequest;
     const subject = normalizeDraft(payload.subject);
     const body = normalizeDraft(payload.body);
     if (!subject && !body) return jsonResponse({ error: "Draft is empty." }, 400);
-    if ((subject.length + body.length) > 9000) {
+    if (subject.length + body.length > 9000) {
       return jsonResponse({ error: "Draft is too long for the rewrite helper." }, 400);
     }
 
     const provider = providerName();
     const model = modelName(provider);
     const prompt = buildPrompt({ ...payload, subject, body });
-    const rewritten = provider === "openai"
-      ? await rewriteWithOpenAi(prompt, model)
-      : provider === "anthropic"
-      ? await rewriteWithAnthropic(prompt, model)
-      : provider === "gemini"
-      ? await rewriteWithGemini(prompt, model)
-      : (() => {
-        throw new Error(`Unsupported AI_EMAIL_PROVIDER: ${provider}.`);
-      })();
+    const rewritten =
+      provider === "openai"
+        ? await rewriteWithOpenAi(prompt, model)
+        : provider === "anthropic"
+          ? await rewriteWithAnthropic(prompt, model)
+          : provider === "gemini"
+            ? await rewriteWithGemini(prompt, model)
+            : (() => {
+                throw new Error(`Unsupported AI_EMAIL_PROVIDER: ${provider}.`);
+              })();
 
     return jsonResponse({ ...rewritten, provider, model });
   } catch (error) {
-    return jsonResponse({ error: error instanceof Error ? error.message : "AI rewrite failed." }, 400);
+    return jsonResponse(
+      { error: error instanceof Error ? error.message : "AI rewrite failed." },
+      400
+    );
   }
 });
