@@ -10,6 +10,7 @@ William & Mary Engineering Physics Capstone site. Vite + React SPA deployed to G
 **Why:** Public course operations tool for students, instructor (Ran Yang), and public visitors following capstone projects.
 
 **Key files:**
+
 - `js/app.jsx` — app shell, hash routing, Header, Footer
 - `js/routes.js` — `hashForPage` / `parseHashToPage` helpers (exported, tested)
 - `js/config.js` — `INSTRUCTOR_EMAIL`, `INSTRUCTOR_NAME` constants (single source)

@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 /* Main app shell — header, year switcher, page routing */
 
 import * as React from "react";
@@ -6,14 +7,47 @@ import { EP_DATA, formatAcademicYear, getSeedAnnouncements, resolveCohortData } 
 import { Monogram } from "./monogram.jsx";
 import { SparkLayer } from "./motion.jsx";
 import { CatalogPage } from "./catalog.jsx";
-import { RankingPage } from "./ranking.jsx";
-import { ArchivePage, DashboardPage } from "./dashboard.jsx";
 import { AuthGate } from "./auth.jsx";
 import { YangLink } from "./links.jsx";
 import { NewsPage, currentCourseAnnouncement } from "./news.jsx";
 import { TweakPanelInline } from "./tweaks.jsx";
 import { loadPublishedAnnouncements } from "./announcements.js";
-import { hashForPage, parseHashToPage } from "./routes.js";
+import { hashForPage, parseHashToPage, parseHashToYear } from "./routes.js";
+
+// Heavy pages are loaded on demand so they don't bloat the initial bundle.
+const RankingPage = React.lazy(() =>
+  import("./ranking.jsx").then((m) => ({ default: m.RankingPage }))
+);
+const DashboardPage = React.lazy(() =>
+  import("./dashboard.jsx").then((m) => ({ default: m.DashboardPage }))
+);
+const ArchivePage = React.lazy(() =>
+  import("./dashboard.jsx").then((m) => ({ default: m.ArchivePage }))
+);
+
+// ── Lazy-load fallback ────────────────────────────────────────────────────────
+
+const PageFallback = () => (
+  <div
+    style={{
+      minHeight: "50vh",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+    }}
+  >
+    <p
+      style={{
+        color: "var(--muted)",
+        fontFamily: "var(--font-mono)",
+        fontSize: "0.8rem",
+        letterSpacing: "0.08em",
+      }}
+    >
+      Loading…
+    </p>
+  </div>
+);
 
 // ── Header ────────────────────────────────────────────────────────────────────
 
@@ -51,7 +85,7 @@ const Header = ({ page, onNavigate, year, setYear, years, currentYear }) => {
     <div className="brand-wrap">
       <a
         className="brand"
-        href={hashForPage("catalog")}
+        href={hashForPage("catalog", year, currentYear)}
         onClick={(e) => {
           e.preventDefault();
           onNavigate("catalog");
@@ -319,35 +353,44 @@ const App = () => {
   const [liveAnnouncements, setLiveAnnouncements] = React.useState(null);
   const [announcementRefreshKey, setAnnouncementRefreshKey] = React.useState(0);
   const [page, setPage] = React.useState(() => parseHashToPage(window.location.hash));
-  const [year, setYear] = React.useState(EP_DATA.currentYear);
+  const [year, setYear] = React.useState(() =>
+    parseHashToYear(window.location.hash, EP_DATA.currentYear)
+  );
   const [sparks, setSparks] = React.useState(1);
   const [newsAnchor, setNewsAnchor] = React.useState(null);
 
-  // Sync URL hash → page on browser back/forward
+  // Sync browser back/forward to page + year state.
   React.useEffect(() => {
     const onPopState = () => {
       setPage(parseHashToPage(window.location.hash));
+      setYear(parseHashToYear(window.location.hash, EP_DATA.currentYear));
       setNewsAnchor(null);
     };
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
   }, []);
 
-  // Set initial hash if the page loaded with no hash
+  // Keep the URL hash in sync whenever page or year changes.
+  // Page navigations use pushState (onNavigate); year-only changes use replaceState.
   React.useEffect(() => {
-    if (!window.location.hash) {
-      history.replaceState(null, "", hashForPage("catalog"));
-    }
-  }, []);
-
-  const onNavigate = React.useCallback((p, anchor = null) => {
-    setPage(p);
-    setNewsAnchor(anchor);
-    const nextHash = hashForPage(p);
+    const nextHash = hashForPage(page, year, EP_DATA.currentYear);
     if (window.location.hash !== nextHash) {
-      history.pushState(null, "", nextHash);
+      history.replaceState(null, "", nextHash);
     }
-  }, []);
+  }, [year, page]);
+
+  // Navigate to a new page: adds a history entry so back/forward work.
+  const onNavigate = React.useCallback(
+    (p, anchor = null) => {
+      setPage(p);
+      setNewsAnchor(anchor);
+      const nextHash = hashForPage(p, year, EP_DATA.currentYear);
+      if (window.location.hash !== nextHash) {
+        history.pushState(null, "", nextHash);
+      }
+    },
+    [year]
+  );
 
   React.useEffect(() => {
     let active = true;
@@ -429,6 +472,9 @@ const App = () => {
     setAnnouncementRefreshKey((key) => key + 1);
   }, []);
 
+  // latestAnnouncement is computed for potential future header use; suppress lint.
+  void latestAnnouncement;
+
   return (
     <div className="app">
       <span className="paper-bg" />
@@ -441,27 +487,28 @@ const App = () => {
         setYear={setYear}
         years={allData.years}
         currentYear={allData.currentYear}
-        latestAnnouncement={latestAnnouncement}
       />
       <main key={page + year}>
-        {page === "catalog" && <CatalogPage data={data} onNavigate={onNavigate} />}
-        {page === "news" && (
-          <NewsPage data={data} currentYear={year} onNavigate={onNavigate} anchor={newsAnchor} />
-        )}
-        {page === "ranking" && <RankingPage data={data} onNavigate={onNavigate} />}
-        {page === "dashboard" && (
-          <AuthGate>
-            <DashboardPage
-              data={data}
-              seedAnnouncements={data.seedAnnouncements}
-              onNavigate={onNavigate}
-              onAnnouncementsChange={refreshAnnouncements}
-            />
-          </AuthGate>
-        )}
-        {page === "archive" && (
-          <ArchivePage data={data} onNavigate={onNavigate} currentYear={year} setYear={setYear} />
-        )}
+        <React.Suspense fallback={<PageFallback />}>
+          {page === "catalog" && <CatalogPage data={data} onNavigate={onNavigate} />}
+          {page === "news" && (
+            <NewsPage data={data} currentYear={year} onNavigate={onNavigate} anchor={newsAnchor} />
+          )}
+          {page === "ranking" && <RankingPage data={data} onNavigate={onNavigate} />}
+          {page === "dashboard" && (
+            <AuthGate>
+              <DashboardPage
+                data={data}
+                seedAnnouncements={data.seedAnnouncements}
+                onNavigate={onNavigate}
+                onAnnouncementsChange={refreshAnnouncements}
+              />
+            </AuthGate>
+          )}
+          {page === "archive" && (
+            <ArchivePage data={data} onNavigate={onNavigate} currentYear={year} setYear={setYear} />
+          )}
+        </React.Suspense>
       </main>
       <Footer onNavigate={onNavigate} yearLabel={data.yearLabel} />
       <TweakPanelInline />

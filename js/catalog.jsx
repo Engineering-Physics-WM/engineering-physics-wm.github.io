@@ -379,23 +379,6 @@ const CourseNow = ({ announcement, referenceItems = [], onNavigate }) => {
   );
 };
 
-const HeroLatest = ({ announcement, onNavigate }) => {
-  if (!announcement) return null;
-
-  return (
-    <button
-      type="button"
-      className="hero-latest"
-      onClick={() => onNavigate("news", announcement.id)}
-      data-spark
-    >
-      <span className="hero-latest-label">Latest update</span>
-      <strong>{announcement.title}</strong>
-      <span className="hero-latest-meta">{announcement.label || announcement.date}</span>
-    </button>
-  );
-};
-
 const CohortPendingPage = ({ data, onNavigate }) => (
   <div className="page catalog-page">
     <section className="hero cohort-pending-hero" style={{ position: "relative" }}>
@@ -433,7 +416,10 @@ const CurrentCatalogPage = ({ data, onNavigate }) => {
     () => [...new Set(data.projects.map((p) => p.affiliation))].sort(),
     [data.projects]
   );
-  const activeProjectIds = data.cohortStatus?.activeProjectIds || [];
+  const activeProjectIds = React.useMemo(
+    () => data.cohortStatus?.activeProjectIds || [],
+    [data.cohortStatus]
+  );
   const hasProjectStatus = activeProjectIds.length > 0;
   const activeProjectSet = React.useMemo(() => new Set(activeProjectIds), [activeProjectIds]);
   const activeProjectCount = hasProjectStatus ? activeProjectSet.size : data.projects.length;

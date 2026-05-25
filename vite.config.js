@@ -28,5 +28,6 @@ export default defineConfig({
         assetFileNames: `assets/[name]-${buildId}-[hash][extname]`,
       },
     },
+    codeSplitting: true,
   },
 });

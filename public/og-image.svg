@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <!-- Warm cream background matches CSS --paper token -->
+    <!-- Pink radial gradient: top-right accent -->
+    <radialGradient id="pink-grd" cx="88%" cy="8%" r="48%">
+      <stop offset="0%" stop-color="#e8c4be" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#f5f0e8" stop-opacity="0"/>
+    </radialGradient>
+    <!-- Olive radial: bottom-left accent -->
+    <radialGradient id="olive-grd" cx="4%" cy="90%" r="38%">
+      <stop offset="0%" stop-color="#c2ccaa" stop-opacity="0.30"/>
+      <stop offset="100%" stop-color="#f5f0e8" stop-opacity="0"/>
+    </radialGradient>
+    <!-- Subtle dot-grid pattern matching CSS paper-bg -->
+    <pattern id="dot-grid" x="0" y="0" width="22" height="22" patternUnits="userSpaceOnUse">
+      <circle cx="1" cy="1" r="0.8" fill="#2c2b1f" opacity="0.06"/>
+    </pattern>
+  </defs>
+
+  <!-- Background layers -->
+  <rect width="1200" height="630" fill="#f5f0e8"/>
+  <rect width="1200" height="630" fill="url(#pink-grd)"/>
+  <rect width="1200" height="630" fill="url(#olive-grd)"/>
+  <rect width="1200" height="630" fill="url(#dot-grid)"/>
+
+  <!-- EP Monogram — scale 2.8 from the React 64×64 viewBox, positioned at (80, 175) -->
+  <!-- At scale 2.8: stroke-width 9 renders as ~25px; content spans ~110×135px -->
+  <g transform="translate(80, 175) scale(2.8)" fill="none" stroke="#2c2b1f" stroke-width="9" stroke-linecap="square">
+    <!-- E -->
+    <path d="M 12 8 L 12 56"/>
+    <path d="M 12 8 L 36 8"/>
+    <path d="M 12 32 L 30 32"/>
+    <path d="M 12 56 L 36 56"/>
+    <!-- P (shared stem) -->
+    <path d="M 36 8 L 36 56"/>
+    <path d="M 36 8 Q 56 8 56 20 Q 56 32 36 32"/>
+  </g>
+
+  <!-- ── Text block (right of monogram) ── -->
+
+  <!-- Kicker: institution line -->
+  <text x="330" y="218"
+    font-family="ui-monospace,'JetBrains Mono','SF Mono',Menlo,monospace"
+    font-size="18" font-weight="400" letter-spacing="0.08em" fill="#8a8070">
+    WILLIAM &amp; MARY · PHYSICS
+  </text>
+
+  <!-- Main headline -->
+  <text x="328" y="302"
+    font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif"
+    font-size="68" font-weight="700" fill="#2c2b1f" letter-spacing="-0.02em">
+    Engineering Physics
+  </text>
+
+  <!-- Sub-headline -->
+  <text x="330" y="362"
+    font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif"
+    font-size="40" font-weight="400" fill="#5a5748" letter-spacing="-0.01em">
+    Capstone HQ
+  </text>
+
+  <!-- Separator hairline -->
+  <line x1="330" y1="396" x2="1100" y2="396" stroke="#d4cfc4" stroke-width="1"/>
+
+  <!-- Description -->
+  <text x="330" y="440"
+    font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif"
+    font-size="26" fill="#5a5748">
+    Browse projects · rank preferences · view the cohort dashboard.
+  </text>
+
+  <!-- Bottom row: URL and year -->
+  <text x="330" y="568"
+    font-family="ui-monospace,'JetBrains Mono','SF Mono',Menlo,monospace"
+    font-size="20" fill="#8a8070" letter-spacing="0.04em">
+    ep.yangran.org
+  </text>
+  <text x="1100" y="568" text-anchor="end"
+    font-family="ui-monospace,'JetBrains Mono','SF Mono',Menlo,monospace"
+    font-size="20" fill="#8a8070" letter-spacing="0.04em">
+    2026–2027
+  </text>
+
+  <!-- Bottom border accent: thin pink line -->
+  <rect x="0" y="612" width="1200" height="18" fill="#d4a8a6" opacity="0.55"/>
+</svg>

@@ -1,6 +1,7 @@
 /* Instructor dashboard — distribution, students, heatmap, teams (auto + manual) */
 
 import * as React from "react";
+import { INSTRUCTOR_EMAIL } from "./config.js";
 import { Reveal } from "./motion.jsx";
 import { DEFAULT_MATCHING_MODE, MATCHING_MODE_OPTIONS, buildTeams } from "./teamMatching.js";
 import { ExternalLink, PersonLink, YangLink } from "./links.jsx";
@@ -35,7 +36,6 @@ import {
   withTeamSummary,
 } from "../src/features/dashboard/dashboardData";
 
-const INSTRUCTOR_EMAIL = "rxyan2@wm.edu";
 const CUSTOM_DRAFT_ID = "custom-draft";
 const TEAM_AUDIENCES = new Set(["team", "team_students", "team_mentors"]);
 const CURRENT_TEAM_MATCHING_MODE = "top1";
@@ -53,12 +53,6 @@ const functionErrorMessage = async (error, fallback) => {
   }
   return error?.message || fallback;
 };
-
-const responseSignature = (responses) =>
-  responses
-    .map((response) => `${normalizeEmail(response.email)}:${(response.ranking || []).join(">")}`)
-    .sort()
-    .join("|");
 
 const matchingOptionFor = (mode) =>
   MATCHING_MODE_OPTIONS.find((option) => option.id === mode) ||
@@ -1176,7 +1170,10 @@ const EmailDraftView = ({
     () => new Set(responses.map((response) => normalizeEmail(response.email))),
     [responses]
   );
-  const activeProjectIds = data.cohortStatus?.activeProjectIds || [];
+  const activeProjectIds = React.useMemo(
+    () => data.cohortStatus?.activeProjectIds || [],
+    [data.cohortStatus]
+  );
   const mentorDirectory = React.useMemo(
     () => splitProjectMentors(projects, activeProjectIds),
     [projects, activeProjectIds]
@@ -2143,7 +2140,12 @@ const AnnouncementsView = ({ data, seedAnnouncements = [], onAnnouncementsChange
   );
 };
 
-const DashboardPage = ({ data, seedAnnouncements, onNavigate, onAnnouncementsChange }) => {
+const DashboardPage = ({
+  data,
+  seedAnnouncements,
+  onNavigate: _onNavigate,
+  onAnnouncementsChange,
+}) => {
   const [tab, setTab] = React.useState("distribution");
   const [responses, setResponses] = React.useState([]);
   const [students, setStudents] = React.useState([]);

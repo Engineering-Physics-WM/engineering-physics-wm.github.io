@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import * as React from "react";
 import { Reveal } from "./motion.jsx";
 import { ExternalLink } from "./links.jsx";
@@ -87,7 +88,7 @@ const AnnouncementPanel = ({ announcements, onNavigate }) => {
   return (
     <>
       <div className="hero-timeline" aria-label="Cohort timeline">
-        {items.map((item, index) => (
+        {items.map((item) => (
           <AnnouncementItem key={item.id} item={item} onNavigate={onNavigate} compact />
         ))}
       </div>
