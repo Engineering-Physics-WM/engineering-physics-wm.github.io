@@ -69,3 +69,16 @@ supabase secrets set AI_EMAIL_PROVIDER=gemini GEMINI_API_KEY=...
 ```
 
 Optional: set `AI_EMAIL_MODEL` to override the default `gemini-2.5-flash`.
+
+## Automated database reporting
+
+A Claude Code cloud agent runs every **Sunday at 6 PM ET** to query the live Supabase database and generate a weekly learning report. The report covers:
+
+- Poll open/closed status and cohort settings
+- Ranking submission count and weekly participation rate
+- Allowed student and team assignment totals
+- Recent announcements (published vs. draft)
+- Any schema file changes committed that week
+- One database learning insight and a suggested action item
+
+The agent connects directly via `psql` using the project database URL. Manage or view past runs at [claude.ai/code/routines](https://claude.ai/code/routines). If the database password is rotated, update the routine prompt with the new credentials.
