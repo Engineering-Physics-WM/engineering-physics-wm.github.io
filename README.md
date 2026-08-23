@@ -9,19 +9,26 @@ Public course website for the William & Mary Engineering Physics Capstone progra
 ```
 index.html          — single-page entry point
 data/               — project and cohort data by year (JSON)
-js/                 — React components (Vite + esbuild)
+js/                 — React components (Vite)
+src/                — TypeScript modules (features, lib, types) shared with js/
 styles/             — CSS (design tokens, layout, pages)
 supabase/           — database schema files
 public/             — static assets served at root
+tests/              — Vitest unit tests
+email/              — local instructor tool for drafting Apple Mail messages (see email/README.md)
 ```
 
 ## Running locally
 
 ```sh
 npm install
-npm run dev        # dev server
-npm run build      # production build → dist/
-npm run preview    # preview the production build locally
+npm run dev         # dev server
+npm run build       # production build → dist/
+npm run preview     # preview the production build locally
+npm test             # run the Vitest suite
+npm run lint         # ESLint
+npm run typecheck    # tsc --noEmit
+npm run format       # Prettier, writes changes
 ```
 
 Copy `.env.example` to `.env.local` and add the Supabase project URL and publishable key for local development.

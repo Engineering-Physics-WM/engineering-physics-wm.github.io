@@ -4,6 +4,7 @@ export const PAGE_TO_HASH = {
   catalog: "/",
   news: "/updates",
   syllabus: "/syllabus",
+  pitchPerfectAssignment: "/syllabus/pitch-perfect-i/assignment",
   ranking: "/ranking",
   dashboard: "/dashboard",
   archive: "/archive",

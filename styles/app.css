@@ -2584,6 +2584,405 @@ main a:hover {
   color: var(--muted);
 }
 
+.schedule-table tr.schedule-row.is-open td,
+.schedule-table tr.is-milestone.is-open td,
+.schedule-table tr.is-tbd.is-open td {
+  background: var(--paper-emph-soft);
+  color: var(--ink);
+}
+.lecture-toggle {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  text-align: left;
+  font-weight: 600;
+  cursor: pointer;
+}
+.lecture-toggle:hover span:first-child,
+.lecture-toggle:focus-visible span:first-child {
+  color: var(--pink-ink);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+.lecture-toggle:focus-visible {
+  outline: 2px solid var(--pink-ink);
+  outline-offset: 4px;
+  border-radius: 2px;
+}
+.lecture-toggle-mark {
+  flex: 0 0 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--hairline-2);
+  border-radius: 50%;
+  color: var(--olive-ink);
+  font-family: var(--font-mono);
+  line-height: 1;
+}
+.schedule-table tr.lecture-materials-row {
+  background: var(--paper-emph-soft);
+}
+.schedule-table tr.lecture-materials-row > td {
+  padding: 0;
+  border-top: 0;
+  color: var(--ink);
+}
+.lecture-materials-panel {
+  padding: 4px 14px 16px 204px;
+  animation: lecture-panel-in 220ms var(--ease) both;
+}
+@keyframes lecture-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+}
+.lecture-resource-card {
+  width: min(100%, 570px);
+  display: grid;
+  gap: 6px;
+  padding: 18px 20px;
+  border: 1px solid var(--hairline-2);
+  border-radius: var(--radius);
+  background: var(--paper);
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  box-shadow: var(--shadow-1);
+  transition:
+    transform 180ms var(--ease),
+    border-color 180ms var(--ease),
+    box-shadow 180ms var(--ease);
+}
+.lecture-resource-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--pink-ink);
+  box-shadow: var(--shadow-2);
+}
+.lecture-resource-card:focus-visible {
+  outline: 2px solid var(--pink-ink);
+  outline-offset: 3px;
+}
+.lecture-resource-type {
+  color: var(--pink-ink);
+  font-size: 10px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+.lecture-resource-card strong {
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+.lecture-resource-card > span:not(.lecture-resource-type):not(.lecture-resource-action) {
+  color: var(--ink-soft);
+  font-size: 13px;
+}
+.lecture-resource-action {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--hairline);
+  color: var(--olive-ink);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+.lecture-resource-empty {
+  max-width: 570px;
+  padding: 14px 16px;
+  border: 1px dashed var(--hairline-2);
+  border-radius: var(--radius);
+  color: var(--muted);
+}
+.lecture-resource-empty span {
+  font-size: 10px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+.lecture-resource-empty p {
+  margin: 4px 0 0;
+  font-size: 13px;
+}
+@media (max-width: 900px) {
+  .lecture-materials-panel {
+    padding-left: 14px;
+  }
+}
+
+/* Pitch Perfect I assignment */
+.assignment-page {
+  max-width: 1380px;
+}
+.assignment-back {
+  margin: 10px 0 34px;
+  padding: 8px 0;
+  border: 0;
+  background: none;
+  color: var(--olive-ink);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+.assignment-back:hover {
+  color: var(--pink-ink);
+}
+.assignment-back:focus-visible {
+  outline: 2px solid var(--pink-ink);
+  outline-offset: 4px;
+}
+.assignment-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(300px, 0.65fr);
+  gap: clamp(40px, 7vw, 120px);
+  align-items: end;
+  padding-bottom: 34px;
+  border-bottom: 1px solid var(--hairline-2);
+}
+.assignment-hero h1 {
+  max-width: 900px;
+  margin: 14px 0 0;
+  font-family: var(--font-display);
+  font-size: clamp(48px, 7vw, 98px);
+  font-weight: 500;
+  line-height: 0.92;
+  letter-spacing: -0.055em;
+}
+.assignment-meta {
+  margin: 0;
+  display: grid;
+  gap: 12px;
+}
+.assignment-meta div {
+  display: grid;
+  grid-template-columns: 84px 1fr;
+  gap: 14px;
+  padding-top: 10px;
+  border-top: 1px solid var(--hairline);
+}
+.assignment-meta dt,
+.assignment-meta dd {
+  margin: 0;
+}
+.assignment-meta dt {
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.assignment-meta dd {
+  font-size: 14px;
+  font-weight: 500;
+}
+.assignment-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(280px, 0.75fr);
+  gap: clamp(48px, 7vw, 110px);
+  align-items: start;
+  padding-top: 52px;
+}
+.assignment-content {
+  min-width: 0;
+}
+.assignment-section {
+  padding: 0 0 48px;
+  margin: 0 0 48px;
+  border-bottom: 1px solid var(--hairline);
+}
+.assignment-section:last-child {
+  margin-bottom: 0;
+}
+.assignment-eyebrow {
+  margin: 0 0 14px;
+  color: var(--pink-ink);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.assignment-section h2,
+.assignment-checklist-card h2 {
+  margin: 0 0 14px;
+  font-family: var(--font-display);
+  font-size: clamp(26px, 3vw, 38px);
+  font-weight: 500;
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+}
+.assignment-section > p:not(.assignment-eyebrow) {
+  max-width: 760px;
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 16px;
+  line-height: 1.7;
+}
+.pitch-template {
+  margin: 0;
+  padding: clamp(24px, 4vw, 40px);
+  border-left: 3px solid var(--pink-ink);
+  background: var(--pink-soft);
+  font-family: var(--font-display);
+  font-size: clamp(24px, 3.2vw, 40px);
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+}
+.pitch-template em {
+  color: var(--pink-ink);
+  font-style: normal;
+}
+.assignment-numbered-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: assignment-rules;
+}
+.assignment-numbered-list li {
+  counter-increment: assignment-rules;
+  display: grid;
+  grid-template-columns: 42px 1fr;
+  gap: 14px;
+  padding: 16px 0;
+  border-top: 1px solid var(--hairline);
+  color: var(--ink-soft);
+}
+.assignment-numbered-list li::before {
+  content: counter(assignment-rules, decimal-leading-zero);
+  color: var(--olive-ink);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+}
+.assignment-callout {
+  margin-top: 30px;
+  padding: 20px 22px;
+  border: 1px solid var(--hairline);
+  background: var(--olive-soft);
+}
+.assignment-callout span {
+  color: var(--olive-ink);
+  font-size: 10px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+.assignment-callout p {
+  margin: 6px 0 0;
+  font-size: 15px;
+}
+.assignment-example > blockquote {
+  margin: 0;
+  padding: 26px;
+  background: var(--olive-ink);
+  color: var(--paper-emph-ink);
+  font-family: var(--font-display);
+  font-size: clamp(22px, 2.7vw, 34px);
+  line-height: 1.28;
+  letter-spacing: -0.02em;
+}
+.pitch-breakdown {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--hairline);
+  border-top: 0;
+}
+.pitch-breakdown li {
+  display: grid;
+  grid-template-columns: minmax(120px, 0.45fr) 1fr;
+  gap: 20px;
+  padding: 13px 16px;
+  border-top: 1px solid var(--hairline);
+}
+.pitch-breakdown li:first-child {
+  border-top: 0;
+}
+.pitch-breakdown span {
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.pitch-breakdown strong {
+  font-size: 13.5px;
+  font-weight: 500;
+}
+.assignment-sidebar {
+  position: sticky;
+  top: 96px;
+}
+.assignment-checklist-card {
+  padding: 25px;
+  border: 1px solid var(--hairline-2);
+  background: var(--paper-2);
+  box-shadow: var(--shadow-1);
+}
+.assignment-checklist-card h2 {
+  font-size: 28px;
+}
+.assignment-check-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.assignment-check-list li {
+  position: relative;
+  padding: 11px 0 11px 27px;
+  border-top: 1px solid var(--hairline);
+  color: var(--ink-soft);
+  font-size: 14px;
+}
+.assignment-check-list li::before {
+  content: "✓";
+  position: absolute;
+  left: 1px;
+  color: var(--pink-ink);
+  font-weight: 700;
+}
+.assignment-submit-link {
+  width: 100%;
+  margin-top: 12px;
+  justify-content: center;
+}
+@media (max-width: 900px) {
+  .assignment-hero,
+  .assignment-layout {
+    grid-template-columns: 1fr;
+  }
+  .assignment-hero {
+    gap: 34px;
+  }
+  .assignment-layout {
+    gap: 42px;
+  }
+  .assignment-sidebar {
+    position: static;
+  }
+}
+@media (max-width: 560px) {
+  .assignment-hero h1 {
+    font-size: 46px;
+  }
+  .pitch-breakdown li {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lecture-materials-panel {
+    animation: none;
+  }
+}
+
 .syllabus-layout {
   margin-top: 8px;
 }

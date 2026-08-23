@@ -7,6 +7,7 @@ describe("parseHashToPage", () => {
     expect(parseHashToPage("#/")).toBe("catalog");
     expect(parseHashToPage("#/updates")).toBe("news");
     expect(parseHashToPage("#/ranking")).toBe("ranking");
+    expect(parseHashToPage("#/syllabus/pitch-perfect-i/assignment")).toBe("pitchPerfectAssignment");
     expect(parseHashToPage("#/dashboard")).toBe("dashboard");
     expect(parseHashToPage("#/archive")).toBe("archive");
   });
@@ -33,6 +34,7 @@ describe("hashForPage", () => {
     expect(hashForPage("catalog")).toBe("#/");
     expect(hashForPage("news")).toBe("#/updates");
     expect(hashForPage("ranking")).toBe("#/ranking");
+    expect(hashForPage("pitchPerfectAssignment")).toBe("#/syllabus/pitch-perfect-i/assignment");
     expect(hashForPage("dashboard")).toBe("#/dashboard");
     expect(hashForPage("archive")).toBe("#/archive");
   });
@@ -53,7 +55,15 @@ describe("hashForPage", () => {
   });
 
   it("round-trips: parseHashToPage(hashForPage(page)) === page", () => {
-    const pages = ["catalog", "news", "ranking", "dashboard", "archive"];
+    const pages = [
+      "catalog",
+      "news",
+      "syllabus",
+      "pitchPerfectAssignment",
+      "ranking",
+      "dashboard",
+      "archive",
+    ];
     for (const page of pages) {
       expect(parseHashToPage(hashForPage(page))).toBe(page);
     }

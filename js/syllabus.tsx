@@ -52,32 +52,92 @@ const SeasonBadge = ({ season }: { season: Season }) => (
   </span>
 );
 
-const SchedulePillarRow = ({ row }: { row: ScheduleRow }) => (
-  <tr className={rowClass(row)}>
-    <td className="mono">{row.week}</td>
-    <td className="mono">{row.date}</td>
-    <td>{row.topic}</td>
-    <td>{row.location}</td>
-    <td>
-      {row.guestSpeakers?.map((speaker, index) => {
-        const joiner = row.guestSpeakerJoiner === "or" ? " or " : " & ";
-        return (
-          <React.Fragment key={speaker}>
-            {index > 0 && joiner}
-            <span className="schedule-speaker-name">{speaker}</span>
-          </React.Fragment>
-        );
-      })}
-      {row.guestSpeakers?.length ? (
-        <span className="schedule-note"> · {row.notes}</span>
-      ) : (
-        row.notes
-      )}
-    </td>
-  </tr>
-);
+const LectureMaterials = ({ row, onNavigate }: { row: ScheduleRow; onNavigate: OnNavigate }) => {
+  if (row.topic === "Pitch Perfect I") {
+    return (
+      <button
+        type="button"
+        className="lecture-resource-card"
+        onClick={() => onNavigate("pitchPerfectAssignment")}
+      >
+        <span className="lecture-resource-type mono">Assignment · Homework 1</span>
+        <strong>Assignment for Pitch Perfect I</strong>
+        <span>Craft a 15-second business thesis pitch in fewer than 30 words.</span>
+        <span className="lecture-resource-action" aria-hidden="true">
+          Open assignment <span>↗</span>
+        </span>
+      </button>
+    );
+  }
 
-const TermSchedule = ({ term }: { term: Term }) => (
+  return (
+    <div className="lecture-resource-empty">
+      <span className="mono">Materials</span>
+      <p>Slides, assignments, and supporting links will appear here when they are published.</p>
+    </div>
+  );
+};
+
+const SchedulePillarRow = ({ row, onNavigate }: { row: ScheduleRow; onNavigate: OnNavigate }) => {
+  const [open, setOpen] = React.useState(false);
+  const expandable = row.kind !== "break" && row.kind !== "cancelled";
+  const panelId = `lecture-${row.isoDate}`;
+
+  return (
+    <>
+      <tr className={`${rowClass(row)}${open ? " is-open" : ""}`}>
+        <td className="mono">{row.week}</td>
+        <td className="mono">{row.date}</td>
+        <td>
+          {expandable ? (
+            <button
+              type="button"
+              className="lecture-toggle"
+              aria-expanded={open}
+              aria-controls={panelId}
+              onClick={() => setOpen((value) => !value)}
+            >
+              <span>{row.topic}</span>
+              <span className="lecture-toggle-mark" aria-hidden="true">
+                {open ? "−" : "+"}
+              </span>
+            </button>
+          ) : (
+            row.topic
+          )}
+        </td>
+        <td>{row.location}</td>
+        <td>
+          {row.guestSpeakers?.map((speaker, index) => {
+            const joiner = row.guestSpeakerJoiner === "or" ? " or " : " & ";
+            return (
+              <React.Fragment key={speaker}>
+                {index > 0 && joiner}
+                <span className="schedule-speaker-name">{speaker}</span>
+              </React.Fragment>
+            );
+          })}
+          {row.guestSpeakers?.length ? (
+            <span className="schedule-note"> · {row.notes}</span>
+          ) : (
+            row.notes
+          )}
+        </td>
+      </tr>
+      {expandable && open && (
+        <tr className="lecture-materials-row">
+          <td colSpan={5}>
+            <div id={panelId} className="lecture-materials-panel">
+              <LectureMaterials row={row} onNavigate={onNavigate} />
+            </div>
+          </td>
+        </tr>
+      )}
+    </>
+  );
+};
+
+const TermSchedule = ({ term, onNavigate }: { term: Term; onNavigate: OnNavigate }) => (
   <div className="term-schedule-block">
     <div className="term-schedule-head">
       <SeasonBadge season={term.season} />
@@ -97,7 +157,7 @@ const TermSchedule = ({ term }: { term: Term }) => (
           </thead>
           <tbody>
             {term.rows.map((row) => (
-              <SchedulePillarRow row={row} key={row.week} />
+              <SchedulePillarRow row={row} onNavigate={onNavigate} key={row.week} />
             ))}
           </tbody>
         </table>
@@ -216,7 +276,7 @@ const SyllabusPage = ({ onNavigate }: { onNavigate: OnNavigate }) => {
         <h2>Course schedule</h2>
       </div>
       {TERMS.map((term) => (
-        <TermSchedule term={term} key={term.id} />
+        <TermSchedule term={term} onNavigate={onNavigate} key={term.id} />
       ))}
 
       <div className="news-layout syllabus-layout">
