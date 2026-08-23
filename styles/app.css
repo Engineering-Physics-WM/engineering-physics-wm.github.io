@@ -2327,6 +2327,50 @@ main a:hover {
   font-style: italic;
 }
 
+/* ---------- Syllabus promo (catalog page) ---------- */
+.syllabus-promo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin: 8px 0 56px;
+  padding: 28px 32px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-lg);
+  background: color-mix(in oklch, var(--paper-2) 70%, white);
+}
+.syllabus-promo-copy {
+  max-width: 620px;
+}
+.syllabus-promo-copy h2 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(20px, 2.2vw, 26px);
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  margin: 8px 0 6px;
+}
+.syllabus-promo-copy p {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 14px;
+  line-height: 1.55;
+}
+.syllabus-promo .btn {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+@media (max-width: 640px) {
+  .syllabus-promo {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .syllabus-promo .btn {
+    width: 100%;
+  }
+}
+
 /* ---------- Syllabus & schedule ---------- */
 .syllabus-facts {
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));

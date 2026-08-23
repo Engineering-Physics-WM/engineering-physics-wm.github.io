@@ -10,7 +10,7 @@ import { CatalogPage } from "./catalog.jsx";
 import { AuthGate } from "./auth.jsx";
 import { YangLink } from "./links.jsx";
 import { NewsPage, currentCourseAnnouncement } from "./news.jsx";
-import { SyllabusPage } from "./syllabus.tsx";
+import { SyllabusPage } from "./syllabus";
 import { TweakPanelInline } from "./tweaks.jsx";
 import { loadPublishedAnnouncements } from "./announcements.js";
 import { hashForPage, parseHashToPage, parseHashToYear } from "./routes.js";

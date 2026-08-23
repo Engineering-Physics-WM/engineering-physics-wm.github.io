@@ -1,4 +1,3 @@
-/* eslint-disable react-refresh/only-export-components */
 import * as React from "react";
 import { Reveal } from "./motion.jsx";
 import {
@@ -12,7 +11,7 @@ import {
   SCHEDULE,
   SYLLABUS_META,
   type ScheduleRow,
-} from "./syllabusData.ts";
+} from "./syllabusData";
 
 type OnNavigate = (page: string) => void;
 

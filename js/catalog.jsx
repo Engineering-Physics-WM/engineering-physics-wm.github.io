@@ -379,6 +379,24 @@ const CourseNow = ({ announcement, referenceItems = [], onNavigate }) => {
   );
 };
 
+const SyllabusPromo = ({ onNavigate }) => (
+  <Reveal as="section" className="syllabus-promo" aria-label="Syllabus and schedule">
+    <div className="syllabus-promo-copy">
+      <p className="kicker">
+        <span className="dot">●</span> &nbsp; Course reference
+      </p>
+      <h2>Full syllabus &amp; schedule, always current.</h2>
+      <p>
+        Policies, grading, the academic calendar, and the week-by-week meeting schedule — published
+        as a page instead of a PDF, so revisions show up the moment they're made.
+      </p>
+    </div>
+    <button className="btn btn-primary" data-spark onClick={() => onNavigate("syllabus")}>
+      View syllabus &amp; schedule
+    </button>
+  </Reveal>
+);
+
 const CohortPendingPage = ({ data, onNavigate }) => (
   <div className="page catalog-page">
     <section className="hero cohort-pending-hero" style={{ position: "relative" }}>
@@ -505,6 +523,8 @@ const CurrentCatalogPage = ({ data, onNavigate }) => {
         referenceItems={referenceUpdates}
         onNavigate={onNavigate}
       />
+
+      <SyllabusPromo onNavigate={onNavigate} />
 
       <Reveal as="section" id="projects">
         <div className="section-heading">
