@@ -55,7 +55,7 @@ export interface ReferenceLink {
 }
 
 export const SYLLABUS_META = {
-  term: "Fall 2026 – Spring 2027 (year-long)",
+  term: "Fall 2026 – Spring 2027",
   meets: "Mondays, 1:00–1:50 p.m.",
   where: "Small Hall 235 (primary; see notes below)",
   instructor: `${INSTRUCTOR_NAME}, Ph.D.`,

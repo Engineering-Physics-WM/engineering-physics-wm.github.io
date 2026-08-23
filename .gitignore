@@ -19,6 +19,8 @@ dist/
 *.log
 .env
 .env.local
+__pycache__/
+*.py[cod]
 
 # Local roster exports and private student/contact data
 data/*/*roster*.csv
@@ -33,3 +35,7 @@ supabase/allowed-students-*.sql
 supabase/*.private.sql
 supabase/.temp/
 !supabase/allowed-students-template.sql
+
+# Private Apple Mail templates and saved draft content
+email/private/
+email/drafts/

@@ -1333,6 +1333,9 @@ section.is-emph-soft .section-heading,
   line-height: 1.6;
   margin: 0;
 }
+.syllabus-page .news-hero .kicker {
+  white-space: nowrap;
+}
 .news-hero-stats {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -2387,10 +2390,21 @@ main a:hover {
   text-decoration-color: color-mix(in oklch, var(--pink-ink) 40%, transparent);
 }
 
+.syllabus-overview {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 40px;
+  max-width: 1200px;
+}
 .syllabus-copy {
-  max-width: 74ch;
   color: var(--ink-soft);
-  margin: 0 0 16px;
+  margin: 0;
+}
+@media (max-width: 900px) {
+  .syllabus-overview {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
 }
 
 .syllabus-pillars {

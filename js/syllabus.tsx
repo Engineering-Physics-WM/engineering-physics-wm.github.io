@@ -174,7 +174,7 @@ const SyllabusPage = ({ onNavigate }: { onNavigate: OnNavigate }) => {
             </dd>
           </div>
           <div>
-            <dt>Revised</dt>
+            <dt>Today</dt>
             <dd className="pink">{formatLongDate(today)}</dd>
           </div>
         </Reveal>
@@ -198,11 +198,13 @@ const SyllabusPage = ({ onNavigate }: { onNavigate: OnNavigate }) => {
       <div className="section-heading">
         <h2>Course overview</h2>
       </div>
-      {OVERVIEW.map((paragraph, index) => (
-        <p key={index} className="syllabus-copy">
-          {paragraph}
-        </p>
-      ))}
+      <div className="syllabus-overview">
+        {OVERVIEW.map((paragraph, index) => (
+          <p key={index} className="syllabus-copy">
+            {paragraph}
+          </p>
+        ))}
+      </div>
 
       <div className="syllabus-pillars">
         {PILLARS.map((pillar) => (
