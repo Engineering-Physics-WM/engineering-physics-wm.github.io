@@ -3,6 +3,7 @@
 export const PAGE_TO_HASH = {
   catalog: "/",
   news: "/updates",
+  syllabus: "/syllabus",
   ranking: "/ranking",
   dashboard: "/dashboard",
   archive: "/archive",

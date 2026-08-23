@@ -10,6 +10,7 @@ import { CatalogPage } from "./catalog.jsx";
 import { AuthGate } from "./auth.jsx";
 import { YangLink } from "./links.jsx";
 import { NewsPage, currentCourseAnnouncement } from "./news.jsx";
+import { SyllabusPage } from "./syllabus.tsx";
 import { TweakPanelInline } from "./tweaks.jsx";
 import { loadPublishedAnnouncements } from "./announcements.js";
 import { hashForPage, parseHashToPage, parseHashToYear } from "./routes.js";
@@ -167,6 +168,15 @@ const Header = ({ page, onNavigate, year, setYear, years, currentYear }) => {
             Updates
           </button>
           <button
+            aria-current={page === "syllabus"}
+            onClick={() => {
+              onNavigate("syllabus");
+              closeMobileMenu();
+            }}
+          >
+            Syllabus
+          </button>
+          <button
             aria-current={page === "dashboard"}
             onClick={() => {
               onNavigate("dashboard");
@@ -235,6 +245,17 @@ const Footer = ({ onNavigate, yearLabel }) => (
                 }}
               >
                 Cohort updates
+              </a>
+            </li>
+            <li>
+              <a
+                href={hashForPage("syllabus")}
+                onClick={(e) => {
+                  e.preventDefault();
+                  onNavigate("syllabus");
+                }}
+              >
+                Syllabus &amp; schedule
               </a>
             </li>
             <li>
@@ -494,6 +515,7 @@ const App = () => {
           {page === "news" && (
             <NewsPage data={data} currentYear={year} onNavigate={onNavigate} anchor={newsAnchor} />
           )}
+          {page === "syllabus" && <SyllabusPage onNavigate={onNavigate} />}
           {page === "ranking" && <RankingPage data={data} onNavigate={onNavigate} />}
           {page === "dashboard" && (
             <AuthGate>
