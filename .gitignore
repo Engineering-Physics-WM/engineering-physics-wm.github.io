@@ -25,6 +25,7 @@ __pycache__/
 # Local roster exports and private student/contact data
 data/*/*roster*.csv
 data/*/students*.json
+data/*/teams*.json
 data/*/private/
 data/**/*.private.*
 data/**/*ranking*.csv
