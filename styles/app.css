@@ -2562,6 +2562,13 @@ main a:hover {
   color: var(--muted);
   font-style: italic;
 }
+.schedule-speaker-name {
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+.schedule-note {
+  color: var(--muted);
+}
 
 .syllabus-layout {
   margin-top: 8px;

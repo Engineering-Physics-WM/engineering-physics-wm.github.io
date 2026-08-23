@@ -30,6 +30,8 @@ export interface ScheduleRow {
   topic: string;
   location: string;
   notes: string;
+  guestSpeakers?: string[];
+  guestSpeakerJoiner?: "and" | "or";
   kind?: "break" | "milestone" | "cancelled" | "tbd";
 }
 
@@ -270,7 +272,8 @@ export const TERMS: Term[] = [
         isoDate: "2026-09-28",
         location: "Career Center — business casual or formal",
         topic: "Career Success I with AI",
-        notes: "Profs. Snyder & Yang",
+        notes: "with Prof. Yang",
+        guestSpeakers: ["Don Snyder"],
       },
       {
         week: "7",
@@ -278,7 +281,8 @@ export const TERMS: Term[] = [
         isoDate: "2026-10-05",
         location: "Small 235",
         topic: "Quantum Engineering I",
-        notes: "Profs. Benten & Yang",
+        notes: "with Prof. Yang",
+        guestSpeakers: ["Gregory Bentsen"],
       },
       {
         week: "8",
@@ -286,7 +290,8 @@ export const TERMS: Term[] = [
         isoDate: "2026-10-12",
         location: "TBD",
         topic: "Public Speaking",
-        notes: "Profs. Neighbors & Yang",
+        notes: "with Prof. Yang",
+        guestSpeakers: ["Len Neighbors"],
       },
       {
         week: "9",
@@ -303,7 +308,8 @@ export const TERMS: Term[] = [
         isoDate: "2026-10-26",
         location: "Small 235",
         topic: "Intellectual Property with AI",
-        notes: "Profs. Rajec & Yang",
+        notes: "with Prof. Yang",
+        guestSpeakers: ["Sarah Rajec"],
       },
       {
         week: "11",
@@ -311,7 +317,8 @@ export const TERMS: Term[] = [
         isoDate: "2026-11-02",
         location: "Entrepreneurship Hub — business casual or formal",
         topic: "Innovation & Entrepreneurship with AI",
-        notes: "Profs. Henshaw & Yang",
+        notes: "with Prof. Yang",
+        guestSpeakers: ["Graham Henshaw"],
       },
       {
         week: "12",
@@ -319,7 +326,8 @@ export const TERMS: Term[] = [
         isoDate: "2026-11-09",
         location: "Mason School of Business — business casual or formal",
         topic: "Innovation & Marketing with AI",
-        notes: "Profs. Swan & Yang",
+        notes: "with Prof. Yang",
+        guestSpeakers: ["Scott Swan"],
       },
       {
         week: "13",
@@ -402,7 +410,8 @@ export const TERMS: Term[] = [
         isoDate: "2027-02-22",
         location: "Career Center — business casual or formal",
         topic: "Career Success II with AI",
-        notes: "Profs. Snyder & Yang",
+        notes: "with Prof. Yang",
+        guestSpeakers: ["Don Snyder"],
       },
       {
         week: "6",
@@ -419,7 +428,9 @@ export const TERMS: Term[] = [
         isoDate: "2027-03-08",
         location: "Small 235",
         topic: "AI Policy & Law / AI in CDSP (TBD)",
-        notes: "Giuffrida & Yang, or Schmidt & Yang — not yet decided",
+        notes: "with Prof. Yang — speaker not yet decided",
+        guestSpeakers: ["Iria Giuffrida", "Douglas Schmidt"],
+        guestSpeakerJoiner: "or",
         kind: "tbd",
       },
       {
@@ -445,7 +456,8 @@ export const TERMS: Term[] = [
         isoDate: "2027-03-29",
         location: "Small 235",
         topic: "Quantum Engineering II",
-        notes: "Profs. Aubin et al. & Yang",
+        notes: "with Prof. Yang",
+        guestSpeakers: ["Seth A. Aubin", "Irina Novikova"],
       },
       {
         week: "11",

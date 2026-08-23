@@ -57,7 +57,22 @@ const SchedulePillarRow = ({ row }: { row: ScheduleRow }) => (
     <td className="mono">{row.date}</td>
     <td>{row.topic}</td>
     <td>{row.location}</td>
-    <td>{row.notes}</td>
+    <td>
+      {row.guestSpeakers?.map((speaker, index) => {
+        const joiner = row.guestSpeakerJoiner === "or" ? " or " : " & ";
+        return (
+          <React.Fragment key={speaker}>
+            {index > 0 && joiner}
+            <span className="schedule-speaker-name">{speaker}</span>
+          </React.Fragment>
+        );
+      })}
+      {row.guestSpeakers?.length ? (
+        <span className="schedule-note"> · {row.notes}</span>
+      ) : (
+        row.notes
+      )}
+    </td>
   </tr>
 );
 
