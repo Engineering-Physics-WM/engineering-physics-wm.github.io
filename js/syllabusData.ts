@@ -264,7 +264,7 @@ export const TERMS: Term[] = [
         isoDate: "2026-09-21",
         location: "SWEM Cox Room",
         topic: "Lit Review I with AI",
-        notes: "Profs. Andrew & Yang",
+        notes: "Profs. Andrews & Yang",
       },
       {
         week: "6",
@@ -394,7 +394,7 @@ export const TERMS: Term[] = [
         isoDate: "2027-02-08",
         location: "SWEM Cox Room",
         topic: "Lit Review II with AI",
-        notes: "Profs. Andrew & Yang",
+        notes: "Profs. Andrews & Yang",
       },
       {
         week: "4",
