@@ -8,6 +8,9 @@ describe("parseHashToPage", () => {
     expect(parseHashToPage("#/updates")).toBe("news");
     expect(parseHashToPage("#/ranking")).toBe("ranking");
     expect(parseHashToPage("#/syllabus/pitch-perfect-i/assignment")).toBe("pitchPerfectAssignment");
+    expect(parseHashToPage("#/syllabus/career-success-i/assignment")).toBe(
+      "careerSuccessAssignment"
+    );
     expect(parseHashToPage("#/dashboard")).toBe("dashboard");
     expect(parseHashToPage("#/archive")).toBe("archive");
   });
@@ -35,6 +38,7 @@ describe("hashForPage", () => {
     expect(hashForPage("news")).toBe("#/updates");
     expect(hashForPage("ranking")).toBe("#/ranking");
     expect(hashForPage("pitchPerfectAssignment")).toBe("#/syllabus/pitch-perfect-i/assignment");
+    expect(hashForPage("careerSuccessAssignment")).toBe("#/syllabus/career-success-i/assignment");
     expect(hashForPage("dashboard")).toBe("#/dashboard");
     expect(hashForPage("archive")).toBe("#/archive");
   });
@@ -60,6 +64,7 @@ describe("hashForPage", () => {
       "news",
       "syllabus",
       "pitchPerfectAssignment",
+      "careerSuccessAssignment",
       "ranking",
       "dashboard",
       "archive",

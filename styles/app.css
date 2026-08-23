@@ -2983,6 +2983,77 @@ main a:hover {
   }
 }
 
+/* Career Success I assignment */
+.career-task-grid {
+  display: grid;
+  gap: 14px;
+}
+.career-task-card {
+  position: relative;
+  padding: 26px 26px 24px 78px;
+  border: 1px solid var(--hairline);
+  background: color-mix(in oklch, var(--paper) 82%, white);
+}
+.career-task-number {
+  position: absolute;
+  top: 28px;
+  left: 24px;
+  color: var(--pink-ink);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+}
+.career-task-card h3 {
+  margin: 0 0 12px;
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 500;
+  letter-spacing: -0.025em;
+}
+.career-task-card ul {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--ink-soft);
+}
+.career-task-card li {
+  margin: 7px 0;
+  padding-left: 4px;
+}
+.career-task-card a {
+  color: var(--pink-ink);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in oklch, var(--pink-ink) 45%, transparent);
+  text-underline-offset: 3px;
+}
+.career-meeting-card > div {
+  padding: 28px;
+  border: 1px solid var(--hairline-2);
+  background: var(--olive-ink);
+  color: var(--paper-emph-ink);
+}
+.career-meeting-card h2 {
+  margin: 8px 0 4px;
+  font-size: clamp(34px, 5vw, 58px);
+}
+.career-meeting-card p {
+  margin: 0;
+  color: color-mix(in oklch, var(--paper-emph-ink) 75%, transparent);
+}
+.career-meeting-date {
+  color: var(--pink);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+}
+@media (max-width: 560px) {
+  .career-task-card {
+    padding: 58px 20px 22px;
+  }
+  .career-task-number {
+    top: 20px;
+    left: 20px;
+  }
+}
+
 .syllabus-layout {
   margin-top: 8px;
 }

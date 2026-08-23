@@ -12,6 +12,7 @@ import { YangLink } from "./links.jsx";
 import { NewsPage, currentCourseAnnouncement } from "./news.jsx";
 import { SyllabusPage } from "./syllabus";
 import { PitchPerfectAssignmentPage } from "./assignmentPitchPerfect.jsx";
+import { CareerSuccessAssignmentPage } from "./assignmentCareerSuccess.jsx";
 import { TweakPanelInline } from "./tweaks.jsx";
 import { loadPublishedAnnouncements } from "./announcements.js";
 import { hashForPage, parseHashToPage, parseHashToYear } from "./routes.js";
@@ -169,7 +170,11 @@ const Header = ({ page, onNavigate, year, setYear, years, currentYear }) => {
             Updates
           </button>
           <button
-            aria-current={page === "syllabus" || page === "pitchPerfectAssignment"}
+            aria-current={
+              page === "syllabus" ||
+              page === "pitchPerfectAssignment" ||
+              page === "careerSuccessAssignment"
+            }
             onClick={() => {
               onNavigate("syllabus");
               closeMobileMenu();
@@ -519,6 +524,9 @@ const App = () => {
           {page === "syllabus" && <SyllabusPage onNavigate={onNavigate} />}
           {page === "pitchPerfectAssignment" && (
             <PitchPerfectAssignmentPage onNavigate={onNavigate} />
+          )}
+          {page === "careerSuccessAssignment" && (
+            <CareerSuccessAssignmentPage onNavigate={onNavigate} />
           )}
           {page === "ranking" && <RankingPage data={data} onNavigate={onNavigate} />}
           {page === "dashboard" && (

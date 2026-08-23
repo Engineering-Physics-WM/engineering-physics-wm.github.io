@@ -70,6 +70,23 @@ const LectureMaterials = ({ row, onNavigate }: { row: ScheduleRow; onNavigate: O
     );
   }
 
+  if (row.topic === "Career Success I with AI") {
+    return (
+      <button
+        type="button"
+        className="lecture-resource-card"
+        onClick={() => onNavigate("careerSuccessAssignment")}
+      >
+        <span className="lecture-resource-type mono">Assignment · Assignment 2</span>
+        <strong>Assignment for Career Success I</strong>
+        <span>Complete your headshot, one-page resume, LinkedIn profile, and QR code.</span>
+        <span className="lecture-resource-action" aria-hidden="true">
+          Open assignment <span>↗</span>
+        </span>
+      </button>
+    );
+  }
+
   return (
     <div className="lecture-resource-empty">
       <span className="mono">Materials</span>

@@ -5,6 +5,7 @@ export const PAGE_TO_HASH = {
   news: "/updates",
   syllabus: "/syllabus",
   pitchPerfectAssignment: "/syllabus/pitch-perfect-i/assignment",
+  careerSuccessAssignment: "/syllabus/career-success-i/assignment",
   ranking: "/ranking",
   dashboard: "/dashboard",
   archive: "/archive",
