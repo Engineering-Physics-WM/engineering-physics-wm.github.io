@@ -9,6 +9,7 @@ import {
   PILLARS,
   POLICY_SECTIONS,
   REFERENCES,
+  SPRING_CALENDAR_DATES,
   SYLLABUS_META,
   TERMS,
   type ScheduleRow,
@@ -241,11 +242,25 @@ const SyllabusPage = ({ onNavigate }: { onNavigate: OnNavigate }) => {
               defaultOpen={index === 0}
             />
           ))}
+
+          <div className="section-heading syllabus-references-heading">
+            <h2>References</h2>
+          </div>
+          <ul className="syllabus-references">
+            {REFERENCES.map((ref) => (
+              <li key={ref.href}>
+                <a href={ref.href} target="_blank" rel="noopener">
+                  {ref.label} ↗
+                </a>
+              </li>
+            ))}
+          </ul>
         </section>
 
         <aside className="news-side syllabus-side">
           <h2>Academic calendar</h2>
-          <p>Important Fall 2026 dates from the W&amp;M Registrar.</p>
+          <p>Important dates for the full 2026–27 academic year.</p>
+          <h3 className="syllabus-calendar-term">Fall 2026</h3>
           <ul className="syllabus-calendar">
             {CALENDAR_DATES.map((item) => (
               <li key={item.label}>
@@ -254,14 +269,12 @@ const SyllabusPage = ({ onNavigate }: { onNavigate: OnNavigate }) => {
               </li>
             ))}
           </ul>
-
-          <h2 style={{ marginTop: 32 }}>References</h2>
-          <ul className="syllabus-references">
-            {REFERENCES.map((ref) => (
-              <li key={ref.href}>
-                <a href={ref.href} target="_blank" rel="noopener">
-                  {ref.label} ↗
-                </a>
+          <h3 className="syllabus-calendar-term">Spring 2027</h3>
+          <ul className="syllabus-calendar">
+            {SPRING_CALENDAR_DATES.map((item) => (
+              <li key={item.label}>
+                <span className="news-side-date">{item.value}</span>
+                {item.label}
               </li>
             ))}
           </ul>

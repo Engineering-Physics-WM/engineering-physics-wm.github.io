@@ -123,6 +123,17 @@ export const CALENDAR_DATES: CalendarDate[] = [
   { label: "Fall grades due", value: "January 4, 2027" },
 ];
 
+export const SPRING_CALENDAR_DATES: CalendarDate[] = [
+  { label: "First day of classes", value: "January 27" },
+  { label: "Spring Break", value: "March 13–21" },
+  { label: "Classes resume from Spring Break", value: "March 22" },
+  { label: "EP Spring Showcase", value: "April 26, 12:00–2:00 p.m." },
+  { label: "Last day of classes", value: "May 7" },
+  { label: "Reading periods", value: "May 8–9 and May 15–16" },
+  { label: "University final exam periods", value: "May 10–14 and May 17–18" },
+  { label: "Commencement Weekend", value: "May 20–22" },
+];
+
 export const POLICY_SECTIONS: PolicySection[] = [
   {
     id: "materials",

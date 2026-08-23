@@ -2605,6 +2605,21 @@ main a:hover {
 .syllabus-policy .news-summary-text strong {
   white-space: nowrap;
 }
+.syllabus-calendar-term {
+  margin: 20px 0 8px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--pink-ink);
+}
+.syllabus-side p + .syllabus-calendar-term {
+  margin-top: 0;
+}
+.syllabus-references-heading {
+  margin-top: 48px;
+}
 .syllabus-calendar,
 .syllabus-references {
   list-style: none;
