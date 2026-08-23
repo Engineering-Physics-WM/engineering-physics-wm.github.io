@@ -56,6 +56,7 @@ const SchedulePillarRow = ({ row }: { row: ScheduleRow }) => (
     <td className="mono">{row.week}</td>
     <td className="mono">{row.date}</td>
     <td>{row.topic}</td>
+    <td>{row.location}</td>
     <td>{row.notes}</td>
   </tr>
 );
@@ -74,6 +75,7 @@ const TermSchedule = ({ term }: { term: Term }) => (
               <th>Wk</th>
               <th>Date</th>
               <th>Topic</th>
+              <th>Location</th>
               <th>Faculty / notes</th>
             </tr>
           </thead>

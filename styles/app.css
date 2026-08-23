@@ -2505,7 +2505,7 @@ main a:hover {
 }
 .schedule-table {
   width: 100%;
-  min-width: 640px;
+  min-width: 800px;
   border-collapse: collapse;
   font-size: 13.5px;
 }
@@ -2533,6 +2533,10 @@ main a:hover {
 .schedule-table td:nth-child(2),
 .schedule-table th:nth-child(2) {
   width: 120px;
+}
+.schedule-table td:nth-child(4),
+.schedule-table th:nth-child(4) {
+  width: 170px;
 }
 .schedule-table tbody tr:nth-child(even) {
   background: color-mix(in oklch, var(--paper-2) 65%, transparent);
