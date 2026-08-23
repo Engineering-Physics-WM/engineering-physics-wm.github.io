@@ -155,7 +155,7 @@ const SchedulePillarRow = ({ row, onNavigate }: { row: ScheduleRow; onNavigate: 
 };
 
 const TermSchedule = ({ term, onNavigate }: { term: Term; onNavigate: OnNavigate }) => (
-  <div className="term-schedule-block">
+  <div className={`term-schedule-block term-schedule-${term.season}`}>
     <div className="term-schedule-head">
       <SeasonBadge season={term.season} />
       <h3>{term.label}</h3>
