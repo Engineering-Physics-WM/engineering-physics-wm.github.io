@@ -2433,6 +2433,70 @@ main a:hover {
   }
 }
 
+.current-week-value {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.term-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.term-badge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+.term-badge-fall {
+  color: var(--olive-ink);
+  background: var(--olive-soft);
+}
+.term-badge-fall .term-badge-dot {
+  background: var(--olive-ink);
+}
+.term-badge-spring {
+  color: var(--pink-ink);
+  background: var(--pink-soft);
+}
+.term-badge-spring .term-badge-dot {
+  background: var(--pink-ink);
+}
+
+.term-schedule-block {
+  margin: 0 0 32px;
+}
+.term-schedule-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 12px;
+}
+.term-schedule-head h3 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 18px;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+.schedule-empty {
+  padding: 22px 24px;
+  border: 1px dashed var(--hairline-2);
+  border-radius: var(--radius);
+  color: var(--muted);
+  font-style: italic;
+  font-size: 13.5px;
+  margin: 0;
+}
+
 .schedule-table-wrap {
   overflow-x: auto;
   border: 1px solid var(--hairline);
@@ -2484,6 +2548,15 @@ main a:hover {
 }
 .schedule-table tr.is-milestone td:first-child {
   border-left: 2px solid var(--pink-ink);
+}
+.schedule-table tr.is-cancelled td {
+  color: var(--muted);
+  text-decoration: line-through;
+  text-decoration-color: var(--hairline-2);
+}
+.schedule-table tr.is-tbd td {
+  color: var(--muted);
+  font-style: italic;
 }
 
 .syllabus-layout {

@@ -21,12 +21,24 @@ export interface PolicySection {
   body: string[];
 }
 
+export type Season = "fall" | "spring";
+
 export interface ScheduleRow {
   week: string;
   date: string;
+  isoDate: string;
   topic: string;
   notes: string;
-  kind?: "break" | "milestone";
+  kind?: "break" | "milestone" | "cancelled" | "tbd";
+}
+
+export interface Term {
+  id: string;
+  season: Season;
+  label: string;
+  /** Empty until the term's calendar is finalized — the page shows a
+   *  "not yet published" placeholder for any term with no rows. */
+  rows: ScheduleRow[];
 }
 
 export interface CalendarDate {
@@ -46,7 +58,6 @@ export const SYLLABUS_META = {
   instructor: `${INSTRUCTOR_NAME}, Ph.D.`,
   instructorEmail: INSTRUCTOR_EMAIL,
   instructorOffice: "Small 252",
-  revised: "August 23, 2026",
 };
 
 export const INFO_FACTS: InfoFact[] = [
@@ -199,30 +210,289 @@ export const POLICY_SECTIONS: PolicySection[] = [
   },
 ];
 
-export const SCHEDULE: ScheduleRow[] = [
-  { week: "1", date: "Wed, Aug 26", topic: "No Class — Opening Convocation (half week)", notes: "—", kind: "break" },
-  { week: "2", date: "Mon, Aug 31", topic: "Introduction", notes: "Prof. Yang" },
-  { week: "3", date: "Mon, Sep 7", topic: "No Class — Labor Day", notes: "—", kind: "break" },
-  { week: "4", date: "Mon, Sep 14", topic: "Pitch Perfect", notes: "Prof. Yang" },
-  { week: "5", date: "Mon, Sep 21", topic: "Lit Review", notes: "Profs. Andrew & Yang" },
-  { week: "6", date: "Mon, Sep 28", topic: "Career Center", notes: "Profs. Snyder & Yang" },
-  { week: "7", date: "Mon, Oct 5", topic: "AI Policy & Law", notes: "Profs. Giuffrida & Yang" },
-  { week: "8", date: "Mon, Oct 12", topic: "GPU & AI Hardware", notes: "Profs. Sun & Yang" },
-  { week: "9", date: "Mon, Oct 19", topic: "Mid-Semester Presentations", notes: "Prof. Yang", kind: "milestone" },
-  { week: "10", date: "Mon, Oct 26", topic: "Intellectual Property", notes: "Profs. Rajec & Yang" },
-  { week: "11", date: "Mon, Nov 2", topic: "Public Speaking", notes: "Prof. Yang" },
-  { week: "12", date: "Mon, Nov 9", topic: "Innovation & Entrepreneurship", notes: "Profs. Henshaw & Yang" },
-  { week: "13", date: "Mon, Nov 16", topic: "Refined Pitch Perfect", notes: "Prof. Yang" },
-  { week: "14", date: "Mon, Nov 23", topic: "Team Preparation Day", notes: "Prof. Yang — remote instruction day" },
-  { week: "15", date: "Mon, Nov 30", topic: "Tips for Presentations", notes: "Prof. Yang — Dec 4 is the last day of classes" },
+/** Terms in chronological order. Add a new term object as future semesters
+ *  are scheduled — leave `rows` empty until that term's calendar is final,
+ *  and the page will show a "not yet published" placeholder for it.
+ *  Within a term, mark a week `kind: "tbd"` to hold its place before the
+ *  topic is set, or `kind: "cancelled"` if a planned session falls through. */
+export const TERMS: Term[] = [
   {
-    week: "Finals",
-    date: "Wed, Dec 9",
-    topic: "Mid-Year Presentations",
-    notes: "2:00–5:00 p.m., final exam period — team presentations & paper due",
-    kind: "milestone",
+    id: "2026-fall",
+    season: "fall",
+    label: "Fall 2026",
+    rows: [
+      {
+        week: "1",
+        date: "Wed, Aug 26",
+        isoDate: "2026-08-26",
+        topic: "No Class — Opening Convocation (half week)",
+        notes: "—",
+        kind: "break",
+      },
+      {
+        week: "2",
+        date: "Mon, Aug 31",
+        isoDate: "2026-08-31",
+        topic: "Introduction",
+        notes: "Prof. Yang",
+      },
+      {
+        week: "3",
+        date: "Mon, Sep 7",
+        isoDate: "2026-09-07",
+        topic: "No Class — Labor Day",
+        notes: "—",
+        kind: "break",
+      },
+      {
+        week: "4",
+        date: "Mon, Sep 14",
+        isoDate: "2026-09-14",
+        topic: "Pitch Perfect I",
+        notes: "Prof. Yang",
+      },
+      {
+        week: "5",
+        date: "Mon, Sep 21",
+        isoDate: "2026-09-21",
+        topic: "Lit Review",
+        notes: "Profs. Andrew & Yang",
+      },
+      {
+        week: "6",
+        date: "Mon, Sep 28",
+        isoDate: "2026-09-28",
+        topic: "Career Center",
+        notes: "Profs. Snyder & Yang",
+      },
+      {
+        week: "7",
+        date: "Mon, Oct 5",
+        isoDate: "2026-10-05",
+        topic: "AI Policy & Law",
+        notes: "Profs. Giuffrida & Yang",
+      },
+      {
+        week: "8",
+        date: "Mon, Oct 12",
+        isoDate: "2026-10-12",
+        topic: "Public Speaking",
+        notes: "Profs. Neighbors & Yang",
+      },
+      {
+        week: "9",
+        date: "Mon, Oct 19",
+        isoDate: "2026-10-19",
+        topic: "Mid-Semester Presentations",
+        notes: "Prof. Yang",
+        kind: "milestone",
+      },
+      {
+        week: "10",
+        date: "Mon, Oct 26",
+        isoDate: "2026-10-26",
+        topic: "Intellectual Property",
+        notes: "Profs. Rajec & Yang",
+      },
+      {
+        week: "11",
+        date: "Mon, Nov 2",
+        isoDate: "2026-11-02",
+        topic: "Innovation & Entrepreneurship",
+        notes: "Profs. Henshaw & Yang",
+      },
+      {
+        week: "12",
+        date: "Mon, Nov 9",
+        isoDate: "2026-11-09",
+        topic: "Innovation & Marketing",
+        notes: "Profs. Swan & Yang",
+      },
+      {
+        week: "13",
+        date: "Mon, Nov 16",
+        isoDate: "2026-11-16",
+        topic: "Pitch Perfect II",
+        notes: "Prof. Yang",
+      },
+      {
+        week: "14",
+        date: "Mon, Nov 23",
+        isoDate: "2026-11-23",
+        topic: "Team Preparation Day",
+        notes: "Prof. Yang — remote instruction day",
+      },
+      {
+        week: "15",
+        date: "Mon, Nov 30",
+        isoDate: "2026-11-30",
+        topic: "Tips for Presentations",
+        notes: "Prof. Yang — Dec 4 is the last day of classes",
+      },
+      {
+        week: "Finals",
+        date: "Wed, Dec 9",
+        isoDate: "2026-12-09",
+        topic: "Mid-Year Presentations",
+        notes: "2:00–5:00 p.m., final exam period — team presentations & paper due",
+        kind: "milestone",
+      },
+    ],
+  },
+  {
+    id: "2027-spring",
+    season: "spring",
+    label: "Spring 2027",
+    rows: [
+      {
+        week: "1",
+        date: "Wed, Jan 27",
+        isoDate: "2027-01-27",
+        topic: "No Class — Spring Semester Begins (half week)",
+        notes: "—",
+        kind: "break",
+      },
+      {
+        week: "2",
+        date: "Mon, Feb 1",
+        isoDate: "2027-02-01",
+        topic: "Pitch Perfect II",
+        notes: "Prof. Yang",
+      },
+      {
+        week: "3",
+        date: "Mon, Feb 8",
+        isoDate: "2027-02-08",
+        topic: "Lit Review II",
+        notes: "Profs. Andrew & Yang",
+      },
+      {
+        week: "4",
+        date: "Mon, Feb 15",
+        isoDate: "2027-02-15",
+        topic: "AI Policy & Law",
+        notes: "Profs. Giuffrida & Yang",
+      },
+      {
+        week: "5",
+        date: "Mon, Feb 22",
+        isoDate: "2027-02-22",
+        topic: "TBD",
+        notes: "—",
+        kind: "tbd",
+      },
+      {
+        week: "6",
+        date: "Mon, Mar 1",
+        isoDate: "2027-03-01",
+        topic: "TBD",
+        notes: "—",
+        kind: "tbd",
+      },
+      {
+        week: "7",
+        date: "Mon, Mar 8",
+        isoDate: "2027-03-08",
+        topic: "TBD",
+        notes: "—",
+        kind: "tbd",
+      },
+      {
+        week: "8",
+        date: "Mon, Mar 15",
+        isoDate: "2027-03-15",
+        topic: "TBD",
+        notes: "—",
+        kind: "tbd",
+      },
+      {
+        week: "9",
+        date: "Mon, Mar 22",
+        isoDate: "2027-03-22",
+        topic: "TBD",
+        notes: "—",
+        kind: "tbd",
+      },
+      {
+        week: "10",
+        date: "Mon, Mar 29",
+        isoDate: "2027-03-29",
+        topic: "TBD",
+        notes: "—",
+        kind: "tbd",
+      },
+      {
+        week: "11",
+        date: "Mon, Apr 5",
+        isoDate: "2027-04-05",
+        topic: "TBD",
+        notes: "—",
+        kind: "tbd",
+      },
+      {
+        week: "12",
+        date: "Mon, Apr 12",
+        isoDate: "2027-04-12",
+        topic: "TBD",
+        notes: "—",
+        kind: "tbd",
+      },
+      {
+        week: "13",
+        date: "Mon, Apr 19",
+        isoDate: "2027-04-19",
+        topic: "TBD",
+        notes: "—",
+        kind: "tbd",
+      },
+      {
+        week: "Showcase",
+        date: "Mon, Apr 26",
+        isoDate: "2027-04-26",
+        topic: "EP Showcase",
+        notes: "Prof. Yang",
+        kind: "milestone",
+      },
+    ],
   },
 ];
+
+export type TermWeekState = "upcoming" | "in-term" | "ended" | "unscheduled";
+
+export interface TermWeek {
+  term: Term;
+  state: TermWeekState;
+  /** The matching row when state is "in-term"; undefined otherwise. */
+  row?: ScheduleRow;
+}
+
+/** Picks the term + week that "today" falls in, so the hero stat and any
+ *  season indicator stay correct as terms start, run, and end — and as new
+ *  terms are added below. `today` is an ISO yyyy-mm-dd string. */
+export const currentTermWeek = (today: string): TermWeek | null => {
+  const scheduled = TERMS.filter((t) => t.rows.length > 0);
+  if (scheduled.length === 0) return null;
+
+  // The current term is the last one whose first week has already arrived;
+  // before the very first term starts, that term is still "current" (upcoming).
+  let term = scheduled[0];
+  for (const t of scheduled) {
+    if (t.rows[0].isoDate <= today) term = t;
+    else break;
+  }
+
+  const first = term.rows[0];
+  const last = term.rows[term.rows.length - 1];
+  if (today < first.isoDate) return { term, state: "upcoming" };
+  if (today > last.isoDate) return { term, state: "ended" };
+
+  let row: ScheduleRow = first;
+  for (const r of term.rows) {
+    if (r.isoDate <= today) row = r;
+    else break;
+  }
+  return { term, state: "in-term", row };
+};
 
 export const REFERENCES: ReferenceLink[] = [
   {
