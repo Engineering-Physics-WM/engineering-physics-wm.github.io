@@ -2596,7 +2596,14 @@ main a:hover {
   margin-bottom: 8px;
 }
 .syllabus-policy summary {
+  grid-template-columns: minmax(0, 1fr) auto;
   padding-right: 12px;
+}
+.syllabus-policy summary::after {
+  grid-column: 2;
+}
+.syllabus-policy .news-summary-text strong {
+  white-space: nowrap;
 }
 .syllabus-calendar,
 .syllabus-references {

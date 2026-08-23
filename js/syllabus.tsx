@@ -159,11 +159,6 @@ const SyllabusPage = ({ onNavigate }: { onNavigate: OnNavigate }) => {
             Syllabus
             <br />& schedule.
           </h1>
-          <p>
-            Full course policies and the week-by-week meeting schedule for the Engineering Physics
-            Capstone, published here instead of as a downloadable PDF so it always reflects the
-            latest revision.
-          </p>
         </div>
         <Reveal as="dl" className="news-hero-stats">
           <div>
