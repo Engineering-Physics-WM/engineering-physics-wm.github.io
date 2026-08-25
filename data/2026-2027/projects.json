@@ -86,14 +86,14 @@
       "path": "data/2026-2027/projects/corrosion-prevention-using-engineered-biofilms.json"
     },
     {
-      "id": "quantum-forge-pilot-project-with-inq-in-quantum-computing-or-quantum-sensing",
-      "slug": "quantum-forge-pilot-project-with-inq-in-quantum-computing-or-quantum-sensing",
-      "title": "Quantum Forge Pilot Project with IonQ in Quantum Computing or Quantum Sensing",
-      "advisor_name": "IonQ quantum industry technical lead and Quantum Forge or Q-SEnSE affiliated mentor",
-      "advisor_affiliation": "Industry / Quantum Forge",
-      "thrust_area": "Quantum science and technology, Computational imaging / simulation, Instrumentation / sensors",
+      "id": "imaging-system-and-laser-shuttering-system-for-a-laser-cooling-apparatus",
+      "slug": "imaging-system-and-laser-shuttering-system-for-a-laser-cooling-apparatus",
+      "title": "Imaging System and Laser Shuttering System for a Laser Cooling Apparatus",
+      "advisor_name": "Seth Aubin",
+      "advisor_affiliation": "Physics",
+      "thrust_area": "Instrumentation / sensors, Quantum science and technology, Computational imaging / simulation, Robotics / autonomy / controls",
       "submitted_at": "2026-05-04T00:00:00",
-      "path": "data/2026-2027/projects/quantum-forge-pilot-project-with-inq-in-quantum-computing-or-quantum-sensing.json"
+      "path": "data/2026-2027/projects/imaging-system-and-laser-shuttering-system-for-a-laser-cooling-apparatus.json"
     }
   ]
 }

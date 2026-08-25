@@ -124,7 +124,7 @@ const EP_DATA = {
       "irays-pupillometry",
       "smr-heat-load",
       "soft-bio-robot",
-      "quantum-forge",
+      "laser-optics",
     ],
   },
 
@@ -301,31 +301,26 @@ const EP_DATA = {
         "The bacteria producing the biofilm is BSL1 — same safety level as the bacteria in the yogurt one eats for breakfast!",
     },
     {
-      id: "quantum-forge",
+      id: "laser-optics",
       num: 8,
-      slug: "quantum-forge-pilot-project-with-inq-in-quantum-computing-or-quantum-sensing",
-      title: "Quantum Forge Pilot Project with IonQ in Quantum Computing or Quantum Sensing",
-      advisor: "IonQ Industry Mentor",
-      affiliation: "Industry / IonQ",
-      advisorEmail: null,
-      partners: [
-        { name: "IonQ", url: "https://www.ionq.com" },
-        { name: "Q-SEnSE", url: "https://www.colorado.edu/research/qsense/" },
-      ],
-      coadvisors: [{ name: "Seth Aubin", affiliation: "Physics", email: "saaubi@wm.edu" }],
+      slug: "imaging-system-and-laser-shuttering-system-for-a-laser-cooling-apparatus",
+      title: "Imaging System and Laser Shuttering System for a Laser Cooling Apparatus",
+      advisor: "Seth Aubin",
+      affiliation: "Physics",
+      advisorEmail: "saaubi@wm.edu",
+      coadvisors: null,
       areas: [
+        "Instrumentation / sensors",
         "Quantum science and technology",
         "Computational imaging / simulation",
-        "Instrumentation / sensors",
+        "Robotics / autonomy / controls",
       ],
       pitch:
-        "IonQ builds the world's most powerful trapped-ion quantum computers — systems where individual ytterbium atoms, suspended in an electromagnetic trap and manipulated by laser pulses, serve as qubits with some of the highest gate fidelities in the industry. This Quantum Forge capstone puts you inside that work. You would join a year-long project mentored directly by an IonQ technical lead, tackling a real problem at the intersection of hardware characterization, algorithm development, or quantum sensing — and doing it at a company that is publicly traded, shipping cloud-accessible quantum hardware today, and actively expanding what trapped-ion systems can do.",
+        "This project will construct three essential instruments for a laser cooling apparatus and integrate them to function together. First, a digital buffer amplifier system will interface between a computer control sequencer and the optical and electronic devices that operate the laser cooling system. Second, reliable high-speed mechanical shutters, activated through the buffer amplifier system, will fully extinguish the cooling and probe lasers. Third, a digital camera and imaging lens will observe the laser-cooled atoms and measure their number, density, and temperature, with the imaging system also triggered through the buffer amplifier.",
       background:
-        "This capstone project is part of Quantum Forge, a year-long model developed by NSF Q-SEnSE to embed undergraduates in real quantum industry collaborations. The 2026-2027 W&M cohort project is being developed with IonQ — a leading quantum computing company whose trapped-ion QPUs are accessible via cloud platforms including AWS Braket, Microsoft Azure, and Google Cloud.\n\nIonQ's core technology uses chains of trapped ytterbium-171 ions as qubits, achieving algorithmic qubit counts that outperform many superconducting systems on error-corrected workloads. Their research spans gate optimization, error mitigation, quantum network interfaces, and application-layer algorithm design for chemistry, optimization, and machine learning tasks.\n\nThe final project scope is being defined with IonQ mentors and will fall in one of two directions: (1) quantum computing — contributing to algorithm benchmarking, circuit optimization, or application development on IonQ hardware; or (2) quantum sensing — exploring how trapped-ion precision measurement techniques translate to real-world sensing problems. Either path involves defining requirements, modeling system behavior, building and testing workflows, and reporting to technical stakeholders in the way industry actually works.\n\nDeliverables: technical background review, problem statement with requirements, progress reviews, and a final report and presentation. Depending on scope, the team may also produce a benchmarking dataset, circuit library, or sensing workflow prototype.",
-      workspace:
-        "Primary work will be based in William & Mary Physics and associated engineering spaces, with regular remote interaction with IonQ technical mentors. Cloud access to IonQ quantum hardware will be provided through the Quantum Forge program.",
-      notes:
-        "This is a pilot Quantum Forge project for the 2026-2027 capstone cycle. The exact technical direction is being finalized with IonQ and Q-SEnSE program mentors. Seth Aubin will serve as the W&M Physics mentor for the relevant quantum direction.",
+        "The laser cooling apparatus is the core component of an experimental program to create a “quantum cloud chamber” that uses precision laser and microwave spectroscopy for quantum sensing of charged particles, including electrons, protons, muons, and ions, possibly at the single-particle level. Because spectroscopy enables non-invasive detection, particle trajectories remain essentially unaffected by the measurement process. This approach could allow uninterrupted monitoring of a particle accelerator's electron beam and precise determination of the direction of low-energy particles.",
+      workspace: "Work will be based in the William & Mary Physics laser cooling laboratory.",
+      notes: "Laser Optics Capstone Project. Register for PHYS 471, section 03 (CRN 11364).",
     },
   ],
 
@@ -357,8 +352,7 @@ const EP_DATA = {
       projects: 9,
       teams: 6,
       students: 18,
-      summary:
-        "Teams are formed for the current course year. Quantum Forge industry track joins the slate.",
+      summary: "Teams are formed for the current course year, with six active projects underway.",
       status: "current",
     },
     {

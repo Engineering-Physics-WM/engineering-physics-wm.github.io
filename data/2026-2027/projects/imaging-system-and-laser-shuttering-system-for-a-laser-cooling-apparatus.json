@@ -1,0 +1,20 @@
+{
+  "id": "imaging-system-and-laser-shuttering-system-for-a-laser-cooling-apparatus",
+  "slug": "imaging-system-and-laser-shuttering-system-for-a-laser-cooling-apparatus",
+  "source_row": 9,
+  "submitted_at": "2026-05-04T00:00:00",
+  "year": "2026-2027",
+  "title": "Imaging System and Laser Shuttering System for a Laser Cooling Apparatus",
+  "advisor": {
+    "name": "Seth Aubin",
+    "affiliation": "Physics",
+    "email": "saaubi@wm.edu"
+  },
+  "coadvisors_raw": null,
+  "coadvisors": [],
+  "pitch": "This project will construct three essential instruments for a laser cooling apparatus and integrate them to function together. First, a digital buffer amplifier system will interface between a computer control sequencer and the optical and electronic devices that operate the laser cooling system. Second, reliable high-speed mechanical shutters, activated through the buffer amplifier system, will fully extinguish the cooling and probe lasers. Third, a digital camera and imaging lens will observe the laser-cooled atoms and measure their number, density, and temperature, with the imaging system also triggered through the buffer amplifier.",
+  "background_objective_deliverables": "The laser cooling apparatus is the core component of an experimental program to create a “quantum cloud chamber” that uses precision laser and microwave spectroscopy for quantum sensing of charged particles, including electrons, protons, muons, and ions, possibly at the single-particle level. Because spectroscopy enables non-invasive detection, particle trajectories remain essentially unaffected by the measurement process. This approach could allow uninterrupted monitoring of a particle accelerator's electron beam and precise determination of the direction of low-energy particles.",
+  "thrust_area": "Instrumentation / sensors, Quantum science and technology, Computational imaging / simulation, Robotics / autonomy / controls",
+  "lab_workspace_access": "Work will be based in the William & Mary Physics laser cooling laboratory.",
+  "notes": "Laser Optics Capstone Project. Register for PHYS 471, section 03 (CRN 11364)."
+}
