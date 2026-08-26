@@ -94,7 +94,21 @@ def load_guests() -> list[Contact]:
     )
 
 
-LOADERS = {"students": load_students, "mentors": load_mentors, "guests": load_guests}
+def load_irays() -> list[Contact]:
+    path = ROOT / "email" / "private" / "contacts" / "irays-research-team.json"
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    return _unique(
+        Contact(_clean(row.get("name")), _clean(row.get("email")), "irays")
+        for row in payload.get("members", [])
+    )
+
+
+LOADERS = {
+    "students": load_students,
+    "mentors": load_mentors,
+    "guests": load_guests,
+    "irays": load_irays,
+}
 
 
 def load_template(name: str) -> tuple[str, str]:

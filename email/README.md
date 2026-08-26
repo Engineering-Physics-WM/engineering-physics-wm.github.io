@@ -1,8 +1,8 @@
 # EP Capstone email helper
 
-`apple_mail.py` loads the private student roster, project mentor contacts, or guest-speaker contacts and creates messages in Apple Mail.
+`apple_mail.py` loads private student rosters, project mentor contacts, guest-speaker contacts, or email-specific contact lists and creates messages in Apple Mail.
 
-Private templates live in `email/private/templates/`. That directory and `email/drafts/` are ignored by Git and are not deployed with the website.
+Email-only contact lists live in `email/private/contacts/`, reusable templates in `email/private/templates/`, and saved drafts in `email/private/drafts/`. The entire `email/private/` directory is ignored by Git and is not deployed with the website.
 
 ## Commands
 
