@@ -54,6 +54,32 @@ export interface ReferenceLink {
   href: string;
 }
 
+export interface PublicSafetyResource {
+  label: string;
+  value: string;
+}
+
+export const PUBLIC_SAFETY_RESOURCES: PublicSafetyResource[] = [
+  { label: "William & Mary Police Dispatch", value: "757.221.4596" },
+  { label: "William & Mary Division of Public Safety", value: "757.221.4596" },
+  { label: "William & Mary The Haven", value: "757.221.2449" },
+  { label: "William & Mary Counseling Center", value: "757.221.3620" },
+  { label: "William & Mary Student Health", value: "757.221.2998" },
+  { label: "William & Mary Title IX Coordinator", value: "757.221.4977" },
+  { label: "Avalon Center", value: "757.258.5051" },
+];
+
+export const PUBLIC_SAFETY_GUIDANCE = [
+  "Know the signs of a healthy relationship (trust, honesty, independence, respect) and an unhealthy relationship (intensity, possessiveness, manipulation, isolation).",
+  "Know when conduct escalates to something more serious—repeated, unwanted attention that causes fear.",
+  "Know the red flags of stalking—persistent contact, surveillance, boundary violations, and obsessive behaviors.",
+  "Online stalking (cyberstalking) includes persistent tagging, private messaging after being asked to stop, creating fake profiles to circumvent being blocked, doxxing, or attempts to access private information through hacking or social engineering.",
+  "Making changes to daily routines to avoid interactions with the individual is a sign that the conduct is becoming more concerning to the victim, even if they have not stated they are fearful.",
+  "Speak up and say something when you see warning signs of stalking.",
+  "Trust your instincts if something feels like it is escalating.",
+  "If you feel unsafe in any situation, call WMPD at 757.221.4596, Williamsburg Police at 757.220.2331, or 911.",
+];
+
 export const SYLLABUS_META = {
   term: "Fall 2026 – Spring 2027",
   meets: "Mondays, 1:00–1:50 p.m.",

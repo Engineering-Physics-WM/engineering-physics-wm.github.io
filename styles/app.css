@@ -3121,3 +3121,56 @@ main a:hover {
 .syllabus-references a:hover {
   color: var(--pink-ink);
 }
+.syllabus-public-safety {
+  margin-top: 10px;
+}
+.syllabus-public-safety .news-body h3 {
+  margin: 0 0 12px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--pink-ink);
+}
+.public-safety-resources {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 18px;
+}
+.public-safety-resources div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid var(--hairline);
+  padding-bottom: 8px;
+}
+.public-safety-resources dt,
+.public-safety-resources dd {
+  margin: 0;
+}
+.public-safety-resources dt {
+  color: var(--ink-soft);
+}
+.public-safety-resources dd {
+  flex: 0 0 auto;
+  font-family: var(--font-mono);
+  color: var(--pink-ink);
+}
+.public-safety-links {
+  margin: 0 0 18px;
+  padding-left: 20px;
+}
+.public-safety-links a,
+.syllabus-public-safety a {
+  color: var(--pink-ink);
+}
+.syllabus-public-safety .news-body > ul:not(.public-safety-links) {
+  margin-top: 8px;
+}
+@media (max-width: 560px) {
+  .public-safety-resources div {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 2px;
+  }
+}

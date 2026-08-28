@@ -8,6 +8,8 @@ import {
   OVERVIEW,
   PILLARS,
   POLICY_SECTIONS,
+  PUBLIC_SAFETY_GUIDANCE,
+  PUBLIC_SAFETY_RESOURCES,
   REFERENCES,
   SPRING_CALENDAR_DATES,
   SYLLABUS_META,
@@ -212,6 +214,68 @@ const PolicyItem = ({
   </details>
 );
 
+const PublicSafetyReference = () => (
+  <details className="news-item syllabus-policy syllabus-public-safety">
+    <summary>
+      <span className="news-summary-text">
+        <strong>W&amp;M Public Safety</strong>
+      </span>
+    </summary>
+    <div className="news-body">
+      <h3>Resources</h3>
+      <dl className="public-safety-resources">
+        {PUBLIC_SAFETY_RESOURCES.map((resource) => (
+          <div key={resource.label}>
+            <dt>{resource.label}</dt>
+            <dd>{resource.value}</dd>
+          </div>
+        ))}
+      </dl>
+      <ul className="public-safety-links">
+        <li>
+          <a
+            href="https://www.wm.edu/offices/publicsafety/emergency/preparedness/safety_apps/rave-guardian-b/"
+            target="_blank"
+            rel="noopener"
+          >
+            Rave Guardian Personal Safety Application ↗
+          </a>
+        </li>
+        <li>
+          <a
+            href="https://wmcompliance.guardianconduct.com/incident-reporting"
+            target="_blank"
+            rel="noopener"
+          >
+            Submit a Title IX report ↗
+          </a>
+        </li>
+      </ul>
+      <p>
+        William &amp; Mary Division of Public Safety provides this notice to alert the campus
+        community when certain crimes occur on our campus that represent a serious or ongoing threat
+        to the community.
+      </p>
+      <p>
+        William &amp; Mary campus community is always encouraged to take the following steps to keep
+        yourself and others safe:
+      </p>
+      <ul>
+        {PUBLIC_SAFETY_GUIDANCE.map((item) => (
+          <li key={item}>{item}</li>
+        ))}
+      </ul>
+      <p>
+        Please review William &amp; Mary&apos;s{" "}
+        <a href="https://www.wm.edu/offices/publicsafety/" target="_blank" rel="noopener">
+          Division of Public Safety ↗
+        </a>{" "}
+        for additional safety awareness information and resources.
+      </p>
+    </div>
+  </details>
+);
+
 const SyllabusPage = ({ onNavigate }: { onNavigate: OnNavigate }) => {
   const today = todayIso();
   const termWeek = React.useMemo(() => currentTermWeek(today), [today]);
@@ -332,6 +396,7 @@ const SyllabusPage = ({ onNavigate }: { onNavigate: OnNavigate }) => {
               </li>
             ))}
           </ul>
+          <PublicSafetyReference />
         </section>
 
         <aside className="news-side syllabus-side">
