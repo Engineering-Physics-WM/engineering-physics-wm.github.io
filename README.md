@@ -4,6 +4,9 @@ Public course website for the William & Mary Engineering Physics Capstone progra
 
 **Live site:** [engineering-physics-wm.github.io](https://engineering-physics-wm.github.io)
 
+**Migration handoff:** See [`CODEX_HANDOFF.md`](./CODEX_HANDOFF.md) before continuing the
+Supabase-to-Neon/Vercel cutover.
+
 ## Structure
 
 ```
