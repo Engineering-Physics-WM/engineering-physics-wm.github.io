@@ -2,6 +2,9 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawn } from "node:child_process";
+import { config } from "dotenv";
+
+config({ path: ".env.local" });
 
 const run = (command, args) =>
   new Promise((resolve, reject) => {
