@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { jwtVerify, SignJWT } from "jose";
 
-import { ApiError, cleanEmail } from "./http";
+import { ApiError, cleanEmail } from "./http.js";
 
 const COOKIE_NAME = "ep_session";
 const SESSION_SECONDS = 60 * 60 * 12;

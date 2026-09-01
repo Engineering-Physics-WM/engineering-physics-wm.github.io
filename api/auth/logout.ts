@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
-import { clearSessionCookie } from "../../server/auth";
-import { applyCors, fail, json, options } from "../../server/http";
+import { clearSessionCookie } from "../../server/auth.js";
+import { applyCors, fail, json, options } from "../../server/http.js";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   applyCors(req, res);

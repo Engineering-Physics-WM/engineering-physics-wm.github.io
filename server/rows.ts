@@ -1,4 +1,4 @@
-import type { AllowedStudent, Announcement, RankingSubmission, TeamMember } from "./schema";
+import type { AllowedStudent, Announcement, RankingSubmission, TeamMember } from "./schema.js";
 
 const iso = (value: Date | string | null | undefined) =>
   value ? (value instanceof Date ? value.toISOString() : value) : null;

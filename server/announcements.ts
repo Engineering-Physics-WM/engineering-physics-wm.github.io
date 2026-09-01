@@ -1,9 +1,9 @@
 import { eq } from "drizzle-orm";
 
-import { getDb } from "./db";
-import { ApiError, requireString } from "./http";
-import { announcementRow } from "./rows";
-import { cohortAnnouncements } from "./schema";
+import { getDb } from "./db.js";
+import { ApiError, requireString } from "./http.js";
+import { announcementRow } from "./rows.js";
+import { cohortAnnouncements } from "./schema.js";
 
 export type AnnouncementInput = {
   id?: string;

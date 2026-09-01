@@ -1,7 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
-import { getDb } from "../../server/db";
+import { getDb } from "../../server/db.js";
 import {
   applyCors,
   cleanEmail,
@@ -11,8 +11,8 @@ import {
   readJson,
   requireString,
   WM_EMAIL_RE,
-} from "../../server/http";
-import { rankingAllowedStudents, rankingPollSettings } from "../../server/schema";
+} from "../../server/http.js";
+import { rankingAllowedStudents, rankingPollSettings } from "../../server/schema.js";
 
 type CheckBody = { cohortYear?: string; email?: string };
 

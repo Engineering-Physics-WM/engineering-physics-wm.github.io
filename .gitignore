@@ -40,3 +40,4 @@ supabase/.temp/
 # Private Apple Mail templates and saved draft content
 email/private/
 email/drafts/
+.vercel

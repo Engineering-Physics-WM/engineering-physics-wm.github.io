@@ -1,11 +1,11 @@
 import { asc, eq } from "drizzle-orm";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
-import { requireInstructor } from "../../server/auth";
-import { getDb } from "../../server/db";
-import { applyCors, fail, json, options, queryString } from "../../server/http";
-import { allowedStudentRow, rankingSubmissionRow, teamMemberRow } from "../../server/rows";
-import { cohortTeamMembers, rankingAllowedStudents, rankingSubmissions } from "../../server/schema";
+import { requireInstructor } from "../../server/auth.js";
+import { getDb } from "../../server/db.js";
+import { applyCors, fail, json, options, queryString } from "../../server/http.js";
+import { allowedStudentRow, rankingSubmissionRow, teamMemberRow } from "../../server/rows.js";
+import { cohortTeamMembers, rankingAllowedStudents, rankingSubmissions } from "../../server/schema.js";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   applyCors(req, res);

@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
-import { requireInstructor } from "../../server/auth";
-import { applyCors, fail, json, options, readJson } from "../../server/http";
-import { rewriteEmail } from "../../server/rewrite";
+import { requireInstructor } from "../../server/auth.js";
+import { applyCors, fail, json, options, readJson } from "../../server/http.js";
+import { rewriteEmail } from "../../server/rewrite.js";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   applyCors(req, res);

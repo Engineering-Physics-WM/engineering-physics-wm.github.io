@@ -1,10 +1,10 @@
 import { and, asc, eq, lte, sql } from "drizzle-orm";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
-import { getDb } from "../../server/db";
-import { applyCors, fail, json, options } from "../../server/http";
-import { announcementRow } from "../../server/rows";
-import { cohortAnnouncements } from "../../server/schema";
+import { getDb } from "../../server/db.js";
+import { applyCors, fail, json, options } from "../../server/http.js";
+import { announcementRow } from "../../server/rows.js";
+import { cohortAnnouncements } from "../../server/schema.js";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   applyCors(req, res);

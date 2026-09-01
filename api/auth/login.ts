@@ -1,8 +1,8 @@
 import bcrypt from "bcryptjs";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
-import { configuredInstructorEmail, createSessionToken, setSessionCookie } from "../../server/auth";
-import { applyCors, ApiError, cleanEmail, fail, json, options, readJson } from "../../server/http";
+import { configuredInstructorEmail, createSessionToken, setSessionCookie } from "../../server/auth.js";
+import { applyCors, ApiError, cleanEmail, fail, json, options, readJson } from "../../server/http.js";
 
 type LoginBody = { email?: string; password?: string };
 

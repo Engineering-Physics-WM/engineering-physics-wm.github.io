@@ -1,16 +1,16 @@
 import { asc, eq } from "drizzle-orm";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
-import { requireInstructor } from "../../server/auth";
+import { requireInstructor } from "../../server/auth.js";
 import {
   upsertAnnouncement,
   updateAnnouncement,
   type AnnouncementInput,
-} from "../../server/announcements";
-import { getDb } from "../../server/db";
-import { applyCors, ApiError, fail, json, options, queryString, readJson } from "../../server/http";
-import { announcementRow } from "../../server/rows";
-import { cohortAnnouncements } from "../../server/schema";
+} from "../../server/announcements.js";
+import { getDb } from "../../server/db.js";
+import { applyCors, ApiError, fail, json, options, queryString, readJson } from "../../server/http.js";
+import { announcementRow } from "../../server/rows.js";
+import { cohortAnnouncements } from "../../server/schema.js";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   applyCors(req, res);

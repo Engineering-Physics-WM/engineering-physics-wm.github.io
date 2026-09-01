@@ -1,8 +1,8 @@
 import { asc, eq } from "drizzle-orm";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
-import { requireInstructor } from "../../server/auth";
-import { getDb } from "../../server/db";
+import { requireInstructor } from "../../server/auth.js";
+import { getDb } from "../../server/db.js";
 import {
   applyCors,
   ApiError,
@@ -11,9 +11,9 @@ import {
   options,
   readJson,
   requireString,
-} from "../../server/http";
-import { teamMemberRow } from "../../server/rows";
-import { cohortTeamMembers } from "../../server/schema";
+} from "../../server/http.js";
+import { teamMemberRow } from "../../server/rows.js";
+import { cohortTeamMembers } from "../../server/schema.js";
 
 type TeamRowInput = {
   cohort_year?: string;
