@@ -6,6 +6,7 @@ import { Reveal } from "./motion.jsx";
 import { DEFAULT_MATCHING_MODE, MATCHING_MODE_OPTIONS, buildTeams } from "./teamMatching.js";
 import { ExternalLink, PersonLink, YangLink } from "./links.jsx";
 import { sortAnnouncements } from "./news.jsx";
+import { apiFetch, isBackendConfigured } from "../src/lib/apiClient";
 import {
   normalizeAnnouncementResources,
   resourceHref,
@@ -13,7 +14,6 @@ import {
   resourceLabel,
   resourcePage,
 } from "./resources.js";
-import { isSupabaseConfigured, supabase } from "./supabaseClient.js";
 import {
   announcementFromRow,
   postDraftAsNowAnnouncement,
@@ -42,17 +42,6 @@ const CURRENT_TEAM_MATCHING_MODE = "top1";
 
 const dashboardReadError = (label, error) =>
   `${label} could not load: ${error?.message || "unknown live data error"}`;
-
-const functionErrorMessage = async (error, fallback) => {
-  const response = error?.context;
-  if (response && typeof response.json === "function") {
-    try {
-      const payload = await response.json();
-      if (payload?.error) return payload.error;
-    } catch {}
-  }
-  return error?.message || fallback;
-};
 
 const matchingOptionFor = (mode) =>
   MATCHING_MODE_OPTIONS.find((option) => option.id === mode) ||
@@ -809,7 +798,7 @@ const TeamsView = ({
   };
 
   const saveFinalTeams = async () => {
-    if (!isSupabaseConfigured) {
+    if (!isBackendConfigured) {
       setSaveStatus(
         "The live database is not configured for this build, so the final teams cannot be saved yet."
       );
@@ -830,23 +819,16 @@ const TeamsView = ({
       assignedByEmail: INSTRUCTOR_EMAIL,
     });
 
-    const { error: deleteError } = await supabase
-      .from("cohort_team_members")
-      .delete()
-      .eq("cohort_year", currentYear);
-
-    if (deleteError) {
+    try {
+      const { teamMembers } = await apiFetch("/api/admin/teams", {
+        method: "POST",
+        body: JSON.stringify({ cohortYear: currentYear, rows }),
+      });
       setSaving(false);
-      setSaveStatus(teamSaveErrorMessage(deleteError));
-      return;
-    }
-
-    const { error: insertError } = await supabase.from("cohort_team_members").insert(rows);
-
-    setSaving(false);
-
-    if (insertError) {
-      setSaveStatus(teamSaveErrorMessage(insertError));
+      setTeamMemberRows(teamMembers || []);
+    } catch (error) {
+      setSaving(false);
+      setSaveStatus(teamSaveErrorMessage(error));
       return;
     }
 
@@ -1317,7 +1299,7 @@ const EmailDraftView = ({
   };
 
   const rewriteDraft = async () => {
-    if (!isSupabaseConfigured) {
+    if (!isBackendConfigured) {
       setStatus("AI rewrite needs the live dashboard connection.");
       return;
     }
@@ -1328,37 +1310,34 @@ const EmailDraftView = ({
 
     setRewriting(true);
     setStatus("Rewriting draft...");
-    const { data: rewrittenDraft, error } = await supabase.functions.invoke("rewrite-email", {
-      body: {
-        cohortYear: data.currentYear,
-        audienceLabel,
-        projectLabel: isTeamAudience ? projectLabel(project) : null,
-        recipientCounts: {
-          students: studentCount,
-          mentors: mentorCount,
-        },
-        subject,
-        body,
-      },
-    });
-    setRewriting(false);
-
-    if (error || rewrittenDraft?.error) {
-      setStatus(rewrittenDraft?.error || (await functionErrorMessage(error, "AI rewrite failed.")));
-      return;
+    try {
+      const rewrittenDraft = await apiFetch("/api/admin/rewrite-email", {
+        method: "POST",
+        body: JSON.stringify({
+          cohortYear: data.currentYear,
+          audienceLabel,
+          projectLabel: isTeamAudience ? projectLabel(project) : null,
+          recipientCounts: { students: studentCount, mentors: mentorCount },
+          subject,
+          body,
+        }),
+      });
+      if (!rewrittenDraft?.subject || !rewrittenDraft?.body) {
+        setStatus("AI rewrite returned an incomplete draft.");
+        return;
+      }
+      setSubject(rewrittenDraft.subject);
+      setBody(rewrittenDraft.body);
+      setStatus("AI rewrote the draft. Review it before opening Mail.");
+    } catch (error) {
+      setStatus(error?.message || "AI rewrite failed.");
+    } finally {
+      setRewriting(false);
     }
-    if (!rewrittenDraft?.subject || !rewrittenDraft?.body) {
-      setStatus("AI rewrite returned an incomplete draft.");
-      return;
-    }
-
-    setSubject(rewrittenDraft.subject);
-    setBody(rewrittenDraft.body);
-    setStatus("AI rewrote the draft. Review it before opening Mail.");
   };
 
   const postAsNowNews = async () => {
-    if (!isSupabaseConfigured) {
+    if (!isBackendConfigured) {
       setStatus("Live announcement posting is not configured.");
       return;
     }
@@ -1376,7 +1355,6 @@ const EmailDraftView = ({
 
     setPostingNews(true);
     setStatus("Posting Now update...");
-    const { data: userData } = await supabase.auth.getUser();
 
     try {
       await postDraftAsNowAnnouncement({
@@ -1385,7 +1363,7 @@ const EmailDraftView = ({
         body,
         audienceLabel,
         resources: selectedAnnouncement?.resources || [],
-        createdByEmail: userData?.user?.email,
+        createdByEmail: INSTRUCTOR_EMAIL,
       });
       onAnnouncementsChange?.();
       setStatus(
@@ -1633,9 +1611,6 @@ const ArchiveView = ({ archive, currentYear, onSwitch }) => (
 
 /* ── Announcements (Updates tab) ─────────────────────────────────── */
 
-const ANN_COLUMNS =
-  "id,cohort_year,slug,title,summary,body,resources,audience_label,label,pinned,display_order,event_date,publish_at,status,created_at,updated_at";
-
 const BLANK = (cohortYear) => ({
   cohortYear,
   slug: "",
@@ -1857,7 +1832,7 @@ const AnnouncementsView = ({ data, seedAnnouncements = [], onAnnouncementsChange
   );
 
   const load = React.useCallback(async () => {
-    if (!isSupabaseConfigured) {
+    if (!isBackendConfigured) {
       setLoading(false);
       return;
     }
@@ -1865,15 +1840,13 @@ const AnnouncementsView = ({ data, seedAnnouncements = [], onAnnouncementsChange
     setError("");
 
     const fetchRows = () =>
-      supabase
-        .from("cohort_announcements")
-        .select(ANN_COLUMNS)
-        .eq("cohort_year", cohortYear)
-        .order("display_order", { ascending: true, nullsFirst: false });
+      apiFetch(`/api/admin/announcements?cohortYear=${encodeURIComponent(cohortYear)}`);
 
-    let { data: rows, error: err } = await fetchRows();
-    if (err) {
-      setError(err.message);
+    let rows;
+    try {
+      ({ announcements: rows } = await fetchRows());
+    } catch (error) {
+      setError(error.message);
       setLoading(false);
       return;
     }
@@ -1882,18 +1855,21 @@ const AnnouncementsView = ({ data, seedAnnouncements = [], onAnnouncementsChange
     if (missingSourceItems.length) {
       for (const item of missingSourceItems) {
         const row = staticAnnouncementToRow(item);
-        const { error: syncError } = await supabase
-          .from("cohort_announcements")
-          .upsert(row, { onConflict: "cohort_year,slug" });
-        if (syncError) {
-          setError(syncError.message);
+        try {
+          await apiFetch("/api/admin/announcements", {
+            method: "POST",
+            body: JSON.stringify(row),
+          });
+        } catch (error) {
+          setError(error.message);
           setLoading(false);
           return;
         }
       }
-      ({ data: rows, error: err } = await fetchRows());
-      if (err) {
-        setError(err.message);
+      try {
+        ({ announcements: rows } = await fetchRows());
+      } catch (error) {
+        setError(error.message);
         setLoading(false);
         return;
       }
@@ -1913,22 +1889,13 @@ const AnnouncementsView = ({ data, seedAnnouncements = [], onAnnouncementsChange
     setError("");
     try {
       const row = annToRow(ann, INSTRUCTOR_EMAIL);
-      let result;
-      if (isNew) {
-        result = await supabase
-          .from("cohort_announcements")
-          .insert(row)
-          .select(ANN_COLUMNS)
-          .single();
-      } else {
-        result = await supabase
-          .from("cohort_announcements")
-          .update(row)
-          .eq("id", ann.id)
-          .select(ANN_COLUMNS)
-          .single();
-      }
-      if (result.error) throw result.error;
+      await apiFetch(
+        `/api/admin/announcements${isNew ? "" : `?id=${encodeURIComponent(ann.id)}`}`,
+        {
+          method: isNew ? "POST" : "PATCH",
+          body: JSON.stringify(isNew ? row : { ...row, id: ann.id }),
+        }
+      );
       await load();
       onAnnouncementsChange?.();
       setEditingId(null);
@@ -1944,9 +1911,10 @@ const AnnouncementsView = ({ data, seedAnnouncements = [], onAnnouncementsChange
   const handleDelete = async (id) => {
     setSaving(true);
     setError("");
-    const { error: err } = await supabase.from("cohort_announcements").delete().eq("id", id);
-    if (err) {
-      setError(err.message);
+    try {
+      await apiFetch(`/api/admin/announcements?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+    } catch (error) {
+      setError(error.message);
       setSaving(false);
       return;
     }
@@ -1957,16 +1925,16 @@ const AnnouncementsView = ({ data, seedAnnouncements = [], onAnnouncementsChange
   };
 
   const handleImport = async () => {
-    if (!isSupabaseConfigured) return;
+    if (!isBackendConfigured) return;
     setImporting(true);
     setError("");
     try {
       for (const item of sourceItems) {
         const row = staticAnnouncementToRow(item);
-        const { error: syncError } = await supabase
-          .from("cohort_announcements")
-          .upsert(row, { onConflict: "cohort_year,slug" });
-        if (syncError) throw syncError;
+        await apiFetch("/api/admin/announcements", {
+          method: "POST",
+          body: JSON.stringify(row),
+        });
       }
       await load();
       onAnnouncementsChange?.();
@@ -1997,11 +1965,12 @@ const AnnouncementsView = ({ data, seedAnnouncements = [], onAnnouncementsChange
     setNewDraft(null);
   };
 
-  if (!isSupabaseConfigured) {
+  if (!isBackendConfigured) {
     return (
       <div className="ann-empty">
         <p>
-          Supabase is not configured — announcements editing is only available with a live database.
+          The live database is not configured — announcements editing is only available on the
+          deployed app.
         </p>
       </div>
     );
@@ -2047,7 +2016,7 @@ const AnnouncementsView = ({ data, seedAnnouncements = [], onAnnouncementsChange
       {!loading && items && items.length === 0 && !creating && (
         <div className="ann-empty">
           <p>
-            No updates in Supabase yet for <strong>{cohortYear}</strong>.
+            No live updates yet for <strong>{cohortYear}</strong>.
           </p>
           <p>Create one above, or import from the static data in data.js.</p>
         </div>
@@ -2159,7 +2128,7 @@ const DashboardPage = ({
   const hasLoadedDashboardRef = React.useRef(false);
 
   React.useEffect(() => {
-    if (!isSupabaseConfigured) {
+    if (!isBackendConfigured) {
       hasLoadedDashboardRef.current = true;
       setLoadingDashboard(false);
       setSyncingDashboard(false);
@@ -2179,19 +2148,12 @@ const DashboardPage = ({
       let teamResult;
 
       try {
-        [submissionResult, allowedResult, teamResult] = await Promise.all([
-          supabase
-            .from("ranking_submissions")
-            .select("*")
-            .eq("cohort_year", data.currentYear)
-            .order("created_at", { ascending: true }),
-          supabase
-            .from("ranking_allowed_students")
-            .select("*")
-            .eq("cohort_year", data.currentYear)
-            .order("student_name", { ascending: true }),
-          supabase.from("cohort_team_members").select("*").eq("cohort_year", data.currentYear),
-        ]);
+        const dashboardData = await apiFetch(
+          `/api/admin/dashboard?cohortYear=${encodeURIComponent(data.currentYear)}`
+        );
+        submissionResult = { data: dashboardData.rankingSubmissions || [], error: null };
+        allowedResult = { data: dashboardData.allowedStudents || [], error: null };
+        teamResult = { data: dashboardData.teamMembers || [], error: null };
       } catch (error) {
         if (!alive) return;
         setResponses([]);
@@ -2276,7 +2238,7 @@ const DashboardPage = ({
   }, [data.currentYear, data.projects, refreshKey]);
 
   React.useEffect(() => {
-    if (!isSupabaseConfigured || autoRefreshPaused) return undefined;
+    if (!isBackendConfigured || autoRefreshPaused) return undefined;
     const refreshTimer = window.setInterval(() => {
       setRefreshKey((key) => key + 1);
     }, 8000);

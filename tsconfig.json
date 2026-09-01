@@ -16,8 +16,17 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
-    "types": ["vite/client", "vitest/globals"]
+    "types": ["vite/client", "vitest/globals", "node"]
   },
-  "include": ["js", "src", "tests", "vite.config.js", "vitest.config.ts", "eslint.config.js"],
+  "include": [
+    "api",
+    "server",
+    "js",
+    "src",
+    "tests",
+    "vite.config.js",
+    "vitest.config.ts",
+    "eslint.config.js"
+  ],
   "exclude": ["dist", "node_modules", "supabase/functions"]
 }

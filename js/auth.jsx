@@ -1,5 +1,10 @@
 import * as React from "react";
-import { isSupabaseConfigured, supabase } from "./supabaseClient.js";
+import {
+  getSession,
+  isBackendConfigured,
+  signIn as signInApi,
+  signOut as signOutApi,
+} from "../src/lib/apiClient";
 import { YangLink } from "./links.jsx";
 import { INSTRUCTOR_EMAIL } from "./config.js";
 
@@ -14,26 +19,26 @@ const AuthGate = ({ children }) => {
   const [submitting, setSubmitting] = React.useState(false);
 
   React.useEffect(() => {
-    if (!isSupabaseConfigured) {
+    if (!isBackendConfigured) {
       setLoading(false);
       return undefined;
     }
 
     let alive = true;
-    supabase.auth.getSession().then(({ data }) => {
-      if (!alive) return;
-      setSession(data.session || null);
-      setLoading(false);
-    });
-
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
-      setSession(nextSession || null);
-      setLoading(false);
-    });
+    getSession()
+      .then(({ user }) => {
+        if (!alive) return;
+        setSession(user ? { user } : null);
+        setLoading(false);
+      })
+      .catch(() => {
+        if (!alive) return;
+        setSession(null);
+        setLoading(false);
+      });
 
     return () => {
       alive = false;
-      listener.subscription.unsubscribe();
     };
   }, []);
 
@@ -42,7 +47,7 @@ const AuthGate = ({ children }) => {
 
   React.useEffect(() => {
     if (!session || !userEmail || isInstructor) return;
-    supabase.auth.signOut();
+    signOutApi();
     setStatus("This account is not authorized for the instructor dashboard.");
   }, [isInstructor, session, userEmail]);
 
@@ -61,27 +66,23 @@ const AuthGate = ({ children }) => {
 
     setSubmitting(true);
     setStatus("");
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: normalizedEmail,
-      password,
-    });
-    setSubmitting(false);
-
-    if (error) {
+    let data;
+    try {
+      data = await signInApi(normalizedEmail, password);
+    } catch {
+      setSubmitting(false);
       setStatus("Could not sign in. Check the email and password.");
       return;
     }
-    if (cleanEmail(data.user?.email || "") !== INSTRUCTOR_EMAIL) {
-      await supabase.auth.signOut();
-      setStatus("This account is not authorized for the instructor dashboard.");
-      return;
-    }
+    setSubmitting(false);
+    setSession(data);
     setPassword("");
   };
 
   const signOut = async () => {
     setStatus("");
-    await supabase.auth.signOut();
+    await signOutApi();
+    setSession(null);
   };
 
   if (loading) {
@@ -98,7 +99,7 @@ const AuthGate = ({ children }) => {
     );
   }
 
-  if (!isSupabaseConfigured) {
+  if (!isBackendConfigured) {
     return (
       <div className="page">
         <section className="auth-panel">

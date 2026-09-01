@@ -11,18 +11,29 @@
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "vitest run"
+    "test": "vitest run",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:password-hash": "node scripts/generate-password-hash.mjs",
+    "db:migrate-supabase": "node scripts/migrate-supabase-to-neon.mjs"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.105.3",
+    "@neondatabase/serverless": "^1.1.0",
+    "bcryptjs": "^3.0.3",
+    "drizzle-orm": "^0.45.2",
+    "jose": "^6.2.10",
     "react": "^19.2.5",
     "react-dom": "^19.2.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
+    "@types/node": "^26.4.0",
     "@types/react": "^19.2.15",
     "@types/react-dom": "^19.2.3",
+    "@vercel/node": "^10.0.0",
     "@vitejs/plugin-react": "^6.0.1",
+    "dotenv": "^17.4.2",
+    "drizzle-kit": "^0.31.10",
     "eslint": "^9.39.4",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.1.1",

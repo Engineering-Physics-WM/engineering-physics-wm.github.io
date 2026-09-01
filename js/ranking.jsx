@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { Reveal } from "./motion.jsx";
-import { isSupabaseConfigured } from "./supabaseClient.js";
+import { isBackendConfigured } from "../src/lib/apiClient";
 import { PersonLink, YangLink } from "./links.jsx";
 import { INSTRUCTOR_EMAIL } from "./config.js";
 import {
@@ -275,14 +275,14 @@ const RankingPage = ({ data, onNavigate }) => {
       name: name.trim(),
       email: cleanEmail,
       order,
-      source: isSupabaseConfigured ? "live" : "local",
+      source: isBackendConfigured ? "live" : "local",
       mode: "created",
     };
 
     setSubmitting(true);
     setStatus("Submitting...");
 
-    if (isSupabaseConfigured) {
+    if (isBackendConfigured) {
       const { allowed, error: allowError } = await isStudentAllowed({
         cohortYear: data.currentYear,
         cleanEmail,
@@ -479,7 +479,7 @@ const RankingPage = ({ data, onNavigate }) => {
           <p className="construction-note">
             {pollClosed
               ? pollClosedMessage
-              : isSupabaseConfigured
+              : isBackendConfigured
                 ? "Student polling live · one saved response per W&M email"
                 : "Student polling mockup · under construction · submissions stay local for now"}
           </p>

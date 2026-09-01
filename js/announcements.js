@@ -1,28 +1,9 @@
-import { isSupabaseConfigured, supabase } from "./supabaseClient.js";
+import { apiFetch, isBackendConfigured } from "../src/lib/apiClient";
 import {
   SITE_PAGE_LABELS,
   normalizeAnnouncementResources,
   resourcePageFromTarget,
 } from "./resources.js";
-
-const ANNOUNCEMENT_COLUMNS = [
-  "id",
-  "cohort_year",
-  "slug",
-  "title",
-  "summary",
-  "body",
-  "resources",
-  "audience_label",
-  "label",
-  "pinned",
-  "display_order",
-  "event_date",
-  "publish_at",
-  "status",
-  "created_at",
-  "updated_at",
-].join(",");
 
 const DASHBOARD_NOW_SLUG = "dashboard-now";
 
@@ -207,15 +188,13 @@ const staticAnnouncementToRow = (item) => ({
 });
 
 const loadPublishedAnnouncements = async () => {
-  if (!isSupabaseConfigured) return { announcements: null, error: null };
-  const { data, error } = await supabase
-    .from("cohort_announcements")
-    .select(ANNOUNCEMENT_COLUMNS)
-    .eq("status", "published")
-    .lte("publish_at", new Date().toISOString());
-
-  if (error) return { announcements: null, error };
-  return { announcements: (data || []).map(announcementFromRow), error: null };
+  if (!isBackendConfigured) return { announcements: null, error: null };
+  try {
+    const { announcements } = await apiFetch("/api/public/announcements");
+    return { announcements: (announcements || []).map(announcementFromRow), error: null };
+  } catch (error) {
+    return { announcements: null, error };
+  }
 };
 
 const postDraftAsNowAnnouncement = async ({
@@ -226,26 +205,13 @@ const postDraftAsNowAnnouncement = async ({
   resources,
   createdByEmail,
 }) => {
-  if (!isSupabaseConfigured) throw new Error("Live announcement posting is not configured.");
+  if (!isBackendConfigured) throw new Error("Live announcement posting is not configured.");
   const announcement = draftToAnnouncement({ cohortYear, subject, body, audienceLabel, resources });
   const row = rowFromAnnouncement(announcement, createdByEmail);
-
-  const { data, error } = await supabase
-    .from("cohort_announcements")
-    .upsert(row, { onConflict: "cohort_year,slug" })
-    .select(ANNOUNCEMENT_COLUMNS)
-    .single();
-
-  if (error) throw error;
-
-  const { error: nowClearError } = await supabase
-    .from("cohort_announcements")
-    .update({ pinned: false, label: null })
-    .eq("cohort_year", cohortYear)
-    .neq("slug", announcement.slug)
-    .or("pinned.eq.true,label.ilike.Now");
-  if (nowClearError) throw nowClearError;
-
+  const { announcement: data } = await apiFetch("/api/admin/announcements/now", {
+    method: "POST",
+    body: JSON.stringify(row),
+  });
   return announcementFromRow(data);
 };
 
