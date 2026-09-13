@@ -3185,6 +3185,33 @@ main a:hover {
 .lecture-resource-grid .lecture-resource-card {
   width: 100%;
 }
+.lecture-schedule-card {
+  cursor: default;
+}
+.lecture-schedule-card:hover {
+  transform: none;
+}
+.lecture-schedule {
+  margin: 4px 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 4px;
+}
+.lecture-schedule-slot {
+  display: grid;
+  grid-template-columns: 7.5em 1fr;
+  gap: 8px;
+  font-size: 0.92em;
+}
+.lecture-schedule-slot.is-team {
+  font-weight: 600;
+}
+.lecture-schedule-slot.is-invest,
+.lecture-schedule-slot.is-opening,
+.lecture-schedule-slot.is-closing {
+  color: var(--muted);
+}
 .invest-page .btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;

@@ -38,6 +38,81 @@ export interface ScheduleRow {
   kind?: "break" | "milestone" | "cancelled" | "tbd";
 }
 
+/** Active Yang Ran Angels teams, in project-number order. */
+export const PITCH_TEAMS = [
+  "Animal Crossing",
+  "SMR Heat Load",
+  "iRays",
+  "USV Race Boat",
+  "Laser Cooling Optics",
+  "Soft Bio-Robot",
+];
+
+export interface SessionSlot {
+  start: string;
+  end: string;
+  label: string;
+  kind: "opening" | "team" | "invest" | "closing";
+}
+
+const OPENING_MINUTES = 5;
+const CLOSING_MINUTES = 5;
+
+const toMinutes = (hhmm: string) => {
+  const [h, m] = hhmm.split(":").map(Number);
+  return h * 60 + m;
+};
+
+const clock = (minutes: number) => {
+  const h24 = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  const h12 = ((h24 + 11) % 12) + 1;
+  return `${h12}:${String(m).padStart(2, "0")}`;
+};
+
+/** Small deterministic PRNG so every session gets a stable, distinct team order. */
+const seededRandom = (seed: string) => {
+  let h = 2166136261;
+  for (const ch of seed) h = Math.imul(h ^ ch.charCodeAt(0), 16777619);
+  return () => {
+    h = Math.imul(h ^ (h >>> 15), 2246822507);
+    h = Math.imul(h ^ (h >>> 13), 3266489909);
+    h ^= h >>> 16;
+    return (h >>> 0) / 4294967296;
+  };
+};
+
+/** Pitch order for a session: a per-date shuffle so no team always goes first or last. */
+export const pitchOrderFor = (isoDate: string): string[] => {
+  const rand = seededRandom(isoDate);
+  const order = [...PITCH_TEAMS];
+  for (let i = order.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(rand() * (i + 1));
+    [order[i], order[j]] = [order[j], order[i]];
+  }
+  return order;
+};
+
+/** Minute-by-minute plan: ~5 min opening, equal team slots, any remainder for investing, ~5 min closing. */
+export const sessionSchedule = (row: ScheduleRow): SessionSlot[] => {
+  const start = toMinutes(row.investmentWindow?.start ?? "13:00");
+  const end = toMinutes(row.investmentWindow?.end ?? "13:50");
+  const teams = pitchOrderFor(row.isoDate);
+  const perTeam = Math.floor((end - start - OPENING_MINUTES - CLOSING_MINUTES) / teams.length);
+  const slots: SessionSlot[] = [];
+  let t = start;
+  const push = (minutes: number, label: string, kind: SessionSlot["kind"]) => {
+    slots.push({ start: clock(t), end: clock(t + minutes), label, kind });
+    t += minutes;
+  };
+  push(OPENING_MINUTES, "Opening: agenda, angel login, and ground rules", "opening");
+  teams.forEach((team, i) => push(perTeam, `Team ${i + 1}: ${team}`, "team"));
+  const remainder = end - CLOSING_MINUTES - t;
+  if (remainder > 0) push(remainder, "Invest, rebalance, and leave team feedback", "invest");
+  push(CLOSING_MINUTES, "Closing: live totals and next steps", "closing");
+  return slots;
+};
+
 export interface Term {
   id: string;
   season: Season;

@@ -11,6 +11,7 @@ import {
   PUBLIC_SAFETY_GUIDANCE,
   PUBLIC_SAFETY_RESOURCES,
   REFERENCES,
+  sessionSchedule,
   SPRING_CALENDAR_DATES,
   SYLLABUS_META,
   TERMS,
@@ -114,6 +115,21 @@ const LectureMaterials = ({ row, onNavigate }: { row: ScheduleRow; onNavigate: O
             View totals <span>↗</span>
           </span>
         </button>
+        <div className="lecture-resource-card lecture-schedule-card">
+          <span className="lecture-resource-type mono">Session schedule · Pitch order</span>
+          <strong>Today&apos;s run of show</strong>
+          <ol className="lecture-schedule">
+            {sessionSchedule(row).map((slot) => (
+              <li key={slot.start} className={`lecture-schedule-slot is-${slot.kind}`}>
+                <span className="mono">
+                  {slot.start}–{slot.end}
+                </span>
+                <span>{slot.label}</span>
+              </li>
+            ))}
+          </ol>
+          <span>Pitch order is reshuffled for every session so no team always goes first or last.</span>
+        </div>
       </div>
     );
   }
