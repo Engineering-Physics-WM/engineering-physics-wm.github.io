@@ -33,8 +33,8 @@ const AREA_COLORS = {
 };
 const ALL_AREAS = Object.keys(AREA_COLORS);
 
-/** Public Yang Ran Angels totals by project id (only teams with money, only while the
- *  instructor has totals switched on). Empty for other cohorts. */
+/** Public Yang Ran Angels totals by project id, including $0 teams, while the instructor has
+ *  totals switched on. Empty for other cohorts or when totals are hidden. */
 const useInvestorTotals = (cohortYear) => {
   const [raised, setRaised] = React.useState({});
   const inGame = cohortYear === GAME_COHORT_YEAR && isSupabaseConfigured;
@@ -45,11 +45,7 @@ const useInvestorTotals = (cohortYear) => {
     const load = async () => {
       const { totals, error } = await fetchPublicTotals(INVESTOR_GAME_ID);
       if (!alive || error) return;
-      setRaised(
-        Object.fromEntries(
-          totals.filter((item) => item.total > 0).map((item) => [item.projectId, item.total])
-        )
-      );
+      setRaised(Object.fromEntries(totals.map((item) => [item.projectId, item.total])));
     };
     load();
     const timer = window.setInterval(() => {
@@ -65,10 +61,10 @@ const useInvestorTotals = (cohortYear) => {
 };
 
 const RaisedBadge = ({ amount, className = "" }) =>
-  amount > 0 ? (
+  typeof amount === "number" ? (
     <p
       className={`project-card-raised ${className}`.trim()}
-      title={`${formatDollars(amount)} raised in the Yang Ran Angels`}
+      title={`${formatDollars(amount)} raised in Yang Ran Angels`}
     >
       <span className="project-card-raised-amount">{formatCompactDollars(amount)}</span> raised
     </p>
@@ -81,7 +77,7 @@ const ProjectCard = ({
   status = "",
   statusLabel = "",
   revealDelay = 0,
-  raised = 0,
+  raised = null,
 }) => {
   const railColor = AREA_COLORS[project.areas[0]] || "var(--pink)";
   const cardClass = "project-card" + (status ? ` is-${status}` : "");
@@ -139,7 +135,7 @@ const ProjectDialog = ({
   onClose,
   yearLabel = "",
   shortYearLabel = "",
-  raised = 0,
+  raised = null,
 }) => {
   const dialogRef = React.useRef(null);
   React.useEffect(() => {
@@ -670,7 +666,7 @@ const CurrentCatalogPage = ({ data, onNavigate }) => {
                   status={status}
                   statusLabel={statusLabel}
                   revealDelay={Math.min(360, index * 45)}
-                  raised={raisedById[p.id] || 0}
+                  raised={raisedById[p.id]}
                 />
               );
             })
@@ -706,7 +702,7 @@ const CurrentCatalogPage = ({ data, onNavigate }) => {
       </Reveal>
 
       <ProjectDialog
-        raised={openProject ? raisedById[openProject.id] || 0 : 0}
+        raised={openProject ? raisedById[openProject.id] : null}
         project={openProject}
         displayIdx={openProject ? openProject.num - 1 : -1}
         onClose={() => setOpenProject(null)}
