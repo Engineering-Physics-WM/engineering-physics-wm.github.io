@@ -72,6 +72,40 @@ const LectureMaterials = ({ row, onNavigate }: { row: ScheduleRow; onNavigate: O
     );
   }
 
+  if (row.topic === "Pitch Perfect II") {
+    return (
+      <div className="lecture-resource-grid">
+        <button
+          type="button"
+          className="lecture-resource-card"
+          onClick={() => onNavigate("pitchPerfectInvest")}
+        >
+          <span className="lecture-resource-type mono">In-class activity · Investor round</span>
+          <strong>Invest your $1M in the pitches</strong>
+          <span>
+            As each of the six teams pitches, split up to $1,000,000 across the projects you would
+            back.
+          </span>
+          <span className="lecture-resource-action" aria-hidden="true">
+            Open investor round <span>↗</span>
+          </span>
+        </button>
+        <button
+          type="button"
+          className="lecture-resource-card"
+          onClick={() => onNavigate("pitchPerfectResults")}
+        >
+          <span className="lecture-resource-type mono">Instructor · Live results</span>
+          <strong>Pitch Perfect II results</strong>
+          <span>Sign in to project live investment totals and open or close investing.</span>
+          <span className="lecture-resource-action" aria-hidden="true">
+            View results <span>↗</span>
+          </span>
+        </button>
+      </div>
+    );
+  }
+
   if (row.topic === "Career Success I with AI") {
     return (
       <button

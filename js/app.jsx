@@ -21,6 +21,12 @@ import { hashForPage, parseHashToPage, parseHashToYear } from "./routes.js";
 const RankingPage = React.lazy(() =>
   import("./ranking.jsx").then((m) => ({ default: m.RankingPage }))
 );
+const PitchInvestPage = React.lazy(() =>
+  import("./pitchInvestSurvey.jsx").then((m) => ({ default: m.PitchInvestPage }))
+);
+const PitchInvestResultsPage = React.lazy(() =>
+  import("./pitchInvestSurvey.jsx").then((m) => ({ default: m.PitchInvestResultsPage }))
+);
 const DashboardPage = React.lazy(() =>
   import("./dashboard.jsx").then((m) => ({ default: m.DashboardPage }))
 );
@@ -173,7 +179,9 @@ const Header = ({ page, onNavigate, year, setYear, years, currentYear }) => {
             aria-current={
               page === "syllabus" ||
               page === "pitchPerfectAssignment" ||
-              page === "careerSuccessAssignment"
+              page === "careerSuccessAssignment" ||
+              page === "pitchPerfectInvest" ||
+              page === "pitchPerfectResults"
             }
             onClick={() => {
               onNavigate("syllabus");
@@ -527,6 +535,12 @@ const App = () => {
           )}
           {page === "careerSuccessAssignment" && (
             <CareerSuccessAssignmentPage onNavigate={onNavigate} />
+          )}
+          {page === "pitchPerfectInvest" && <PitchInvestPage onNavigate={onNavigate} />}
+          {page === "pitchPerfectResults" && (
+            <AuthGate>
+              <PitchInvestResultsPage onNavigate={onNavigate} />
+            </AuthGate>
           )}
           {page === "ranking" && <RankingPage data={data} onNavigate={onNavigate} />}
           {page === "dashboard" && (

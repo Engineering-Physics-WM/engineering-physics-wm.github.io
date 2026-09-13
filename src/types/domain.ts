@@ -231,6 +231,28 @@ export type DashboardSummary = {
   coveragePercent: number | null;
 };
 
+export type PitchInvestmentRoundRow = {
+  round_id: string;
+  created_at?: string;
+  updated_at?: string;
+  cohort_year: CohortYear;
+  title: string;
+  is_open: boolean;
+  budget: number;
+  project_ids: ProjectId[];
+};
+
+export type PitchInvestmentRow = {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  round_id: string;
+  student_name: string;
+  student_email: EmailAddress;
+  allocations: Json;
+  total_invested: number;
+};
+
 type TableDefinition<Row, Insert = Partial<Row>, Update = Partial<Row>> = {
   Row: Row;
   Insert: Insert;
@@ -250,6 +272,8 @@ export type AppDatabase = {
       ranking_poll_settings: TableDefinition<PollSettingsRow>;
       cohort_announcements: TableDefinition<AnnouncementRow>;
       cohort_team_members: TableDefinition<TeamRosterRow, TeamRosterRow, Partial<TeamRosterRow>>;
+      pitch_investment_rounds: TableDefinition<PitchInvestmentRoundRow>;
+      pitch_investments: TableDefinition<PitchInvestmentRow>;
     };
     Views: Record<string, never>;
     Functions: {
@@ -277,6 +301,25 @@ export type AppDatabase = {
         Returns: Array<{
           submission_mode: "created" | "updated";
           saved_receipt_code: string;
+        }>;
+      };
+      get_pitch_investment_round: {
+        Args: {
+          check_round_id: string;
+        };
+        Returns: Array<Omit<PitchInvestmentRoundRow, "created_at" | "updated_at">>;
+      };
+      submit_pitch_investment: {
+        Args: {
+          submit_round_id: string;
+          submit_student_name: string;
+          submit_student_email: EmailAddress;
+          submit_allocations: Json;
+        };
+        Returns: Array<{
+          submission_mode: "created" | "updated";
+          saved_total: number;
+          saved_at: string;
         }>;
       };
     };

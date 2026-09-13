@@ -3174,3 +3174,571 @@ main a:hover {
     gap: 2px;
   }
 }
+
+/* Pitch Perfect II investor round */
+.lecture-resource-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  gap: 12px;
+  max-width: 1160px;
+}
+.lecture-resource-grid .lecture-resource-card {
+  width: 100%;
+}
+.invest-page .btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+.invest-banner {
+  margin: 28px 0 0;
+  padding: 14px 18px;
+  border: 1px solid var(--hairline-2);
+  border-left: 3px solid var(--pink-ink);
+  background: var(--pink-soft);
+  font-size: 15px;
+}
+.invest-banner strong {
+  font-weight: 600;
+}
+.invest-layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.8fr) minmax(0, 2fr);
+  gap: clamp(28px, 5vw, 72px);
+  align-items: start;
+  padding-top: 40px;
+}
+.invest-side {
+  position: sticky;
+  top: 92px;
+  display: grid;
+  gap: 18px;
+}
+.invest-panel {
+  display: grid;
+  gap: 14px;
+  padding: 22px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-lg);
+  background: color-mix(in oklch, var(--paper) 75%, white);
+}
+.invest-panel h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+.invest-panel .assignment-eyebrow,
+.invest-rules .assignment-eyebrow {
+  margin: 0;
+}
+.invest-panel-status {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.invest-panel-status.is-success {
+  color: var(--olive-ink);
+}
+.invest-panel-status.is-error {
+  color: oklch(48% 0.14 28);
+}
+.invest-budget-figures {
+  margin: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.invest-budget-figures div {
+  display: grid;
+  gap: 4px;
+}
+.invest-budget-figures dt,
+.invest-stats dt,
+.invest-dock-figure span,
+.invest-amount-field span,
+.invest-link-callout span {
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.invest-budget-figures dd {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(22px, 2.2vw, 28px);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+.invest-budget-figures dd.is-zero {
+  color: var(--pink-ink);
+}
+.invest-meter {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--paper-3);
+  overflow: hidden;
+}
+.invest-meter span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--olive-ink);
+  transition: width 220ms var(--ease);
+}
+.invest-switch {
+  justify-self: start;
+  padding: 4px 0;
+  border: 0;
+  background: none;
+  color: var(--olive-ink);
+  font-size: 11px;
+  cursor: pointer;
+}
+.invest-switch:hover {
+  color: var(--pink-ink);
+}
+.invest-rules {
+  display: grid;
+  gap: 8px;
+}
+.invest-rules .assignment-numbered-list li {
+  padding: 10px 0;
+  font-size: 14px;
+}
+.invest-locked-note {
+  margin: 0 0 14px;
+  padding: 12px 16px;
+  border: 1px dashed var(--hairline-2);
+  border-radius: var(--radius);
+  color: var(--muted);
+  font-size: 14px;
+}
+.invest-cards {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+  gap: 14px;
+}
+.invest-card {
+  display: grid;
+  align-content: space-between;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-lg);
+  background: color-mix(in oklch, var(--paper) 75%, white);
+  transition:
+    border-color 180ms var(--ease),
+    box-shadow 180ms var(--ease);
+}
+.invest-card.has-investment {
+  border-color: var(--olive-2);
+  box-shadow: var(--shadow-1);
+}
+.invest-card-head {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  gap: 12px;
+}
+.invest-card-num {
+  padding-top: 6px;
+  color: var(--pink-ink);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+}
+.invest-card-title h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+.invest-card-title p {
+  margin: 6px 0 0;
+  color: var(--ink-soft);
+  font-size: 13px;
+  line-height: 1.45;
+}
+.invest-card-title span {
+  display: block;
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+}
+.invest-card-controls {
+  display: grid;
+  gap: 12px;
+}
+.invest-amount-field {
+  display: grid;
+  gap: 4px;
+}
+.invest-amount-field input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+  background: color-mix(in oklch, var(--paper) 70%, white);
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.invest-amount-field input:focus {
+  outline: none;
+  border-color: var(--pink-ink);
+  background: white;
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--pink) 22%, transparent);
+}
+.invest-amount-field input:disabled {
+  color: var(--muted);
+  cursor: not-allowed;
+}
+.invest-slider {
+  --fill: 0%;
+  --cap: 100%;
+  width: 100%;
+  height: 28px;
+  margin: 0;
+  background: transparent;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+.invest-slider:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.invest-slider::-webkit-slider-runnable-track {
+  height: 8px;
+  border-radius: 999px;
+  background: linear-gradient(
+    to right,
+    var(--olive-ink) 0 var(--fill),
+    var(--olive-soft) var(--fill) var(--cap),
+    var(--paper-3) var(--cap) 100%
+  );
+}
+.invest-slider::-moz-range-track {
+  height: 8px;
+  border-radius: 999px;
+  background: linear-gradient(
+    to right,
+    var(--olive-ink) 0 var(--fill),
+    var(--olive-soft) var(--fill) var(--cap),
+    var(--paper-3) var(--cap) 100%
+  );
+}
+.invest-slider::-webkit-slider-thumb {
+  width: 24px;
+  height: 24px;
+  margin-top: -8px;
+  border: 2px solid var(--olive-ink);
+  border-radius: 50%;
+  background: var(--paper);
+  box-shadow: var(--shadow-1);
+  -webkit-appearance: none;
+  appearance: none;
+}
+.invest-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--olive-ink);
+  border-radius: 50%;
+  background: var(--paper);
+}
+.invest-slider:focus-visible {
+  outline: 2px solid var(--pink-ink);
+  outline-offset: 4px;
+  border-radius: 999px;
+}
+.invest-quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.invest-chip {
+  min-height: 36px;
+  padding: 6px 12px;
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  cursor: pointer;
+  transition:
+    border-color 160ms,
+    background 160ms;
+}
+.invest-chip:hover:not(:disabled) {
+  border-color: var(--ink);
+  background: var(--paper-2);
+}
+.invest-chip:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.invest-chip.is-clear {
+  color: var(--muted);
+}
+.invest-note {
+  margin: 0;
+  color: var(--olive-ink);
+  font-size: 12.5px;
+}
+.invest-dock {
+  display: none;
+}
+
+/* Instructor results */
+.invest-results-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  padding: 22px 0;
+  border-bottom: 1px solid var(--hairline);
+}
+.invest-link-callout {
+  display: grid;
+  gap: 2px;
+  margin-left: auto;
+  text-align: right;
+}
+.invest-link-callout strong {
+  font-family: var(--font-display);
+  font-size: clamp(20px, 2.4vw, 30px);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+.invest-stats {
+  margin: 28px 0 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+  gap: 14px;
+}
+.invest-stats div {
+  display: grid;
+  gap: 4px;
+  padding-top: 10px;
+  border-top: 1px solid var(--hairline-2);
+}
+.invest-stats dd {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(26px, 3vw, 40px);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+.invest-results-chart {
+  margin: 36px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+}
+.invest-result-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 24px minmax(150px, 0.8fr) minmax(0, 2fr) minmax(150px, auto);
+  align-items: center;
+  gap: 16px;
+  padding: 14px 0;
+  border-top: 1px solid var(--hairline);
+  outline: none;
+}
+.invest-result-row:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--pink-ink);
+}
+.invest-result-rank {
+  color: var(--muted);
+  font-size: 12px;
+}
+.invest-result-label {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.invest-result-label strong {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.invest-result-label span {
+  color: var(--muted);
+  font-size: 10.5px;
+}
+.invest-result-track {
+  position: relative;
+  display: flex;
+  height: 28px;
+  border-left: 1px solid var(--hairline-2);
+}
+.invest-result-bar {
+  display: block;
+  border-radius: 0 4px 4px 0;
+  background: var(--olive-ink);
+  transition:
+    width 480ms var(--ease),
+    background 160ms;
+}
+.invest-result-row:hover .invest-result-bar,
+.invest-result-row:focus-visible .invest-result-bar {
+  background: var(--olive);
+}
+.invest-result-value {
+  display: grid;
+  gap: 2px;
+  text-align: right;
+}
+.invest-result-value strong {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.invest-result-value span {
+  color: var(--ink-soft);
+  font-size: 12px;
+}
+.invest-result-tip {
+  position: absolute;
+  z-index: 5;
+  top: 50%;
+  left: 12px;
+  padding: 8px 12px;
+  border: 1px solid var(--hairline-2);
+  border-radius: var(--radius);
+  background: var(--paper);
+  box-shadow: var(--shadow-2);
+  color: var(--ink);
+  font-size: 13px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(calc(-50% + 4px));
+  transition:
+    opacity 140ms,
+    transform 140ms;
+}
+.invest-result-row:hover .invest-result-tip,
+.invest-result-row:focus-visible .invest-result-tip {
+  opacity: 1;
+  transform: translateY(-50%);
+}
+@media (hover: none) {
+  .invest-result-tip {
+    display: none;
+  }
+}
+.invest-responses {
+  margin-top: 44px;
+}
+.invest-responses summary {
+  padding: 14px 0;
+  border-top: 1px solid var(--hairline-2);
+  font-weight: 600;
+  cursor: pointer;
+}
+.invest-table-wrap {
+  overflow-x: auto;
+}
+.invest-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.invest-table th,
+.invest-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--hairline);
+  text-align: right;
+  white-space: nowrap;
+}
+.invest-table th:first-child,
+.invest-table td:first-child {
+  text-align: left;
+}
+.invest-table th {
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.invest-table td.is-zero {
+  color: var(--muted);
+}
+.invest-table td small {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+@media (max-width: 980px) {
+  .invest-layout {
+    grid-template-columns: 1fr;
+  }
+  .invest-side {
+    position: static;
+  }
+  .invest-page.has-dock {
+    padding-bottom: 104px;
+  }
+  .invest-dock {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 40;
+    display: grid;
+    grid-template-columns: auto minmax(48px, 1fr) auto;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--hairline-2);
+    background: color-mix(in oklch, var(--paper) 92%, white);
+    box-shadow: 0 -10px 30px oklch(22% 0.012 95 / 0.08);
+  }
+  .invest-dock-figure {
+    display: grid;
+    gap: 2px;
+  }
+  .invest-dock-figure strong {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+  .invest-link-callout {
+    margin-left: 0;
+    text-align: left;
+  }
+}
+@media (max-width: 720px) {
+  .invest-result-row {
+    grid-template-columns: 20px minmax(0, 1fr) auto;
+    gap: 8px 12px;
+  }
+  .invest-result-track {
+    grid-column: 2 / -1;
+    grid-row: 2;
+    height: 14px;
+  }
+}

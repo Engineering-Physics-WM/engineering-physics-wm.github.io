@@ -6,12 +6,22 @@ export const PAGE_TO_HASH = {
   syllabus: "/syllabus",
   pitchPerfectAssignment: "/syllabus/pitch-perfect-i/assignment",
   careerSuccessAssignment: "/syllabus/career-success-i/assignment",
+  pitchPerfectInvest: "/syllabus/pitch-perfect-ii/invest",
+  pitchPerfectResults: "/syllabus/pitch-perfect-ii/results",
   ranking: "/ranking",
   dashboard: "/dashboard",
   archive: "/archive",
 };
 
-const HASH_TO_PAGE = Object.fromEntries(Object.entries(PAGE_TO_HASH).map(([page, h]) => [h, page]));
+// Short, typeable aliases (e.g. ep.yangran.org/#/invest on a projector slide).
+const HASH_ALIASES = {
+  "/invest": "pitchPerfectInvest",
+};
+
+const HASH_TO_PAGE = {
+  ...HASH_ALIASES,
+  ...Object.fromEntries(Object.entries(PAGE_TO_HASH).map(([page, h]) => [h, page])),
+};
 
 /** Map a page name to its hash fragment, optionally including the cohort year.
  *  Year is omitted when it matches currentYear (keeps default-view URLs clean). */
