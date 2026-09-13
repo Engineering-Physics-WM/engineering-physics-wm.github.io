@@ -1,0 +1,11 @@
+{
+  "remoteName": "origin",
+  "projects": [
+    {
+      "id": "prj_BdsFY2AwrhlVFM65e0POD6NXdWcU",
+      "name": "engineering-physics",
+      "directory": ".",
+      "orgId": "team_okXaFqVnViUb1t6lBkie2aJD"
+    }
+  ]
+}
