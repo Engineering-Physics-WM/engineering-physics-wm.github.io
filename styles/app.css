@@ -3947,3 +3947,23 @@ main a:hover {
 .dialog-raised {
   margin-top: 10px;
 }
+
+/* Yang Ran Angels: autosave status in the phone dock */
+.invest-dock-status {
+  justify-self: end;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: var(--olive-soft);
+  color: var(--olive-ink);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+.invest-dock-status.is-info {
+  background: var(--paper-2);
+  color: var(--muted);
+}
+.invest-dock-status.is-error {
+  background: var(--pink-soft);
+  color: oklch(48% 0.14 28);
+}

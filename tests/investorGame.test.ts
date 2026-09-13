@@ -30,10 +30,12 @@ describe("login input", () => {
 });
 
 describe("sanitizeAmount and parseDollarInput", () => {
-  it("clamps amounts to whole dollars within the budget", () => {
+  it("rounds amounts to $10K steps within the budget", () => {
     expect(sanitizeAmount(-5)).toBe(0);
     expect(sanitizeAmount("abc")).toBe(0);
-    expect(sanitizeAmount(1234.6)).toBe(1235);
+    expect(sanitizeAmount(4_999)).toBe(0);
+    expect(sanitizeAmount(14_999)).toBe(10_000);
+    expect(sanitizeAmount(15_000)).toBe(20_000);
     expect(sanitizeAmount(5_000_000)).toBe(INVESTMENT_BUDGET);
   });
 
@@ -65,6 +67,11 @@ describe("setAllocation", () => {
     expect(allocations).toEqual({ a: 400_000, b: 600_000, c: 0 });
   });
 
+  it("rounds typed amounts to the nearest $10K step", () => {
+    expect(setAllocation(emptyAllocations(IDS), "a", 25_000).a).toBe(30_000);
+    expect(setAllocation(emptyAllocations(IDS), "a", 4_000).a).toBe(0);
+  });
+
   it("keeps the student's own team at zero", () => {
     const allocations = setAllocation(emptyAllocations(IDS), "b", 500_000, "b");
     expect(allocations.b).toBe(0);
@@ -94,6 +101,7 @@ describe("validateAllocations", () => {
     expect(validateAllocations({ a: 600_000, b: 500_000 }, IDS)).toMatch(/cannot be more/);
     expect(validateAllocations({ z: 1 }, IDS)).toMatch(/Unknown team/);
     expect(validateAllocations({ a: 10.5 }, IDS)).toMatch(/whole-dollar/);
+    expect(validateAllocations({ a: 25_000 }, IDS)).toMatch(/\$10,000 steps/);
     expect(validateAllocations({ b: 1 }, IDS, "b")).toMatch(/own team/);
     expect(validateAllocations({ a: 1_000_000, b: 0, c: 0 }, IDS, "b")).toBeNull();
   });

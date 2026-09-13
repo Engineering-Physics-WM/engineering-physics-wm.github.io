@@ -32,6 +32,7 @@ import {
   maxForProject,
   normalizeAllocations,
   parseDollarInput,
+  sanitizeAmount,
   saveAllocations,
   setAllocation,
   setGameSettings,
@@ -89,9 +90,6 @@ const clearStoredToken = () => {
     window.localStorage.removeItem(SESSION_KEY);
   } catch {}
 };
-
-const formatClock = (value) =>
-  value ? new Date(value).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : "";
 
 const formatStamp = (value) =>
   value
@@ -166,13 +164,13 @@ const GameRules = () => (
     <p className="assignment-eyebrow mono">Rules</p>
     <ol className="assignment-numbered-list">
       <li>You start with {formatDollars(INVESTMENT_BUDGET)} in play money.</li>
-      <li>Invest any amount in any team except your own.</li>
+      <li>Invest in steps of $10,000, in any team except your own.</li>
       <li>Your total can&apos;t go over $1M. Money you don&apos;t invest stays in your wallet.</li>
       <li>
         After each pitch or progress report, you can move money: pull it out of one team and put it
         into another.
       </li>
-      <li>Nothing counts until you press Save.</li>
+      <li>Every change saves instantly. There is no submit button.</li>
       <li>The class sees each team&apos;s total. Only Prof. Yang sees who invested what.</li>
     </ol>
   </section>
@@ -206,7 +204,7 @@ const GameDisclaimer = () => (
           You log in with your first name and a password from Prof. Yang. The game does not ask for
           your email or student ID.
         </li>
-        <li>Each time you save, the game records the amounts, the time, and the class session.</li>
+        <li>Each change you make is recorded with the amounts, the time, and the class session.</li>
         <li>
           Passwords are stored hashed, but this is a low-security class tool. Keep your password to
           yourself.
@@ -226,27 +224,33 @@ const GameDisclaimer = () => (
 
 // ── Student page ──────────────────────────────────────────────────────────────
 
-const QUICK_ADDS = [50_000, 100_000];
+const QUICK_STEPS = [
+  { label: "−$10K", delta: -10_000 },
+  { label: "+$10K", delta: 10_000 },
+  { label: "+$100K", delta: 100_000 },
+];
 
-const InvestmentCard = ({ project, allocations, savedAmount, ownTeamId, disabled, onSet }) => {
+const InvestmentCard = ({ project, allocations, ownTeamId, disabled, onSet }) => {
   const isOwnTeam = project.id === ownTeamId;
   const amount = allocations[project.id] || 0;
   const cap = maxForProject(allocations, project.id, ownTeamId);
   const [text, setText] = React.useState(null);
   const [note, setNote] = React.useState("");
   const inputId = `invest-${project.id}`;
-  const changed = savedAmount !== null && savedAmount !== amount;
 
-  const apply = (requested) => {
-    const next = Math.max(0, requested);
+  const apply = (requested, typed = false) => {
+    const wanted = Math.max(0, requested);
+    const stepped = sanitizeAmount(wanted);
     setNote(
-      next <= cap
-        ? ""
-        : cap === 0
+      stepped > cap
+        ? cap === 0
           ? "Your $1M is fully invested. Pull money out of another team first."
           : `Capped at ${formatDollars(cap)}, which is all you have left.`
+        : typed && stepped !== wanted
+          ? `Rounded to ${formatDollars(stepped)}. Investments go in $10K steps.`
+          : ""
     );
-    onSet(project.id, next);
+    onSet(project.id, stepped);
   };
 
   const commitText = () => {
@@ -257,16 +261,13 @@ const InvestmentCard = ({ project, allocations, savedAmount, ownTeamId, disabled
       setNote("Type a dollar amount, like 250000 or 250k.");
       return;
     }
-    apply(parsed);
+    apply(parsed, true);
   };
 
   return (
     <li
       className={
-        "invest-card" +
-        (amount > 0 ? " has-investment" : "") +
-        (changed ? " is-changed" : "") +
-        (isOwnTeam ? " is-own-team" : "")
+        "invest-card" + (amount > 0 ? " has-investment" : "") + (isOwnTeam ? " is-own-team" : "")
       }
     >
       <div className="invest-card-head">
@@ -286,12 +287,7 @@ const InvestmentCard = ({ project, allocations, savedAmount, ownTeamId, disabled
       ) : (
         <div className="invest-card-controls">
           <label className="invest-amount-field" htmlFor={inputId}>
-            <span className="mono">
-              Your investment
-              {changed && (
-                <em className="invest-was"> · was {formatCompactDollars(savedAmount)}</em>
-              )}
-            </span>
+            <span className="mono">Your investment</span>
             <input
               id={inputId}
               inputMode="decimal"
@@ -330,15 +326,15 @@ const InvestmentCard = ({ project, allocations, savedAmount, ownTeamId, disabled
           />
 
           <div className="invest-quick">
-            {QUICK_ADDS.map((step) => (
+            {QUICK_STEPS.map((step) => (
               <button
-                key={step}
+                key={step.label}
                 type="button"
                 className="invest-chip"
-                disabled={disabled || amount >= cap}
-                onClick={() => apply(amount + step)}
+                disabled={disabled || (step.delta < 0 ? amount === 0 : amount >= cap)}
+                onClick={() => apply(amount + step.delta)}
               >
-                +{formatCompactDollars(step)}
+                {step.label}
               </button>
             ))}
             <button
@@ -383,35 +379,38 @@ export const InvestorGamePage = ({ onNavigate }) => {
   const [saved, setSaved] = React.useState(null);
   const [savedAt, setSavedAt] = React.useState(null);
   const [saving, setSaving] = React.useState(false);
-  const [saveStatus, setSaveStatus] = React.useState(null);
+  const [saveError, setSaveError] = React.useState("");
+  const savedRef = React.useRef(null);
   const [game, refreshGame] = useGameStatus(15_000);
 
   const ownTeamId = session?.teamProjectId ?? null;
   const total = totalInvested(allocations);
   const wallet = INVESTMENT_BUDGET - total;
-  const changes = saved ? describeChanges(saved, allocations, GAME_PROJECT_IDS) : [];
-  const dirty = changes.length > 0;
+  const snapshot = JSON.stringify(allocations);
+  const pending = Boolean(session && saved) && snapshot !== JSON.stringify(saved);
   const closed = game.state === "ready" && !game.isOpen;
   const canEdit = Boolean(session) && !closed;
 
   const applySession = React.useCallback((player) => {
     const clean = normalizeAllocations(player.allocations, GAME_PROJECT_IDS, player.teamProjectId);
     writeStoredToken(player.token);
+    savedRef.current = clean;
     setSession(player);
     setAllocations(clean);
     setSaved(clean);
     setSavedAt(player.savedAt);
-    setSaveStatus(null);
+    setSaveError("");
     setPassword("");
     setLoginStatus("");
   }, []);
 
   const endSession = React.useCallback((message = "") => {
     clearStoredToken();
+    savedRef.current = null;
     setSession(null);
     setSaved(null);
     setSavedAt(null);
-    setSaveStatus(null);
+    setSaveError("");
     setAllocations(emptyAllocations(GAME_PROJECT_IDS));
     setShowLogin(Boolean(message));
     setLoginStatus(message);
@@ -433,15 +432,58 @@ export const InvestorGamePage = ({ onNavigate }) => {
     };
   }, [applySession]);
 
+  const persist = React.useCallback(
+    async (next) => {
+      if (!session) return;
+      const problem = validateAllocations(next, GAME_PROJECT_IDS, session.teamProjectId);
+      if (problem) {
+        setSaveError(problem);
+        return;
+      }
+      setSaving(true);
+      setSaveError("");
+      const result = await saveAllocations({
+        gameId: INVESTOR_GAME_ID,
+        token: session.token,
+        allocations: next,
+      });
+      setSaving(false);
+      if (result.error) {
+        if (isSessionEndedError(result.error)) {
+          endSession("Your session ended. Log in again with your first name and password.");
+          return;
+        }
+        // The game refused the change (for example, investing just closed): show what is saved.
+        if (result.error.code === "42501" && savedRef.current) setAllocations(savedRef.current);
+        setSaveError(describeError(result.error));
+        refreshGame();
+        return;
+      }
+      savedRef.current = next;
+      setSaved(next);
+      if (result.savedAt) setSavedAt(result.savedAt);
+    },
+    [session, endSession, refreshGame]
+  );
+
+  // Every change saves itself a moment after the student stops adjusting, so dragging a
+  // slider records one change instead of dozens.
   React.useEffect(() => {
-    if (!dirty) return undefined;
+    if (!pending || closed || saving || saveError) return undefined;
+    const next = JSON.parse(snapshot);
+    const timer = window.setTimeout(() => persist(next), 450);
+    return () => window.clearTimeout(timer);
+  }, [pending, closed, saving, saveError, snapshot, persist]);
+
+  React.useEffect(() => {
+    if (!pending && !saving) return undefined;
     const warn = (event) => {
       event.preventDefault();
       event.returnValue = "";
     };
     window.addEventListener("beforeunload", warn);
     return () => window.removeEventListener("beforeunload", warn);
-  }, [dirty]);
+  }, [pending, saving]);
 
   const login = async (event) => {
     event.preventDefault();
@@ -473,53 +515,19 @@ export const InvestorGamePage = ({ onNavigate }) => {
   };
 
   const setAmount = (projectId, requested) => {
-    setSaveStatus(null);
+    setSaveError("");
     setAllocations((current) => setAllocation(current, projectId, requested, ownTeamId));
   };
 
-  const save = async () => {
-    if (!session || saving || !dirty) return;
-    const problem = validateAllocations(allocations, GAME_PROJECT_IDS, ownTeamId);
-    if (problem) {
-      setSaveStatus({ tone: "error", text: problem });
-      return;
-    }
-    const snapshot = allocations;
-    setSaving(true);
-    setSaveStatus({ tone: "info", text: "Saving…" });
-    const result = await saveAllocations({
-      gameId: INVESTOR_GAME_ID,
-      token: session.token,
-      allocations: snapshot,
-    });
-    setSaving(false);
-    if (result.error) {
-      if (isSessionEndedError(result.error)) {
-        endSession("Your session ended. Log in again with your first name and password.");
-        return;
-      }
-      setSaveStatus({ tone: "error", text: describeError(result.error) });
-      refreshGame();
-      return;
-    }
-    setSaved(snapshot);
-    if (result.savedAt) setSavedAt(result.savedAt);
-    setSaveStatus({
-      tone: "success",
-      text: result.changed
-        ? `Saved at ${formatClock(result.savedAt)}.`
-        : "Already saved. Nothing new to record.",
-    });
-  };
-
-  const undo = () => {
-    if (!saved) return;
-    setAllocations(saved);
-    setSaveStatus(null);
-  };
+  const retrySave = () => setSaveError("");
 
   const logOut = () => {
-    if (dirty && !window.confirm("You have unsaved changes. Log out and lose them?")) return;
+    if (
+      (pending || saving) &&
+      !window.confirm("Your last change is still saving. Log out anyway?")
+    ) {
+      return;
+    }
     endSession("");
   };
 
@@ -532,20 +540,23 @@ export const InvestorGamePage = ({ onNavigate }) => {
     unconfigured: "Preview only",
   }[game.state];
 
-  const statusLine =
-    saveStatus ||
-    (closed
-      ? {
-          tone: "info",
-          text: "Investing is closed right now. Your saved portfolio stays as it is.",
-        }
-      : dirty
-        ? { tone: "warn", text: `Not saved yet: ${changeText(changes)}` }
+  const canRetry = Boolean(saveError) && pending && !closed;
+  const saveLine = closed
+    ? { tone: "info", text: "Investing is closed right now. Your portfolio stays as it is." }
+    : saveError
+      ? { tone: "error", text: saveError }
+      : saving || pending
+        ? { tone: "info", text: "Saving…" }
         : savedAt
-          ? { tone: "success", text: `Last saved ${formatStamp(savedAt)}.` }
-          : { tone: "info", text: "You haven't invested yet." });
-
-  const saveLabel = saving ? "Saving…" : dirty ? "Save changes" : "Saved ✓";
+          ? { tone: "success", text: `All changes saved · ${formatStamp(savedAt)}` }
+          : { tone: "info", text: "Changes save automatically as you invest." };
+  const dockStatus = closed
+    ? { tone: "info", text: "Closed" }
+    : saveError
+      ? { tone: "error", text: "Not saved" }
+      : saving || pending
+        ? { tone: "info", text: "Saving…" }
+        : { tone: "success", text: "Saved ✓" };
 
   return (
     <div className={"page assignment-page invest-page" + (session ? " has-dock" : "")}>
@@ -627,20 +638,12 @@ export const InvestorGamePage = ({ onNavigate }) => {
               <div className="invest-meter" aria-hidden="true">
                 <span style={{ width: `${(total / INVESTMENT_BUDGET) * 100}%` }} />
               </div>
-              <button
-                className="btn btn-primary"
-                type="button"
-                disabled={!dirty || saving || closed}
-                onClick={save}
-              >
-                {saveLabel}
-              </button>
-              <p className={`invest-panel-status is-${statusLine.tone}`} aria-live="polite">
-                {statusLine.text}
+              <p className={`invest-panel-status is-${saveLine.tone}`} aria-live="polite">
+                {saveLine.text}
               </p>
-              {dirty && !saving && (
-                <button className="invest-switch mono" type="button" onClick={undo}>
-                  Undo unsaved changes
+              {canRetry && (
+                <button className="btn btn-ghost" type="button" onClick={retrySave}>
+                  Try again
                 </button>
               )}
               <button className="invest-switch mono" type="button" onClick={logOut}>
@@ -730,7 +733,6 @@ export const InvestorGamePage = ({ onNavigate }) => {
                 key={project.id}
                 project={project}
                 allocations={allocations}
-                savedAmount={saved ? saved[project.id] || 0 : null}
                 ownTeamId={ownTeamId}
                 disabled={!canEdit}
                 onSet={setAmount}
@@ -750,14 +752,15 @@ export const InvestorGamePage = ({ onNavigate }) => {
             <div className="invest-meter" aria-hidden="true">
               <span style={{ width: `${(total / INVESTMENT_BUDGET) * 100}%` }} />
             </div>
-            <button
-              className="btn btn-primary"
-              type="button"
-              disabled={!dirty || saving || closed}
-              onClick={save}
-            >
-              {saving ? "Saving…" : dirty ? "Save" : "Saved ✓"}
-            </button>
+            {canRetry ? (
+              <button className="btn btn-primary" type="button" onClick={retrySave}>
+                Retry
+              </button>
+            ) : (
+              <span className={`invest-dock-status mono is-${dockStatus.tone}`} aria-live="polite">
+                {dockStatus.text}
+              </span>
+            )}
           </div>,
           document.body
         )}
@@ -1054,7 +1057,7 @@ export const InvestorGameDashboardView = ({ onNavigate }) => {
           <p className="assignment-eyebrow mono">Yang Ran Angels · Instructor only</p>
           <h2>Who invested in whom</h2>
           <p className="pitch-admin-copy">
-            Students log in with their first name and the password you gave them. Every save is
+            Students log in with their first name and the password you gave them. Every change is
             logged under the current class session. The public page shows team totals only.
           </p>
         </div>
@@ -1291,7 +1294,7 @@ export const InvestorGameDashboardView = ({ onNavigate }) => {
       )}
 
       <div className="pitch-admin-subhead">
-        <h3>History of every save</h3>
+        <h3>History of every change</h3>
         <select
           value={activityFilter}
           onChange={(event) => setActivityFilter(event.target.value)}
@@ -1306,7 +1309,7 @@ export const InvestorGameDashboardView = ({ onNavigate }) => {
         </select>
       </div>
       {visibleActivity.length === 0 ? (
-        <p className="invest-locked-note">No saves recorded yet.</p>
+        <p className="invest-locked-note">No changes recorded yet.</p>
       ) : (
         <div className="invest-table-wrap">
           <table className="invest-table">

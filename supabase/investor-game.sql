@@ -1,6 +1,7 @@
 -- Yang Ran Angels, the EP classroom investor game (starts at Pitch Perfect II, continues through later pitches and progress reports).
 -- Each student logs in with their first name and a preset password, and keeps one $1M portfolio
--- for the whole year. Every save is written to an activity log for the instructor.
+-- for the whole year. The page saves every change instantly, and each change is written to an activity log
+-- for the instructor. Investments move in $10,000 steps.
 --
 -- Setup, in Supabase Dashboard -> SQL Editor:
 --   1. Run this file. Safe to re-run: players, portfolios, history, and settings are kept.
@@ -327,6 +328,10 @@ begin
 
     if amount > 0 and entry.key = player.team_project_id then
       raise exception 'You cannot invest in your own team.' using errcode = '42501';
+    end if;
+
+    if mod(amount, 10000) <> 0 then
+      raise exception 'Investments go in $10,000 steps.' using errcode = '22023';
     end if;
 
     running_total := running_total + amount;

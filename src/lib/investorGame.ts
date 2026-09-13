@@ -53,11 +53,11 @@ export const validatePassword = (value: string) => {
 
 // ── Budget math ───────────────────────────────────────────────────────────────
 
-/** Coerce any input to a whole-dollar amount between 0 and the budget. */
+/** Coerce any input to the nearest $10K step between 0 and the budget. */
 export const sanitizeAmount = (value: unknown, budget = INVESTMENT_BUDGET) => {
   const amount = typeof value === "number" ? value : Number(value);
   if (!Number.isFinite(amount) || amount <= 0) return 0;
-  return Math.min(Math.round(amount), budget);
+  return Math.min(Math.round(amount / INVESTMENT_STEP) * INVESTMENT_STEP, budget);
 };
 
 /** Parse typed dollar text such as "250000", "$250,000", "250k", or "1m".
@@ -144,6 +144,7 @@ export const validateAllocations = (
       return `Each investment must be a whole-dollar amount from $0 to ${formatDollars(budget)}.`;
     }
     if (id === ownTeamId && amount > 0) return "You cannot invest in your own team.";
+    if (amount % INVESTMENT_STEP !== 0) return "Investments go in $10,000 steps.";
   }
   if (totalInvested(allocations) > budget) {
     return `Your total cannot be more than ${formatDollars(budget)}.`;
@@ -390,7 +391,7 @@ export const fetchPlayers = async (gameId: string) => {
 
 export type AdminActivity = Omit<InvestorGameActivityRow, "game_id">;
 
-export const fetchActivity = async (gameId: string, limit = 500) => {
+export const fetchActivity = async (gameId: string, limit = 2000) => {
   if (!supabase) return { rows: [] as AdminActivity[], error: notConfiguredError() };
   const { data, error } = await supabase
     .from("investor_game_activity")
