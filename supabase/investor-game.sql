@@ -1,7 +1,8 @@
 -- Yang Ran Angels, the EP classroom investor game (starts at Pitch Perfect II, continues through later pitches and progress reports).
 -- Each student logs in with their first name and a preset password, and keeps one $1M portfolio
 -- for the whole year. The page saves every change instantly, and each change is written to an activity log
--- for the instructor. Investments move in $10,000 steps.
+-- for the instructor. Investments move in $10,000 steps. Students get $1M each; an
+-- instructor account can have its own budget.
 --
 -- Setup, in Supabase Dashboard -> SQL Editor:
 --   1. Run this file. Safe to re-run: players, portfolios, history, and settings are kept.
@@ -69,18 +70,33 @@ create table if not exists public.investor_game_players (
   session_token uuid not null default gen_random_uuid(),
   team_project_id text,
   is_practice boolean not null default false,
+  is_instructor boolean not null default false,
+  budget integer not null default 1000000,
   allocations jsonb not null default '{}'::jsonb,
   total_invested integer not null default 0,
   last_saved_at timestamptz,
   failed_login_attempts integer not null default 0,
   locked_until timestamptz,
   constraint investor_game_players_name_length check (char_length(display_name) between 1 and 40),
-  constraint investor_game_players_team_required check (is_practice or team_project_id is not null),
+  constraint investor_game_players_team_required check (is_practice or is_instructor or team_project_id is not null),
   constraint investor_game_players_allocations_object check (jsonb_typeof(allocations) = 'object'),
-  constraint investor_game_players_total_range check (total_invested between 0 and 1000000),
+  constraint investor_game_players_budget_positive check (budget > 0),
+  constraint investor_game_players_total_range check (total_invested between 0 and budget),
   constraint investor_game_players_unique_name unique (game_id, name_key),
   constraint investor_game_players_unique_token unique (session_token)
 );
+
+-- Bring tables created by an earlier version of this script up to date.
+alter table public.investor_game_players add column if not exists is_instructor boolean not null default false;
+alter table public.investor_game_players add column if not exists budget integer not null default 1000000;
+alter table public.investor_game_players drop constraint if exists investor_game_players_team_required;
+alter table public.investor_game_players add constraint investor_game_players_team_required
+  check (is_practice or is_instructor or team_project_id is not null);
+alter table public.investor_game_players drop constraint if exists investor_game_players_budget_positive;
+alter table public.investor_game_players add constraint investor_game_players_budget_positive check (budget > 0);
+alter table public.investor_game_players drop constraint if exists investor_game_players_total_range;
+alter table public.investor_game_players add constraint investor_game_players_total_range
+  check (total_invested between 0 and budget);
 
 create table if not exists public.investor_game_activity (
   id bigint generated always as identity primary key,
@@ -160,6 +176,8 @@ grant execute on function public.investor_game_status(text) to anon, authenticat
 -- Log in -------------------------------------------------------------------------
 -- status: ok | wrong (unknown name or wrong password) | locked (5 misses, wait 2 minutes)
 
+drop function if exists public.investor_game_login(text, text, text);
+
 create or replace function public.investor_game_login(
   p_game_id text,
   p_name text,
@@ -170,6 +188,8 @@ returns table (
   player_name text,
   team_project_id text,
   is_practice boolean,
+  is_instructor boolean,
+  budget integer,
   session_token uuid,
   allocations jsonb,
   saved_at timestamptz
@@ -196,12 +216,12 @@ begin
     and pl.name_key = name_key_value;
 
   if not found then
-    return query select 'wrong'::text, null::text, null::text, null::boolean, null::uuid, null::jsonb, null::timestamptz;
+    return query select 'wrong'::text, null::text, null::text, null::boolean, null::boolean, null::integer, null::uuid, null::jsonb, null::timestamptz;
     return;
   end if;
 
   if player.locked_until is not null and player.locked_until > now() then
-    return query select 'locked'::text, null::text, null::text, null::boolean, null::uuid, null::jsonb, null::timestamptz;
+    return query select 'locked'::text, null::text, null::text, null::boolean, null::boolean, null::integer, null::uuid, null::jsonb, null::timestamptz;
     return;
   end if;
 
@@ -216,6 +236,8 @@ begin
       player.display_name,
       player.team_project_id,
       player.is_practice,
+      player.is_instructor,
+      player.budget,
       player.session_token,
       player.allocations,
       player.last_saved_at;
@@ -228,13 +250,15 @@ begin
       locked_until = case when pl.failed_login_attempts + 1 >= 5 then now() + interval '2 minutes' else null end
   where pl.id = player.id;
 
-  return query select 'wrong'::text, null::text, null::text, null::boolean, null::uuid, null::jsonb, null::timestamptz;
+  return query select 'wrong'::text, null::text, null::text, null::boolean, null::boolean, null::integer, null::uuid, null::jsonb, null::timestamptz;
 end;
 $$;
 
 grant execute on function public.investor_game_login(text, text, text) to anon, authenticated;
 
 -- Restore a login on page reload ------------------------------------------------
+
+drop function if exists public.investor_game_session(text, uuid);
 
 create or replace function public.investor_game_session(
   p_game_id text,
@@ -244,6 +268,8 @@ returns table (
   player_name text,
   team_project_id text,
   is_practice boolean,
+  is_instructor boolean,
+  budget integer,
   allocations jsonb,
   saved_at timestamptz
 )
@@ -252,7 +278,7 @@ stable
 security definer
 set search_path = public
 as $$
-  select pl.display_name, pl.team_project_id, pl.is_practice, pl.allocations, pl.last_saved_at
+  select pl.display_name, pl.team_project_id, pl.is_practice, pl.is_instructor, pl.budget, pl.allocations, pl.last_saved_at
   from public.investor_game_players pl
   where pl.game_id = p_game_id
     and pl.session_token = p_session_token;
@@ -321,9 +347,9 @@ begin
 
     amount := (entry.value #>> '{}')::numeric;
 
-    if amount < 0 or amount > game_row.budget or amount <> trunc(amount) then
+    if amount < 0 or amount > player.budget or amount <> trunc(amount) then
       raise exception 'Each investment must be a whole-dollar amount from $0 to %.',
-        to_char(game_row.budget, 'FM$9,999,999') using errcode = '22023';
+        to_char(player.budget, 'FM$99,999,999') using errcode = '22023';
     end if;
 
     if amount > 0 and entry.key = player.team_project_id then
@@ -344,10 +370,10 @@ begin
     end if;
   end loop;
 
-  if running_total > game_row.budget then
+  if running_total > player.budget then
     raise exception 'Your total of % is more than your % budget.',
-      to_char(running_total, 'FM$9,999,999'),
-      to_char(game_row.budget, 'FM$9,999,999') using errcode = '22023';
+      to_char(running_total, 'FM$99,999,999'),
+      to_char(player.budget, 'FM$99,999,999') using errcode = '22023';
   end if;
 
   if clean_allocations = player.allocations then

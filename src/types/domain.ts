@@ -254,6 +254,8 @@ export type InvestorGamePlayerRow = {
   name_key: string;
   team_project_id: ProjectId | null;
   is_practice: boolean;
+  is_instructor: boolean;
+  budget: number;
   allocations: Json;
   total_invested: number;
   last_saved_at: string | null;
@@ -333,6 +335,8 @@ export type AppDatabase = {
           player_name: string | null;
           team_project_id: ProjectId | null;
           is_practice: boolean | null;
+          is_instructor: boolean | null;
+          budget: number | null;
           session_token: string | null;
           allocations: Json | null;
           saved_at: string | null;
@@ -344,6 +348,8 @@ export type AppDatabase = {
           player_name: string;
           team_project_id: ProjectId | null;
           is_practice: boolean;
+          is_instructor: boolean;
+          budget: number;
           allocations: Json;
           saved_at: string | null;
         }>;

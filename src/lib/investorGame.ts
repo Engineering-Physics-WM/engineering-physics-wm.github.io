@@ -197,7 +197,9 @@ export type ProjectInvestmentSummary = {
 };
 
 export const summarizeInvestments = (
-  rows: Pick<InvestorGamePlayerRow, "allocations" | "team_project_id">[],
+  rows: (Pick<InvestorGamePlayerRow, "allocations" | "team_project_id"> & {
+    budget?: number | null;
+  })[],
   projectIds: readonly ProjectId[],
   budget = INVESTMENT_BUDGET
 ) => {
@@ -213,11 +215,12 @@ export const summarizeInvestments = (
   for (const row of rows) {
     const team = row.team_project_id ? byId.get(row.team_project_id) : undefined;
     if (team) team.teamPlayers += 1;
+    const rowBudget = row.budget ?? budget;
     const allocations = normalizeAllocations(
       row.allocations,
       projectIds,
       row.team_project_id,
-      budget
+      rowBudget
     );
     for (const id of projectIds) {
       const amount = allocations[id];
@@ -234,7 +237,7 @@ export const summarizeInvestments = (
     projects,
     playerCount: rows.length,
     capitalDeployed,
-    capitalAvailable: rows.length * budget,
+    capitalAvailable: rows.reduce((sum, row) => sum + (row.budget ?? budget), 0),
   };
 };
 
@@ -261,6 +264,8 @@ export type PlayerSession = {
   name: string;
   teamProjectId: ProjectId | null;
   isPractice: boolean;
+  isInstructor: boolean;
+  budget: number;
   allocations: unknown;
   savedAt: string | null;
 };
@@ -294,6 +299,8 @@ export const loginPlayer = async ({
           name: row.player_name,
           teamProjectId: row.team_project_id,
           isPractice: Boolean(row.is_practice),
+          isInstructor: Boolean(row.is_instructor),
+          budget: row.budget ?? INVESTMENT_BUDGET,
           allocations: row.allocations,
           savedAt: row.saved_at,
         }
@@ -319,6 +326,8 @@ export const fetchSession = async (
           name: row.player_name,
           teamProjectId: row.team_project_id,
           isPractice: row.is_practice,
+          isInstructor: row.is_instructor,
+          budget: row.budget ?? INVESTMENT_BUDGET,
           allocations: row.allocations,
           savedAt: row.saved_at,
         }
@@ -372,6 +381,8 @@ export type AdminPlayer = Pick<
   | "display_name"
   | "team_project_id"
   | "is_practice"
+  | "is_instructor"
+  | "budget"
   | "allocations"
   | "total_invested"
   | "last_saved_at"
@@ -382,7 +393,7 @@ export const fetchPlayers = async (gameId: string) => {
   const { data, error } = await supabase
     .from("investor_game_players")
     .select(
-      "id, display_name, team_project_id, is_practice, allocations, total_invested, last_saved_at"
+      "id, display_name, team_project_id, is_practice, is_instructor, budget, allocations, total_invested, last_saved_at"
     )
     .eq("game_id", gameId)
     .order("display_name", { ascending: true });

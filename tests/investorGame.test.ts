@@ -72,6 +72,13 @@ describe("setAllocation", () => {
     expect(setAllocation(emptyAllocations(IDS), "a", 4_000).a).toBe(0);
   });
 
+  it("uses a larger budget for the instructor account", () => {
+    const allocations = setAllocation(emptyAllocations(IDS), "a", 7_000_000, null, 10_000_000);
+    expect(allocations.a).toBe(7_000_000);
+    expect(maxForProject(allocations, "b", null, 10_000_000)).toBe(3_000_000);
+    expect(setAllocation(emptyAllocations(IDS), "a", 7_000_000).a).toBe(INVESTMENT_BUDGET);
+  });
+
   it("keeps the student's own team at zero", () => {
     const allocations = setAllocation(emptyAllocations(IDS), "b", 500_000, "b");
     expect(allocations.b).toBe(0);
@@ -137,6 +144,26 @@ describe("summarizeInvestments", () => {
     expect(summary.playerCount).toBe(3);
     expect(summary.capitalDeployed).toBe(1_350_000);
     expect(summary.capitalAvailable).toBe(3_000_000);
+  });
+});
+
+describe("summarizeInvestments with an instructor budget", () => {
+  it("counts each account's own budget toward available capital", () => {
+    const summary = summarizeInvestments(
+      [
+        { allocations: { a: 5_000_000 }, team_project_id: null, budget: 10_000_000 },
+        { allocations: { a: 200_000 }, team_project_id: "b" },
+      ],
+      IDS
+    );
+    expect(summary.projects[0]).toEqual({
+      projectId: "a",
+      total: 5_200_000,
+      investors: 2,
+      teamPlayers: 0,
+    });
+    expect(summary.capitalDeployed).toBe(5_200_000);
+    expect(summary.capitalAvailable).toBe(11_000_000);
   });
 });
 

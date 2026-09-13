@@ -159,13 +159,16 @@ const useGameStatus = (pollMs) => {
 
 // ── Shared pieces ─────────────────────────────────────────────────────────────
 
-const GameRules = () => (
+const GameRules = ({ budget = INVESTMENT_BUDGET }) => (
   <section className="invest-rules" aria-label="Game rules">
     <p className="assignment-eyebrow mono">Rules</p>
     <ol className="assignment-numbered-list">
-      <li>You start with {formatDollars(INVESTMENT_BUDGET)} in play money.</li>
+      <li>You start with {formatDollars(budget)} in play money.</li>
       <li>Invest in steps of $10,000, in any team except your own.</li>
-      <li>Your total can&apos;t go over $1M. Money you don&apos;t invest stays in your wallet.</li>
+      <li>
+        Your total can&apos;t go over {formatCompactDollars(budget)}. Money you don&apos;t invest
+        stays in your wallet.
+      </li>
       <li>
         After each pitch or progress report, you can move money: pull it out of one team and put it
         into another.
@@ -230,21 +233,28 @@ const QUICK_STEPS = [
   { label: "+$100K", delta: 100_000 },
 ];
 
-const InvestmentCard = ({ project, allocations, ownTeamId, disabled, onSet }) => {
+const InvestmentCard = ({
+  project,
+  allocations,
+  ownTeamId,
+  disabled,
+  onSet,
+  budget = INVESTMENT_BUDGET,
+}) => {
   const isOwnTeam = project.id === ownTeamId;
   const amount = allocations[project.id] || 0;
-  const cap = maxForProject(allocations, project.id, ownTeamId);
+  const cap = maxForProject(allocations, project.id, ownTeamId, budget);
   const [text, setText] = React.useState(null);
   const [note, setNote] = React.useState("");
   const inputId = `invest-${project.id}`;
 
   const apply = (requested, typed = false) => {
     const wanted = Math.max(0, requested);
-    const stepped = sanitizeAmount(wanted);
+    const stepped = sanitizeAmount(wanted, budget);
     setNote(
       stepped > cap
         ? cap === 0
-          ? "Your $1M is fully invested. Pull money out of another team first."
+          ? `Your ${formatCompactDollars(budget)} is fully invested. Pull money out of another team first.`
           : `Capped at ${formatDollars(cap)}, which is all you have left.`
         : typed && stepped !== wanted
           ? `Rounded to ${formatDollars(stepped)}. Investments go in $10K steps.`
@@ -312,21 +322,24 @@ const InvestmentCard = ({ project, allocations, ownTeamId, disabled, onSet }) =>
             type="range"
             className="invest-slider"
             min={0}
-            max={INVESTMENT_BUDGET}
+            max={budget}
             step={INVESTMENT_STEP}
             value={amount}
             disabled={disabled}
             aria-label={`Investment in ${project.shortName}`}
             aria-valuetext={formatDollars(amount)}
             style={{
-              "--fill": `${(amount / INVESTMENT_BUDGET) * 100}%`,
-              "--cap": `${(cap / INVESTMENT_BUDGET) * 100}%`,
+              "--fill": `${(amount / budget) * 100}%`,
+              "--cap": `${(cap / budget) * 100}%`,
             }}
             onChange={(event) => apply(Number(event.target.value))}
           />
 
           <div className="invest-quick">
-            {QUICK_STEPS.map((step) => (
+            {(budget > INVESTMENT_BUDGET
+              ? [...QUICK_STEPS, { label: "+$1M", delta: 1_000_000 }]
+              : QUICK_STEPS
+            ).map((step) => (
               <button
                 key={step.label}
                 type="button"
@@ -384,15 +397,21 @@ export const InvestorGamePage = ({ onNavigate }) => {
   const [game, refreshGame] = useGameStatus(15_000);
 
   const ownTeamId = session?.teamProjectId ?? null;
+  const budget = session?.budget ?? INVESTMENT_BUDGET;
   const total = totalInvested(allocations);
-  const wallet = INVESTMENT_BUDGET - total;
+  const wallet = budget - total;
   const snapshot = JSON.stringify(allocations);
   const pending = Boolean(session && saved) && snapshot !== JSON.stringify(saved);
   const closed = game.state === "ready" && !game.isOpen;
   const canEdit = Boolean(session) && !closed;
 
   const applySession = React.useCallback((player) => {
-    const clean = normalizeAllocations(player.allocations, GAME_PROJECT_IDS, player.teamProjectId);
+    const clean = normalizeAllocations(
+      player.allocations,
+      GAME_PROJECT_IDS,
+      player.teamProjectId,
+      player.budget
+    );
     writeStoredToken(player.token);
     savedRef.current = clean;
     setSession(player);
@@ -435,7 +454,12 @@ export const InvestorGamePage = ({ onNavigate }) => {
   const persist = React.useCallback(
     async (next) => {
       if (!session) return;
-      const problem = validateAllocations(next, GAME_PROJECT_IDS, session.teamProjectId);
+      const problem = validateAllocations(
+        next,
+        GAME_PROJECT_IDS,
+        session.teamProjectId,
+        session.budget
+      );
       if (problem) {
         setSaveError(problem);
         return;
@@ -516,7 +540,7 @@ export const InvestorGamePage = ({ onNavigate }) => {
 
   const setAmount = (projectId, requested) => {
     setSaveError("");
-    setAllocations((current) => setAllocation(current, projectId, requested, ownTeamId));
+    setAllocations((current) => setAllocation(current, projectId, requested, ownTeamId, budget));
   };
 
   const retrySave = () => setSaveError("");
@@ -571,14 +595,18 @@ export const InvestorGamePage = ({ onNavigate }) => {
             {game.currentEvent ? ` · ${game.currentEvent}` : ""}
           </p>
           <h1>
-            You have $1M.
+            You have {formatCompactDollars(budget)}.
             <br /> Invest it wisely.
           </h1>
         </div>
         <Reveal as="dl" className="assignment-meta">
           <div>
             <dt>Budget</dt>
-            <dd>{formatDollars(INVESTMENT_BUDGET)} per student</dd>
+            <dd>
+              {session?.isInstructor
+                ? `${formatDollars(budget)} instructor budget`
+                : `${formatDollars(INVESTMENT_BUDGET)} per student`}
+            </dd>
           </div>
           <div>
             <dt>Session</dt>
@@ -613,7 +641,11 @@ export const InvestorGamePage = ({ onNavigate }) => {
           {session ? (
             <div className="invest-panel">
               <p className="assignment-eyebrow mono">
-                {session.isPractice ? "Practice account" : "Your portfolio"}
+                {session.isPractice
+                  ? "Practice account"
+                  : session.isInstructor
+                    ? "Instructor portfolio"
+                    : "Your portfolio"}
               </p>
               <h2>Hi, {session.name}.</h2>
               <p className="invest-player-team">
@@ -621,6 +653,8 @@ export const InvestorGamePage = ({ onNavigate }) => {
                   <>
                     Your team: <strong>{ownTeam.shortName}</strong>
                   </>
+                ) : session.isInstructor ? (
+                  "Instructor account · you can invest in every team"
                 ) : (
                   "Practice account · not on a team"
                 )}
@@ -636,7 +670,7 @@ export const InvestorGamePage = ({ onNavigate }) => {
                 </div>
               </dl>
               <div className="invest-meter" aria-hidden="true">
-                <span style={{ width: `${(total / INVESTMENT_BUDGET) * 100}%` }} />
+                <span style={{ width: `${(total / budget) * 100}%` }} />
               </div>
               <p className={`invest-panel-status is-${saveLine.tone}`} aria-live="polite">
                 {saveLine.text}
@@ -719,7 +753,7 @@ export const InvestorGamePage = ({ onNavigate }) => {
             </div>
           )}
 
-          <GameRules />
+          <GameRules budget={budget} />
           <GameDisclaimer />
         </aside>
 
@@ -734,6 +768,7 @@ export const InvestorGamePage = ({ onNavigate }) => {
                 project={project}
                 allocations={allocations}
                 ownTeamId={ownTeamId}
+                budget={budget}
                 disabled={!canEdit}
                 onSet={setAmount}
               />
@@ -750,7 +785,7 @@ export const InvestorGamePage = ({ onNavigate }) => {
               <strong>{formatCompactDollars(wallet)}</strong>
             </div>
             <div className="invest-meter" aria-hidden="true">
-              <span style={{ width: `${(total / INVESTMENT_BUDGET) * 100}%` }} />
+              <span style={{ width: `${(total / budget) * 100}%` }} />
             </div>
             {canRetry ? (
               <button className="btn btn-primary" type="button" onClick={retrySave}>
@@ -1005,7 +1040,8 @@ export const InvestorGameDashboardView = ({ onNavigate }) => {
 
   const changeTeam = async (player, teamId) => {
     if (!teamId || teamId === player.team_project_id) return;
-    const inNewTeam = normalizeAllocations(player.allocations, GAME_PROJECT_IDS)[teamId] || 0;
+    const inNewTeam =
+      normalizeAllocations(player.allocations, GAME_PROJECT_IDS, null, player.budget)[teamId] || 0;
     const warning = inNewTeam
       ? ` Their ${formatDollars(inNewTeam)} in that team goes back to their wallet.`
       : "";
@@ -1040,8 +1076,10 @@ export const InvestorGameDashboardView = ({ onNavigate }) => {
     load();
   };
 
-  const students = players.filter((player) => !player.is_practice);
-  const summary = summarizeInvestments(students, GAME_PROJECT_IDS);
+  // Practice money never counts. The instructor's money counts toward totals but not the student count.
+  const counted = players.filter((player) => !player.is_practice);
+  const students = counted.filter((player) => !player.is_instructor);
+  const summary = summarizeInvestments(counted, GAME_PROJECT_IDS);
   const rankedTeams = [...summary.projects].sort((a, b) => b.total - a.total);
   const invested = students.filter((player) => player.last_saved_at).length;
   const namesById = Object.fromEntries(players.map((player) => [player.id, player.display_name]));
@@ -1229,13 +1267,15 @@ export const InvestorGameDashboardView = ({ onNavigate }) => {
                 const amounts = normalizeAllocations(
                   player.allocations,
                   GAME_PROJECT_IDS,
-                  player.team_project_id
+                  player.team_project_id,
+                  player.budget
                 );
                 return (
                   <tr key={player.id}>
                     <td>
                       {player.display_name}
                       {player.is_practice && <span className="invest-badge">Practice</span>}
+                      {player.is_instructor && <span className="invest-badge">Instructor</span>}
                     </td>
                     <td>
                       <select
@@ -1263,7 +1303,12 @@ export const InvestorGameDashboardView = ({ onNavigate }) => {
                         </td>
                       )
                     )}
-                    <td>{formatCompactDollars(totalInvested(amounts))}</td>
+                    <td>
+                      {formatCompactDollars(totalInvested(amounts))}
+                      {player.budget !== INVESTMENT_BUDGET && (
+                        <small>of {formatCompactDollars(player.budget)}</small>
+                      )}
+                    </td>
                     <td>{formatStamp(player.last_saved_at)}</td>
                     <td>
                       <div className="invest-row-actions">
