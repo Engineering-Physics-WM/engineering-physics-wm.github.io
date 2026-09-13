@@ -82,15 +82,63 @@ const seededRandom = (seed: string) => {
   };
 };
 
-/** Pitch order for a session: a per-date shuffle so no team always goes first or last. */
-export const pitchOrderFor = (isoDate: string): string[] => {
-  const rand = seededRandom(isoDate);
+const shuffled = (rand: () => number): string[] => {
   const order = [...PITCH_TEAMS];
   for (let i = order.length - 1; i > 0; i -= 1) {
     const j = Math.floor(rand() * (i + 1));
     [order[i], order[j]] = [order[j], order[i]];
   }
   return order;
+};
+
+/** Sessions that get a pitch order, in chronological order. */
+const isPitchSession = (row: ScheduleRow) =>
+  row.yangOnly === true && !["break", "cancelled", "tbd"].includes(row.kind || "");
+
+let pitchOrders: Map<string, string[]> | null = null;
+
+/**
+ * Assign pitch orders chronologically so no team repeats a position until every
+ * team has been in every position once; then a fresh round begins. Each session
+ * picks the first seeded shuffle with no repeated positions, or the fewest if
+ * none exists.
+ */
+const buildPitchOrders = (): Map<string, string[]> => {
+  const orders = new Map<string, string[]>();
+  let used = new Map<string, Set<number>>();
+  const sessions = TERMS.flatMap((t) => t.rows)
+    .filter(isPitchSession)
+    .sort((a, b) => a.isoDate.localeCompare(b.isoDate));
+  for (const row of sessions) {
+    if ([...used.values()].every((set) => set.size >= PITCH_TEAMS.length)) used = new Map();
+    const rand = seededRandom(row.isoDate);
+    let best: string[] | null = null;
+    let bestConflicts = Infinity;
+    for (let attempt = 0; attempt < 2000 && bestConflicts > 0; attempt += 1) {
+      const candidate = shuffled(rand);
+      const conflicts = candidate.filter((team, i) => used.get(team)?.has(i)).length;
+      if (conflicts < bestConflicts) {
+        best = candidate;
+        bestConflicts = conflicts;
+      }
+    }
+    const order = best ?? [...PITCH_TEAMS];
+    order.forEach((team, i) => {
+      if (!used.has(team)) used.set(team, new Set());
+      used.get(team)!.add(i);
+    });
+    if (used.size < PITCH_TEAMS.length) {
+      for (const team of PITCH_TEAMS) if (!used.has(team)) used.set(team, new Set());
+    }
+    orders.set(row.isoDate, order);
+  }
+  return orders;
+};
+
+/** Pitch order for a session; teams rotate positions so nobody always goes first or last. */
+export const pitchOrderFor = (isoDate: string): string[] => {
+  if (!pitchOrders) pitchOrders = buildPitchOrders();
+  return pitchOrders.get(isoDate) ?? shuffled(seededRandom(isoDate));
 };
 
 /** Minute-by-minute plan: ~5 min opening, equal team slots, any remainder for investing, ~5 min closing. */

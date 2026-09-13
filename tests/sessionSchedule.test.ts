@@ -19,6 +19,17 @@ describe("investment session schedule", () => {
     expect(new Set(orders.map((o) => o.join("|"))).size).toBe(orders.length);
   });
 
+  it("never repeats a team's position within a round of six sessions", () => {
+    const orders = sessions.map((r) => pitchOrderFor(r.isoDate));
+    for (let start = 0; start < orders.length; start += PITCH_TEAMS.length) {
+      const round = orders.slice(start, start + PITCH_TEAMS.length);
+      for (const team of PITCH_TEAMS) {
+        const positions = round.map((o) => o.indexOf(team));
+        expect(new Set(positions).size).toBe(positions.length);
+      }
+    }
+  });
+
   it("is stable across calls", () => {
     expect(pitchOrderFor("2026-09-14")).toEqual(pitchOrderFor("2026-09-14"));
   });
