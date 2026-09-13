@@ -231,26 +231,44 @@ export type DashboardSummary = {
   coveragePercent: number | null;
 };
 
-export type PitchInvestmentRoundRow = {
-  round_id: string;
+export type InvestorGameRow = {
+  game_id: string;
   created_at?: string;
   updated_at?: string;
   cohort_year: CohortYear;
   title: string;
   is_open: boolean;
+  totals_visible: boolean;
+  current_event: string;
   budget: number;
   project_ids: ProjectId[];
 };
 
-export type PitchInvestmentRow = {
+/** Preset student login. The password hash and session token are never selected by the client. */
+export type InvestorGamePlayerRow = {
   id: string;
   created_at: string;
   updated_at: string;
-  round_id: string;
-  student_name: string;
-  student_email: EmailAddress;
+  game_id: string;
+  display_name: string;
+  name_key: string;
+  team_project_id: ProjectId | null;
+  is_practice: boolean;
   allocations: Json;
   total_invested: number;
+  last_saved_at: string | null;
+};
+
+export type InvestorGameActivityRow = {
+  id: number;
+  created_at: string;
+  game_id: string;
+  player_id: string;
+  event_label: string;
+  allocations_before: Json;
+  allocations_after: Json;
+  total_before: number;
+  total_after: number;
 };
 
 type TableDefinition<Row, Insert = Partial<Row>, Update = Partial<Row>> = {
@@ -272,8 +290,9 @@ export type AppDatabase = {
       ranking_poll_settings: TableDefinition<PollSettingsRow>;
       cohort_announcements: TableDefinition<AnnouncementRow>;
       cohort_team_members: TableDefinition<TeamRosterRow, TeamRosterRow, Partial<TeamRosterRow>>;
-      pitch_investment_rounds: TableDefinition<PitchInvestmentRoundRow>;
-      pitch_investments: TableDefinition<PitchInvestmentRow>;
+      investor_games: TableDefinition<InvestorGameRow>;
+      investor_game_players: TableDefinition<InvestorGamePlayerRow>;
+      investor_game_activity: TableDefinition<InvestorGameActivityRow>;
     };
     Views: Record<string, never>;
     Functions: {
@@ -303,24 +322,47 @@ export type AppDatabase = {
           saved_receipt_code: string;
         }>;
       };
-      get_pitch_investment_round: {
-        Args: {
-          check_round_id: string;
-        };
-        Returns: Array<Omit<PitchInvestmentRoundRow, "created_at" | "updated_at">>;
+      investor_game_status: {
+        Args: { p_game_id: string };
+        Returns: Array<Omit<InvestorGameRow, "created_at" | "updated_at">>;
       };
-      submit_pitch_investment: {
-        Args: {
-          submit_round_id: string;
-          submit_student_name: string;
-          submit_student_email: EmailAddress;
-          submit_allocations: Json;
-        };
+      investor_game_login: {
+        Args: { p_game_id: string; p_name: string; p_password: string };
         Returns: Array<{
-          submission_mode: "created" | "updated";
-          saved_total: number;
-          saved_at: string;
+          status: "ok" | "wrong" | "locked";
+          player_name: string | null;
+          team_project_id: ProjectId | null;
+          is_practice: boolean | null;
+          session_token: string | null;
+          allocations: Json | null;
+          saved_at: string | null;
         }>;
+      };
+      investor_game_session: {
+        Args: { p_game_id: string; p_session_token: string };
+        Returns: Array<{
+          player_name: string;
+          team_project_id: ProjectId | null;
+          is_practice: boolean;
+          allocations: Json;
+          saved_at: string | null;
+        }>;
+      };
+      investor_game_save: {
+        Args: { p_game_id: string; p_session_token: string; p_allocations: Json };
+        Returns: Array<{ saved_total: number; saved_at: string | null; changed: boolean }>;
+      };
+      investor_game_public_totals: {
+        Args: { p_game_id: string };
+        Returns: Array<{ project_id: ProjectId; total_raised: number }>;
+      };
+      investor_game_admin_update_player: {
+        Args: {
+          p_player_id: string;
+          p_new_password?: string | null;
+          p_team_project_id?: string | null;
+        };
+        Returns: undefined;
       };
     };
     Enums: Record<string, never>;

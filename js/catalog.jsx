@@ -11,6 +11,14 @@ import {
   sortAnnouncements,
 } from "./news.jsx";
 import { resourcePage } from "./resources.js";
+import { isSupabaseConfigured } from "./supabaseClient.js";
+import {
+  GAME_COHORT_YEAR,
+  INVESTOR_GAME_ID,
+  fetchPublicTotals,
+  formatCompactDollars,
+  formatDollars,
+} from "../src/lib/investorGame";
 
 const AREA_COLORS = {
   "Instrumentation / sensors": "oklch(72% 0.060 18)",
@@ -25,6 +33,47 @@ const AREA_COLORS = {
 };
 const ALL_AREAS = Object.keys(AREA_COLORS);
 
+/** Public Yang Ran Angels totals by project id (only teams with money, only while the
+ *  instructor has totals switched on). Empty for other cohorts. */
+const useInvestorTotals = (cohortYear) => {
+  const [raised, setRaised] = React.useState({});
+  const inGame = cohortYear === GAME_COHORT_YEAR && isSupabaseConfigured;
+
+  React.useEffect(() => {
+    if (!inGame) return undefined;
+    let alive = true;
+    const load = async () => {
+      const { totals, error } = await fetchPublicTotals(INVESTOR_GAME_ID);
+      if (!alive || error) return;
+      setRaised(
+        Object.fromEntries(
+          totals.filter((item) => item.total > 0).map((item) => [item.projectId, item.total])
+        )
+      );
+    };
+    load();
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === "visible") load();
+    }, 60_000);
+    return () => {
+      alive = false;
+      window.clearInterval(timer);
+    };
+  }, [inGame]);
+
+  return inGame ? raised : {};
+};
+
+const RaisedBadge = ({ amount, className = "" }) =>
+  amount > 0 ? (
+    <p
+      className={`project-card-raised ${className}`.trim()}
+      title={`${formatDollars(amount)} raised in the Yang Ran Angels`}
+    >
+      <span className="project-card-raised-amount">{formatCompactDollars(amount)}</span> raised
+    </p>
+  ) : null;
+
 const ProjectCard = ({
   project,
   displayIdx,
@@ -32,6 +81,7 @@ const ProjectCard = ({
   status = "",
   statusLabel = "",
   revealDelay = 0,
+  raised = 0,
 }) => {
   const railColor = AREA_COLORS[project.areas[0]] || "var(--pink)";
   const cardClass = "project-card" + (status ? ` is-${status}` : "");
@@ -74,6 +124,7 @@ const ProjectCard = ({
         <span className="aff">/ {project.affiliation}</span>
       </p>
       <p className="project-card-pitch">{project.pitch}</p>
+      <RaisedBadge amount={raised} />
       <div className="project-card-foot">
         <span className="read">Read brief</span>
         {statusLabel && <span className="project-status-badge">{statusLabel}</span>}
@@ -82,7 +133,14 @@ const ProjectCard = ({
   );
 };
 
-const ProjectDialog = ({ project, displayIdx, onClose, yearLabel = "", shortYearLabel = "" }) => {
+const ProjectDialog = ({
+  project,
+  displayIdx,
+  onClose,
+  yearLabel = "",
+  shortYearLabel = "",
+  raised = 0,
+}) => {
   const dialogRef = React.useRef(null);
   React.useEffect(() => {
     if (project) {
@@ -111,6 +169,7 @@ const ProjectDialog = ({ project, displayIdx, onClose, yearLabel = "", shortYear
               <PersonLink name={project.advisor}>{project.advisor}</PersonLink> ·{" "}
               {project.affiliation}
             </p>
+            <RaisedBadge amount={raised} className="dialog-raised" />
           </div>
           <button className="dialog-close" onClick={onClose} aria-label="Close">
             ✕
@@ -429,6 +488,7 @@ const CurrentCatalogPage = ({ data, onNavigate }) => {
   const [affiliationFilter, setAffiliationFilter] = React.useState("");
   const [sort, setSort] = React.useState("title");
   const [openProject, setOpenProject] = React.useState(null);
+  const raisedById = useInvestorTotals(data.currentYear);
 
   const affiliations = React.useMemo(
     () => [...new Set(data.projects.map((p) => p.affiliation))].sort(),
@@ -610,6 +670,7 @@ const CurrentCatalogPage = ({ data, onNavigate }) => {
                   status={status}
                   statusLabel={statusLabel}
                   revealDelay={Math.min(360, index * 45)}
+                  raised={raisedById[p.id] || 0}
                 />
               );
             })
@@ -645,6 +706,7 @@ const CurrentCatalogPage = ({ data, onNavigate }) => {
       </Reveal>
 
       <ProjectDialog
+        raised={openProject ? raisedById[openProject.id] || 0 : 0}
         project={openProject}
         displayIdx={openProject ? openProject.num - 1 : -1}
         onClose={() => setOpenProject(null)}

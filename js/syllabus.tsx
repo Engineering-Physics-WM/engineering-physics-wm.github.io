@@ -32,6 +32,9 @@ const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 type OnNavigate = (page: string) => void;
 
+/** Class sessions where students can invest or rebalance in Yang Ran Angels. */
+const INVESTOR_GAME_TOPIC = /^(Pitch Perfect III?$|Progress Report\b)/;
+
 const rowClass = (row: ScheduleRow) => {
   switch (row.kind) {
     case "break":
@@ -72,34 +75,36 @@ const LectureMaterials = ({ row, onNavigate }: { row: ScheduleRow; onNavigate: O
     );
   }
 
-  if (row.topic === "Pitch Perfect II") {
+  if (INVESTOR_GAME_TOPIC.test(row.topic)) {
     return (
       <div className="lecture-resource-grid">
         <button
           type="button"
           className="lecture-resource-card"
-          onClick={() => onNavigate("pitchPerfectInvest")}
+          onClick={() => onNavigate("investorGame")}
         >
-          <span className="lecture-resource-type mono">In-class activity · Investor round</span>
-          <strong>Invest your $1M in the pitches</strong>
+          <span className="lecture-resource-type mono">In-class game · Yang Ran Angels</span>
+          <strong>Angel Login: manage your $1M</strong>
           <span>
-            As each of the six teams pitches, split up to $1,000,000 across the projects you would
-            back.
+            Log in with your first name to invest, or move money between teams after today&apos;s
+            pitches.
           </span>
           <span className="lecture-resource-action" aria-hidden="true">
-            Open investor round <span>↗</span>
+            Enter the game <span>↗</span>
           </span>
         </button>
         <button
           type="button"
           className="lecture-resource-card"
-          onClick={() => onNavigate("pitchPerfectResults")}
+          onClick={() => onNavigate("investorTotals")}
         >
-          <span className="lecture-resource-type mono">Instructor · Live results</span>
-          <strong>Pitch Perfect II results</strong>
-          <span>Sign in to project live investment totals and open or close investing.</span>
+          <span className="lecture-resource-type mono">Live · Public totals</span>
+          <strong>Capital raised by each team</strong>
+          <span>
+            See the running total each team has raised. Individual investments stay private.
+          </span>
           <span className="lecture-resource-action" aria-hidden="true">
-            View results <span>↗</span>
+            View totals <span>↗</span>
           </span>
         </button>
       </div>

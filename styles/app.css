@@ -3742,3 +3742,208 @@ main a:hover {
     height: 14px;
   }
 }
+
+/* EP Investor Game: login, rules, own team, saved vs changed, instructor tab */
+.invest-roll-btn {
+  min-height: 56px;
+  font-family: var(--font-display);
+  font-size: 19px;
+  letter-spacing: -0.01em;
+}
+.invest-panel-hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.invest-player-team {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 14px;
+}
+.invest-panel-status.is-warn {
+  color: var(--ink);
+  font-weight: 500;
+}
+.invest-card.is-changed {
+  border-color: var(--pink-ink);
+}
+.invest-card.is-own-team {
+  border-style: dashed;
+  background: var(--paper-2);
+  box-shadow: none;
+}
+.invest-own-note {
+  margin: 0;
+  padding: 14px 16px;
+  border-radius: var(--radius);
+  background: var(--pink-soft);
+  color: var(--ink-soft);
+  font-size: 14px;
+}
+.invest-own-note strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--pink-ink);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.invest-amount-field .invest-was {
+  color: var(--pink-ink);
+  font-style: normal;
+  letter-spacing: 0.04em;
+}
+.invest-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--olive-soft);
+  color: var(--olive-ink);
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+.invest-totals-note {
+  margin: 18px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+.pitch-admin {
+  padding-top: 28px;
+}
+.pitch-admin-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+.pitch-admin-head h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(28px, 3vw, 40px);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+}
+.pitch-admin-head .assignment-eyebrow {
+  margin-bottom: 8px;
+}
+.pitch-admin-copy {
+  max-width: 640px;
+  margin: 8px 0 0;
+  color: var(--ink-soft);
+  font-size: 14px;
+  line-height: 1.55;
+}
+.pitch-admin-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.pitch-admin-event {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.pitch-admin-event span {
+  color: var(--muted);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.pitch-admin-event input {
+  width: min(100%, 220px);
+  padding: 9px 12px;
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  background: white;
+  color: var(--ink);
+  font-size: 13px;
+}
+.pitch-admin-subhead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin: 40px 0 10px;
+}
+.pitch-admin-subhead h3 {
+  margin: 0;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.invest-table select,
+.pitch-admin-subhead select {
+  padding: 5px 8px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+  background: white;
+  color: var(--ink);
+  font-size: 12.5px;
+}
+.invest-table .invest-row-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+.invest-table .invest-chip {
+  min-height: 30px;
+  padding: 4px 10px;
+}
+.invest-table td.invest-activity-changes {
+  min-width: 240px;
+  text-align: left;
+  white-space: normal;
+}
+.invest-results-updated {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+/* EP Investor Game: capital raised on project cards */
+.project-card-raised {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: 6px;
+  margin: 0;
+  padding: 3px 10px 3px 8px;
+  border: 1px solid color-mix(in oklch, var(--olive-ink) 22%, var(--hairline));
+  border-radius: 999px;
+  background: color-mix(in oklch, var(--olive-soft) 45%, transparent);
+  color: var(--olive-ink);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.project-card-raised::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--olive-ink);
+}
+.project-card-raised-amount {
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-transform: none;
+}
+.dialog-raised {
+  margin-top: 10px;
+}

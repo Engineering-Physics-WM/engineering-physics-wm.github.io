@@ -6,8 +6,8 @@ export const PAGE_TO_HASH = {
   syllabus: "/syllabus",
   pitchPerfectAssignment: "/syllabus/pitch-perfect-i/assignment",
   careerSuccessAssignment: "/syllabus/career-success-i/assignment",
-  pitchPerfectInvest: "/syllabus/pitch-perfect-ii/invest",
-  pitchPerfectResults: "/syllabus/pitch-perfect-ii/results",
+  investorGame: "/investor-game",
+  investorTotals: "/investor-game/totals",
   ranking: "/ranking",
   dashboard: "/dashboard",
   archive: "/archive",
@@ -15,7 +15,8 @@ export const PAGE_TO_HASH = {
 
 // Short, typeable aliases (e.g. ep.yangran.org/#/invest on a projector slide).
 const HASH_ALIASES = {
-  "/invest": "pitchPerfectInvest",
+  "/invest": "investorGame",
+  "/totals": "investorTotals",
 };
 
 const HASH_TO_PAGE = {

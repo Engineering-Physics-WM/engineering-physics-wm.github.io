@@ -21,11 +21,11 @@ import { hashForPage, parseHashToPage, parseHashToYear } from "./routes.js";
 const RankingPage = React.lazy(() =>
   import("./ranking.jsx").then((m) => ({ default: m.RankingPage }))
 );
-const PitchInvestPage = React.lazy(() =>
-  import("./pitchInvestSurvey.jsx").then((m) => ({ default: m.PitchInvestPage }))
+const InvestorGamePage = React.lazy(() =>
+  import("./investorGame.jsx").then((m) => ({ default: m.InvestorGamePage }))
 );
-const PitchInvestResultsPage = React.lazy(() =>
-  import("./pitchInvestSurvey.jsx").then((m) => ({ default: m.PitchInvestResultsPage }))
+const InvestorTotalsPage = React.lazy(() =>
+  import("./investorGame.jsx").then((m) => ({ default: m.InvestorTotalsPage }))
 );
 const DashboardPage = React.lazy(() =>
   import("./dashboard.jsx").then((m) => ({ default: m.DashboardPage }))
@@ -180,8 +180,8 @@ const Header = ({ page, onNavigate, year, setYear, years, currentYear }) => {
               page === "syllabus" ||
               page === "pitchPerfectAssignment" ||
               page === "careerSuccessAssignment" ||
-              page === "pitchPerfectInvest" ||
-              page === "pitchPerfectResults"
+              page === "investorGame" ||
+              page === "investorTotals"
             }
             onClick={() => {
               onNavigate("syllabus");
@@ -536,12 +536,8 @@ const App = () => {
           {page === "careerSuccessAssignment" && (
             <CareerSuccessAssignmentPage onNavigate={onNavigate} />
           )}
-          {page === "pitchPerfectInvest" && <PitchInvestPage onNavigate={onNavigate} />}
-          {page === "pitchPerfectResults" && (
-            <AuthGate>
-              <PitchInvestResultsPage onNavigate={onNavigate} />
-            </AuthGate>
-          )}
+          {page === "investorGame" && <InvestorGamePage onNavigate={onNavigate} />}
+          {page === "investorTotals" && <InvestorTotalsPage onNavigate={onNavigate} />}
           {page === "ranking" && <RankingPage data={data} onNavigate={onNavigate} />}
           {page === "dashboard" && (
             <AuthGate>

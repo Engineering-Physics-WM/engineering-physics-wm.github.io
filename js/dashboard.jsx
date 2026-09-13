@@ -14,6 +14,7 @@ import {
   resourcePage,
 } from "./resources.js";
 import { isSupabaseConfigured, supabase } from "./supabaseClient.js";
+import { InvestorGameDashboardView } from "./investorGame.jsx";
 import {
   announcementFromRow,
   postDraftAsNowAnnouncement,
@@ -2362,6 +2363,7 @@ const DashboardPage = ({
           ["teams", "Current teams"],
           ["email", "Email drafts"],
           ["updates", "Updates"],
+          ["investorGame", "Yang Ran Angels"],
         ].map(([k, label]) => (
           <button
             key={k}
@@ -2415,6 +2417,7 @@ const DashboardPage = ({
           onAnnouncementsChange={onAnnouncementsChange}
         />
       )}
+      {tab === "investorGame" && <InvestorGameDashboardView onNavigate={_onNavigate} />}
     </div>
   );
 };

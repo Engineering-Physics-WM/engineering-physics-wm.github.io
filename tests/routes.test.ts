@@ -11,9 +11,10 @@ describe("parseHashToPage", () => {
     expect(parseHashToPage("#/syllabus/career-success-i/assignment")).toBe(
       "careerSuccessAssignment"
     );
-    expect(parseHashToPage("#/syllabus/pitch-perfect-ii/invest")).toBe("pitchPerfectInvest");
-    expect(parseHashToPage("#/syllabus/pitch-perfect-ii/results")).toBe("pitchPerfectResults");
-    expect(parseHashToPage("#/invest")).toBe("pitchPerfectInvest");
+    expect(parseHashToPage("#/investor-game")).toBe("investorGame");
+    expect(parseHashToPage("#/investor-game/totals")).toBe("investorTotals");
+    expect(parseHashToPage("#/invest")).toBe("investorGame");
+    expect(parseHashToPage("#/totals")).toBe("investorTotals");
     expect(parseHashToPage("#/dashboard")).toBe("dashboard");
     expect(parseHashToPage("#/archive")).toBe("archive");
   });
@@ -42,8 +43,8 @@ describe("hashForPage", () => {
     expect(hashForPage("ranking")).toBe("#/ranking");
     expect(hashForPage("pitchPerfectAssignment")).toBe("#/syllabus/pitch-perfect-i/assignment");
     expect(hashForPage("careerSuccessAssignment")).toBe("#/syllabus/career-success-i/assignment");
-    expect(hashForPage("pitchPerfectInvest")).toBe("#/syllabus/pitch-perfect-ii/invest");
-    expect(hashForPage("pitchPerfectResults")).toBe("#/syllabus/pitch-perfect-ii/results");
+    expect(hashForPage("investorGame")).toBe("#/investor-game");
+    expect(hashForPage("investorTotals")).toBe("#/investor-game/totals");
     expect(hashForPage("dashboard")).toBe("#/dashboard");
     expect(hashForPage("archive")).toBe("#/archive");
   });
