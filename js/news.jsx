@@ -20,13 +20,18 @@ const sortAnnouncements = (items = []) =>
     return (b.date || "").localeCompare(a.date || "");
   });
 
+const newestFirst = (a, b) =>
+  (b.date || "").localeCompare(a.date || "") || (a.order ?? 999) - (b.order ?? 999);
+
+/** The update featured on the home page. A pinned update always wins, even when its date is in
+ *  the future; with several pinned, the one with the latest date wins. Otherwise the newest update
+ *  dated today or earlier is featured. */
 const currentCourseAnnouncement = (items = []) => {
+  const pinned = items.filter((item) => item.pinned).sort(newestFirst);
+  if (pinned.length) return pinned[0];
+
   const today = new Date().toISOString().slice(0, 10);
-  const dated = [...items]
-    .filter((item) => item.date && item.date <= today)
-    .sort(
-      (a, b) => (b.date || "").localeCompare(a.date || "") || (a.order ?? 999) - (b.order ?? 999)
-    );
+  const dated = items.filter((item) => item.date && item.date <= today).sort(newestFirst);
 
   return dated[0] || sortAnnouncements(items)[0] || null;
 };
