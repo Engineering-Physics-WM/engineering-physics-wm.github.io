@@ -3967,3 +3967,95 @@ main a:hover {
   background: var(--pink-soft);
   color: oklch(48% 0.14 28);
 }
+
+/* Session windows, private feedback, and compact permanent archives. */
+.invest-comment-editor {
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--hairline);
+  display: grid;
+  gap: 0.6rem;
+}
+.invest-comment-editor label {
+  font-weight: 600;
+}
+.invest-comment-editor textarea {
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+  padding: 0.75rem;
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: 1px solid var(--hairline);
+  border-radius: 6px;
+}
+.invest-comment-editor textarea:focus {
+  outline: 2px solid var(--pink);
+  outline-offset: 2px;
+}
+.invest-feedback,
+.invest-archive,
+.invest-window-editor,
+.invest-history {
+  margin: 1.5rem 0;
+}
+.invest-feedback article {
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--hairline);
+}
+.invest-feedback small {
+  display: block;
+  margin-top: 0.4rem;
+}
+.invest-feedback blockquote {
+  margin: 0.75rem 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.invest-history details,
+.invest-archive details,
+.invest-window-editor details {
+  border: 1px solid var(--hairline);
+  border-radius: 6px;
+  padding: 0.75rem;
+  margin: 0.5rem 0;
+}
+.invest-history details details,
+.invest-archive details details {
+  margin-left: 0.75rem;
+}
+.invest-history summary,
+.invest-archive summary,
+.invest-window-editor summary,
+.invest-feedback summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.invest-history li,
+.invest-window-editor li {
+  margin: 0.5rem 0;
+}
+.invest-window-editor form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: end;
+}
+.invest-window-editor label {
+  display: grid;
+  gap: 0.35rem;
+}
+.invest-window-editor input,
+.invest-window-editor select {
+  padding: 0.5rem;
+  font: inherit;
+  max-width: 100%;
+}
+@media (max-width: 600px) {
+  .invest-window-editor label {
+    width: 100%;
+  }
+  .invest-history details details {
+    margin-left: 0.25rem;
+  }
+}

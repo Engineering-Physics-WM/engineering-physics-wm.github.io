@@ -56,34 +56,40 @@ When adding a cohort:
 
 ## Yang Ran Angels (investor game)
 
-A classroom simulation that runs from Pitch Perfect II through later pitches and progress reports. It uses play money only and is not a company, fund, or security offering; the student page carries a legal disclaimer saying so.
+A classroom simulation that runs in every course session taught only by Prof. Yang, using the dates in `js/syllabusData.ts`. Guest-taught sessions, breaks, and the jointly led Showcase are excluded. It uses play money only and is not a company, fund, or security offering; the student page carries a legal disclaimer saying so.
 
 ### How it works
 
 - Students log in with **Angel Login** using their first name and a preset password.
 - Each student has **$1,000,000**. The instructor account has its own budget.
 - Money moves in **$10,000 steps**, into any team except the student's own. The total cannot exceed the account's budget.
-- Every change **saves instantly**; there is no submit button. Each saved change is logged with the current class session label.
+- Every investment change **saves instantly**. Each change is logged with its dated session. Comments have a **Save comment** button.
+- Investments and comments are accepted only during the session window: **1–2 p.m. America/New_York**, unless overridden. The December 9 final uses its syllabus window, **2–5 p.m.** The database enforces the window, and the page shows a countdown. Login and viewing remain available outside it.
+- **Business casual or formal attire is required** at every investment session.
+- Each session’s **closing portfolios and team totals are archived permanently**, including unchanged portfolios. Later investments, team changes, and archived accounts do not rewrite earlier results.
+- Angels can leave up to **500 characters of private feedback per other team per session**. Logged-in students see anonymous quotations received by their current team and all comments they have left. The student API omits commenter names and IDs entirely, including for the instructor’s angel login. Only the protected instructor dashboard identifies authors and shows everyone’s portfolios. Practice feedback is visible only to its author and the instructor dashboard.
 - Portfolios carry over all year, so students can move money between teams after later sessions.
 - The public sees **team totals only**. Only the instructor sees who invested what.
 - A **practice account** (`Demo`) never counts toward totals.
 
 ### Pages
 
-| Page                    | Route                                            | Access                                                   |
-| ----------------------- | ------------------------------------------------ | -------------------------------------------------------- |
-| Student game            | `#/investor-game` (short link `#/invest`)        | Public, login required to invest                         |
-| Live team totals        | `#/investor-game/totals` (short link `#/totals`) | Public                                                   |
-| Home page project cards | `#/`                                             | Public, shows "$X raised" on each active team            |
-| Syllabus cards          | `#/syllabus`                                     | Public, on Pitch Perfect II/III and Progress Report rows |
-| Instructor view         | Dashboard → **Yang Ran Angels** tab              | Instructor sign-in                                       |
+| Page                    | Route                                            | Access                                        |
+| ----------------------- | ------------------------------------------------ | --------------------------------------------- |
+| Student game            | `#/investor-game` (short link `#/invest`)        | Public, login required to invest              |
+| Live team totals        | `#/investor-game/totals` (short link `#/totals`) | Public                                        |
+| Home page project cards | `#/`                                             | Public, shows "$X raised" on each active team |
+| Syllabus cards          | `#/syllabus`                                     | Public, on every Yang-only class session      |
+| Instructor view         | Dashboard → **Yang Ran Angels** tab              | Instructor sign-in                            |
 
 ### Setup in Supabase
 
 Run these in the Supabase SQL Editor, in order. Both are safe to re-run.
 
-1. `supabase/investor-game.sql` creates the tables, row-level security, and functions, and upgrades tables created by earlier versions.
+1. `supabase/investor-game.sql` creates the tables, row-level security, functions, dated sessions, and permanent archives, and upgrades earlier versions in one transaction. For an existing game, run only this file; do not re-seed logins.
 2. `supabase/investor-game-players-2026-2027.private.sql` creates the logins. It is not in git because it contains plaintext passwords. Re-running skips existing accounts, so passwords reset from the dashboard are kept.
+
+Existing passwords, session tokens, portfolios, and activity are retained by the upgrade. The dated seed uses `ON CONFLICT DO NOTHING` so instructor time overrides survive re-running the script. Archive recording starts when this upgrade is installed; earlier sessions are not given fabricated results.
 
 The matching password handout is `data/2026-2027/investor-game-logins.private.csv`, also ignored by git.
 
@@ -91,12 +97,16 @@ The matching password handout is `data/2026-2027/investor-game-logins.private.cs
 
 From the dashboard's **Yang Ran Angels** tab:
 
-- **Open or close investing.** Closed games still let students log in and view portfolios.
-- **Hide or show public totals.** Hiding removes the totals page chart and the home page "raised" labels.
-- **Set the class session** (for example `Progress Report I`) before each session so new changes are logged under it.
-- **Reset a password, change a student's team, or remove an account.** A password reset signs the student out everywhere; a team change returns any money already in the new team to the student's wallet.
+- **Enable scheduled submissions or pause them.** Pausing blocks both investments and comments. Enabling uses the calendar; it does not bypass the time window.
+- **Set a time override** for a current or upcoming session. Times are always Eastern, independent of the browser’s timezone. Completed sessions stay closed and archived.
+- **Hide or show public totals.** Hiding also hides archived public totals and home page raised labels. The instructor still sees individual archived portfolios.
+- **Reset a password, correct a team, or archive an account.** A password reset signs the student out everywhere. A team correction returns money in the new team to the wallet. Archiving disables login and removes the account from current totals while preserving all historical results, comments, and activity.
+- **Review history by day → receiving team → angel.** Groups start collapsed and retain every individual change, including large instructor allocations.
+- **Instructor reminder:** send a follow-up email to each team after every investment event, using that session’s saved results and private feedback. The dashboard displays this reminder; it does not send emails automatically.
 
-The tab also shows team totals, each student's portfolio, and the full history of changes.
+Closing snapshots are finalized on the first status/archive request after the deadline, or before any subsequent portfolio, team, or account mutation. Database locking serializes finalization with writes. This preserves the closing state even when no browser is open at the deadline and requires no scheduled job. Stored archives include student and instructor portfolios; public archived totals exclude practice money.
+
+To verify database behavior with synthetic data and a controllable clock, install local PostgreSQL and run `npm run test:investor-db`. The test creates and deletes its own temporary cluster; it never uses the live database.
 
 ### Reusing it for another cohort
 
@@ -109,7 +119,8 @@ The tab also shows team totals, each student's portfolio, and the full history o
 - `js/investorGame.jsx` — student page, public totals page, and dashboard tab
 - `src/lib/investorGame.ts` — budget math and Supabase calls
 - `supabase/investor-game.sql` — schema, security rules, and database functions
-- `tests/investorGame.test.ts` — unit tests for the budget rules
+- `tests/investorGame.test.ts` and `tests/investorSessions.test.ts` — budget, calendar alignment, and grouped history tests
+- `tests/sql/investor-game.sql` — database integration checks for permissions, windows, and permanent results
 
 ## Dashboard
 

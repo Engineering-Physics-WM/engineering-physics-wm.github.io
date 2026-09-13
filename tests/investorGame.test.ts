@@ -176,3 +176,15 @@ describe("dollar formatting", () => {
     expect(formatCompactDollars(900)).toBe("$900");
   });
 });
+
+describe("large portfolios in the permanent activity log", () => {
+  it("keeps full instructor and spring-budget changes without a $1M clamp", () => {
+    expect(describeChanges({ a: 5_000_000, b: 0 }, { a: 3_000_000, b: 2_000_000 }, IDS)).toEqual([
+      { projectId: "a", delta: -2_000_000 },
+      { projectId: "b", delta: 2_000_000 },
+    ]);
+    expect(describeChanges({ a: 1_000_000 }, { a: 2_000_000 }, IDS)).toEqual([
+      { projectId: "a", delta: 1_000_000 },
+    ]);
+  });
+});

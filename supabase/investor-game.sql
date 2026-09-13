@@ -1,4 +1,6 @@
--- Yang Ran Angels, the EP classroom investor game (starts at Pitch Perfect II, continues through later pitches and progress reports).
+begin;
+
+-- Yang Ran Angels: dated investment sessions for every Yang-only class.
 -- Each student logs in with their first name and a preset password, and keeps one $1M portfolio
 -- for the whole year. The page saves every change instantly, and each change is written to an activity log
 -- for the instructor. Investments move in $10,000 steps. Students get $1M each; an
@@ -9,7 +11,7 @@
 --   2. Run the private seed file supabase/investor-game-players-2026-2027.private.sql (not in git).
 --
 -- Who can see what:
---   * Students (anon) reach only their own portfolio, through the functions below.
+--   * Angels use token-scoped functions for their portfolio, archive, and private feedback.
 --   * The public totals function returns one total per team, nothing per student.
 --   * Only the instructor account can read players, the activity log, or change settings.
 
@@ -146,31 +148,152 @@ for select
 to authenticated
 using ((auth.jwt() ->> 'email') in ('rxyan2@wm.edu'));
 
+-- Dated sessions use America/New_York, including daylight-saving transitions.
+alter table public.investor_game_players add column if not exists is_active boolean not null default true;
+alter table public.investor_game_players add column if not exists spring_bonus_at timestamptz;
+alter table public.investor_games add column if not exists archive_started_at timestamptz not null default now();
+
+create table if not exists public.investor_game_events (
+  id text primary key,
+  game_id text not null references public.investor_games(game_id),
+  label text not null,
+  starts_at timestamptz not null,
+  ends_at timestamptz not null,
+  finalized_at timestamptz,
+  check (ends_at > starts_at)
+);
+create index if not exists investor_events_by_game on public.investor_game_events(game_id, starts_at);
+create table if not exists public.investor_game_results (
+  event_id text not null references public.investor_game_events(id),
+  player_id uuid not null references public.investor_game_players(id),
+  player_name text not null,
+  team_project_id text,
+  is_practice boolean not null,
+  is_instructor boolean not null,
+  budget integer not null,
+  allocations jsonb not null,
+  total_invested integer not null,
+  primary key(event_id, player_id)
+);
+create table if not exists public.investor_game_comments (
+  id bigint generated always as identity primary key,
+  event_id text not null references public.investor_game_events(id),
+  player_id uuid not null references public.investor_game_players(id),
+  player_name text not null,
+  project_id text not null,
+  body text not null check (char_length(body) between 1 and 500),
+  updated_at timestamptz not null default now(),
+  unique(event_id, player_id, project_id)
+);
+
+alter table public.investor_game_activity add column if not exists player_name text;
+alter table public.investor_game_activity add column if not exists team_project_id text;
+update public.investor_game_activity a set player_name = p.display_name, team_project_id = p.team_project_id
+from public.investor_game_players p where a.player_id = p.id and a.player_name is null;
+-- Archiving a login must never delete its portfolio history.
+alter table public.investor_game_activity drop constraint if exists investor_game_activity_player_id_fkey;
+alter table public.investor_game_activity add constraint investor_game_activity_player_id_fkey
+  foreign key(player_id) references public.investor_game_players(id);
+drop policy if exists "Instructor can remove investor game players" on public.investor_game_players;
+
+alter table public.investor_game_events enable row level security;
+alter table public.investor_game_results enable row level security;
+alter table public.investor_game_comments enable row level security;
+drop policy if exists "Instructor reads events" on public.investor_game_events;
+create policy "Instructor reads events" on public.investor_game_events for select to authenticated
+  using ((auth.jwt() ->> 'email') = 'rxyan2@wm.edu');
+drop policy if exists "Instructor reads results" on public.investor_game_results;
+create policy "Instructor reads results" on public.investor_game_results for select to authenticated
+  using ((auth.jwt() ->> 'email') = 'rxyan2@wm.edu');
+drop policy if exists "Instructor reads comments" on public.investor_game_comments;
+create policy "Instructor reads comments" on public.investor_game_comments for select to authenticated
+  using ((auth.jwt() ->> 'email') = 'rxyan2@wm.edu');
+
+-- Called before ANY portfolio/team/account mutation and by status reads. Taking the
+-- game lock serializes writes with finalization. Even if nobody visits at closing,
+-- the final state is frozen before the next write; no cron or open browser is needed.
+create or replace function public.investor_game_prepare(p_game_id text)
+returns void language plpgsql security definer set search_path = public as $$
+declare g public.investor_games%rowtype; e record;
+begin
+  select * into g from public.investor_games where game_id = p_game_id for update;
+  for e in select * from public.investor_game_events
+    where game_id = p_game_id and ends_at <= now() and finalized_at is null
+      and ends_at >= g.archive_started_at order by ends_at for update
+  loop
+    insert into public.investor_game_results
+      (event_id, player_id, player_name, team_project_id, is_practice, is_instructor, budget, allocations, total_invested)
+    select e.id, p.id, p.display_name, p.team_project_id, p.is_practice, p.is_instructor,
+      p.budget + case when p.game_id = 'ep-investor-2026-2027' and not p.is_instructor
+        and not p.is_practice and p.spring_bonus_at is null
+        and e.ends_at >= timestamptz '2027-01-27 00:00 America/New_York' then 1000000 else 0 end,
+      p.allocations, p.total_invested
+    from public.investor_game_players p where p.game_id = p_game_id and p.is_active
+    on conflict do nothing;
+    update public.investor_game_events set finalized_at = now() where id = e.id;
+  end loop;
+  -- Instructor note: one additional $1M holiday bonus per student, effective when
+  -- spring begins. Kept server-side; no advance student-facing announcement.
+  update public.investor_game_players set budget = budget + 1000000, spring_bonus_at = now()
+  where game_id = p_game_id and game_id = 'ep-investor-2026-2027'
+    and not is_instructor and not is_practice and spring_bonus_at is null
+    and now() >= timestamptz '2027-01-27 00:00 America/New_York';
+end;
+$$;
+revoke all on function public.investor_game_prepare(text) from public, anon, authenticated;
+
+create or replace function public.investor_game_activity_identity()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  select display_name, team_project_id into new.player_name, new.team_project_id
+  from public.investor_game_players where id = new.player_id;
+  return new;
+end;
+$$;
+drop trigger if exists investor_activity_identity on public.investor_game_activity;
+create trigger investor_activity_identity before insert on public.investor_game_activity
+  for each row execute function public.investor_game_activity_identity();
+revoke all on function public.investor_game_activity_identity() from public, anon, authenticated;
+
+-- Syllabus Yang-only sessions; never overwrite an instructor time override.
+insert into public.investor_game_events (id, game_id, label, starts_at, ends_at) values
+('ep-investor-2026-08-31', 'ep-investor-2026-2027', 'Pitch Perfect I', '2026-08-31 13:00 America/New_York'::timestamptz, '2026-08-31 14:00 America/New_York'::timestamptz),
+('ep-investor-2026-09-14', 'ep-investor-2026-2027', 'Pitch Perfect II', '2026-09-14 13:00 America/New_York'::timestamptz, '2026-09-14 14:00 America/New_York'::timestamptz),
+('ep-investor-2026-10-19', 'ep-investor-2026-2027', 'Progress Report I', '2026-10-19 13:00 America/New_York'::timestamptz, '2026-10-19 14:00 America/New_York'::timestamptz),
+('ep-investor-2026-11-16', 'ep-investor-2026-2027', 'Pitch Perfect III', '2026-11-16 13:00 America/New_York'::timestamptz, '2026-11-16 14:00 America/New_York'::timestamptz),
+('ep-investor-2026-11-23', 'ep-investor-2026-2027', 'Team Preparation Day', '2026-11-23 13:00 America/New_York'::timestamptz, '2026-11-23 14:00 America/New_York'::timestamptz),
+('ep-investor-2026-11-30', 'ep-investor-2026-2027', 'Progress Report II', '2026-11-30 13:00 America/New_York'::timestamptz, '2026-11-30 14:00 America/New_York'::timestamptz),
+('ep-investor-2026-12-09', 'ep-investor-2026-2027', 'Mid-Year Presentations', '2026-12-09 14:00 America/New_York'::timestamptz, '2026-12-09 17:00 America/New_York'::timestamptz),
+('ep-investor-2027-02-01', 'ep-investor-2026-2027', 'Progress Report III', '2027-02-01 13:00 America/New_York'::timestamptz, '2027-02-01 14:00 America/New_York'::timestamptz),
+('ep-investor-2027-02-15', 'ep-investor-2026-2027', 'Writing Thesis I', '2027-02-15 13:00 America/New_York'::timestamptz, '2027-02-15 14:00 America/New_York'::timestamptz),
+('ep-investor-2027-03-01', 'ep-investor-2026-2027', 'Progress Report IV', '2027-03-01 13:00 America/New_York'::timestamptz, '2027-03-01 14:00 America/New_York'::timestamptz),
+('ep-investor-2027-03-22', 'ep-investor-2026-2027', 'Writing Thesis II', '2027-03-22 13:00 America/New_York'::timestamptz, '2027-03-22 14:00 America/New_York'::timestamptz),
+('ep-investor-2027-04-05', 'ep-investor-2026-2027', 'Writing Thesis III', '2027-04-05 13:00 America/New_York'::timestamptz, '2027-04-05 14:00 America/New_York'::timestamptz),
+('ep-investor-2027-04-12', 'ep-investor-2026-2027', 'Final Presentation I', '2027-04-12 13:00 America/New_York'::timestamptz, '2027-04-12 14:00 America/New_York'::timestamptz),
+('ep-investor-2027-04-19', 'ep-investor-2026-2027', 'Final Presentation II', '2027-04-19 13:00 America/New_York'::timestamptz, '2027-04-19 14:00 America/New_York'::timestamptz)
+on conflict (id) do nothing;
+
 -- Game status -------------------------------------------------------------------
 
-create or replace function public.investor_game_status(
-  p_game_id text
-)
-returns table (
-  game_id text,
-  cohort_year text,
-  title text,
-  is_open boolean,
-  totals_visible boolean,
-  current_event text,
-  budget integer,
-  project_ids text[]
-)
-language sql
-stable
-security definer
-set search_path = public
-as $$
-  select g.game_id, g.cohort_year, g.title, g.is_open, g.totals_visible, g.current_event, g.budget, g.project_ids
-  from public.investor_games g
-  where g.game_id = p_game_id;
+drop function if exists public.investor_game_status(text);
+create function public.investor_game_status(p_game_id text)
+returns table (game_id text, cohort_year text, title text, is_open boolean, totals_visible boolean,
+  current_event text, budget integer, project_ids text[], accepting boolean, event_id text,
+  starts_at timestamptz, ends_at timestamptz, server_now timestamptz)
+language plpgsql volatile security definer set search_path = public as $$
+begin
+  perform public.investor_game_prepare(p_game_id);
+  return query select g.game_id, g.cohort_year, g.title, g.is_open, g.totals_visible,
+    coalesce(e.label, g.current_event), g.budget, g.project_ids,
+    (g.is_open and coalesce(now() >= e.starts_at and now() < e.ends_at, false)),
+    e.id, e.starts_at, e.ends_at, now()
+  from public.investor_games g left join lateral (
+    select ev.* from public.investor_game_events ev where ev.game_id = g.game_id
+    order by case when ev.ends_at > now() then 0 else 1 end,
+      case when ev.ends_at > now() then ev.starts_at end asc, ev.starts_at desc limit 1
+  ) e on true where g.game_id = p_game_id;
+end;
 $$;
-
 grant execute on function public.investor_game_status(text) to anon, authenticated;
 
 -- Log in -------------------------------------------------------------------------
@@ -205,6 +328,7 @@ declare
   name_key_value text := lower(regexp_replace(trim(coalesce(p_name, '')), '\s+', ' ', 'g'));
   clean_password text := trim(coalesce(p_password, ''));
 begin
+  perform public.investor_game_prepare(p_game_id);
   perform 1 from public.investor_games g where g.game_id = p_game_id;
   if not found then
     raise exception 'The investor game is not set up yet.' using errcode = '22023';
@@ -213,7 +337,7 @@ begin
   select * into player
   from public.investor_game_players pl
   where pl.game_id = p_game_id
-    and pl.name_key = name_key_value;
+    and pl.name_key = name_key_value and pl.is_active;
 
   if not found then
     return query select 'wrong'::text, null::text, null::text, null::boolean, null::boolean, null::integer, null::uuid, null::jsonb, null::timestamptz;
@@ -273,15 +397,18 @@ returns table (
   allocations jsonb,
   saved_at timestamptz
 )
-language sql
-stable
+language plpgsql
+volatile
 security definer
 set search_path = public
 as $$
-  select pl.display_name, pl.team_project_id, pl.is_practice, pl.is_instructor, pl.budget, pl.allocations, pl.last_saved_at
+begin
+  perform public.investor_game_prepare(p_game_id);
+  return query select pl.display_name, pl.team_project_id, pl.is_practice, pl.is_instructor, pl.budget, pl.allocations, pl.last_saved_at
   from public.investor_game_players pl
   where pl.game_id = p_game_id
-    and pl.session_token = p_session_token;
+    and pl.session_token = p_session_token and pl.is_active;
+end;
 $$;
 
 grant execute on function public.investor_game_session(text, uuid) to anon, authenticated;
@@ -306,6 +433,7 @@ as $$
 #variable_conflict use_column
 declare
   game_row public.investor_games%rowtype;
+  active_event public.investor_game_events%rowtype;
   player public.investor_game_players%rowtype;
   clean_allocations jsonb := '{}'::jsonb;
   entry record;
@@ -314,6 +442,7 @@ declare
   listed_project text;
   saved_time timestamptz := now();
 begin
+  perform public.investor_game_prepare(p_game_id);
   select * into game_row from public.investor_games g where g.game_id = p_game_id;
   if not found then
     raise exception 'The investor game is not set up yet.' using errcode = '22023';
@@ -322,14 +451,16 @@ begin
   select * into player
   from public.investor_game_players pl
   where pl.game_id = game_row.game_id
-    and pl.session_token = p_session_token;
+    and pl.session_token = p_session_token and pl.is_active for update;
 
   if not found then
     raise exception 'Your session ended. Log in again with your first name and password.' using errcode = '28000';
   end if;
 
-  if not game_row.is_open then
-    raise exception 'Investing is closed right now.' using errcode = '42501';
+  select * into active_event from public.investor_game_events e
+    where e.game_id = p_game_id and now() >= e.starts_at and now() < e.ends_at;
+  if not found or not game_row.is_open then
+    raise exception 'Investing and comments are closed right now. You can still log in and view.' using errcode = '42501';
   end if;
 
   if jsonb_typeof(p_allocations) is distinct from 'object' then
@@ -400,7 +531,7 @@ begin
   values (
     game_row.game_id,
     player.id,
-    game_row.current_event,
+    active_event.label,
     player.allocations,
     clean_allocations,
     player.total_invested,
@@ -432,7 +563,7 @@ as $$
   cross join lateral unnest(g.project_ids) as u(pid)
   left join public.investor_game_players pl
     on pl.game_id = g.game_id
-   and not pl.is_practice
+   and not pl.is_practice and pl.is_active
   where g.game_id = p_game_id
     and g.totals_visible
   group by u.pid;
@@ -463,7 +594,8 @@ begin
     raise exception 'Only the instructor can change students.' using errcode = '42501';
   end if;
 
-  select * into player from public.investor_game_players pl where pl.id = p_player_id;
+  perform public.investor_game_prepare((select game_id from public.investor_game_players where id = p_player_id));
+  select * into player from public.investor_game_players pl where pl.id = p_player_id for update;
   if not found then
     raise exception 'Student not found.' using errcode = '22023';
   end if;
@@ -521,3 +653,128 @@ $$;
 
 revoke all on function public.investor_game_admin_update_player(uuid, text, text) from public, anon;
 grant execute on function public.investor_game_admin_update_player(uuid, text, text) to authenticated;
+
+-- Comments are scoped by the authenticated angel token in SQL, never filtered only in the UI.
+drop function if exists public.investor_game_feedback(text, uuid);
+create function public.investor_game_feedback(p_game_id text, p_session_token uuid)
+returns table(id bigint, event_id text, event_label text, project_id text,
+  body text, updated_at timestamptz, is_mine boolean)
+language plpgsql security definer set search_path = public as $$
+declare viewer public.investor_game_players%rowtype;
+begin
+  select * into viewer from public.investor_game_players p
+  where p.game_id = p_game_id and p.session_token = p_session_token and p.is_active;
+  if not found then raise exception 'Your session ended.' using errcode = '28000'; end if;
+  return query select c.id, c.event_id, e.label, c.project_id, c.body, c.updated_at,
+    c.player_id = viewer.id
+  from public.investor_game_comments c join public.investor_game_events e on e.id = c.event_id
+  join public.investor_game_players author on author.id = c.player_id
+  where e.game_id = p_game_id and (c.player_id = viewer.id
+    or (c.project_id = viewer.team_project_id and not author.is_practice))
+  order by e.starts_at desc, c.updated_at desc, c.id desc;
+end;
+$$;
+
+create or replace function public.investor_game_save_comment(
+  p_game_id text, p_session_token uuid, p_event_id text, p_project_id text, p_body text)
+returns void language plpgsql security definer set search_path = public as $$
+declare viewer public.investor_game_players%rowtype; g public.investor_games%rowtype;
+begin
+  perform public.investor_game_prepare(p_game_id);
+  select * into viewer from public.investor_game_players p
+    where p.game_id = p_game_id and p.session_token = p_session_token and p.is_active;
+  if not found then raise exception 'Your session ended.' using errcode = '28000'; end if;
+  select * into g from public.investor_games where game_id = p_game_id;
+  if not g.is_open or not exists (select 1 from public.investor_game_events e
+    where e.id = p_event_id and e.game_id = p_game_id and now() >= e.starts_at and now() < e.ends_at)
+  then raise exception 'Investing and comments are closed right now.' using errcode = '42501'; end if;
+  if p_project_id is null or not (p_project_id = any(g.project_ids))
+    or p_project_id = viewer.team_project_id
+  then raise exception 'Choose another team for your feedback.' using errcode = '22023'; end if;
+  if p_body is null or char_length(trim(p_body)) not between 1 and 500
+  then raise exception 'Write a short comment of 1 to 500 characters.' using errcode = '22023'; end if;
+  insert into public.investor_game_comments(event_id, player_id, player_name, project_id, body)
+  values (p_event_id, viewer.id, viewer.display_name, p_project_id, trim(p_body))
+  on conflict(event_id, player_id, project_id) do update set body = excluded.body, updated_at = now();
+end;
+$$;
+
+-- Public archive contains team totals only and respects the same visibility switch as live totals.
+create or replace function public.investor_game_events_list(p_game_id text)
+returns table(id text, label text, starts_at timestamptz, ends_at timestamptz, finalized_at timestamptz,
+  totals jsonb)
+language plpgsql security definer set search_path = public as $$
+begin
+  perform public.investor_game_prepare(p_game_id);
+  return query select e.id, e.label, e.starts_at, e.ends_at, e.finalized_at,
+    case when g.totals_visible and e.finalized_at is not null then
+      (select jsonb_object_agg(t.pid, t.total) from (
+        select pid, coalesce(sum((r.allocations ->> pid)::bigint), 0) as total
+        from unnest(g.project_ids) pid left join public.investor_game_results r
+          on r.event_id = e.id and not r.is_practice group by pid
+      ) t) else null end
+  from public.investor_game_events e join public.investor_games g on g.game_id = e.game_id
+  where e.game_id = p_game_id order by e.starts_at;
+end;
+$$;
+
+create or replace function public.investor_game_my_results(p_game_id text, p_session_token uuid)
+returns setof public.investor_game_results
+language plpgsql security definer set search_path = public as $$
+declare viewer public.investor_game_players%rowtype;
+begin
+  perform public.investor_game_prepare(p_game_id);
+  select * into viewer from public.investor_game_players p
+    where p.game_id = p_game_id and p.session_token = p_session_token and p.is_active;
+  if not found then raise exception 'Your session ended.' using errcode = '28000'; end if;
+  return query select r.* from public.investor_game_results r
+    join public.investor_game_events e on e.id = r.event_id
+    where e.game_id = p_game_id and r.player_id = viewer.id
+    order by e.starts_at desc, r.player_name;
+end;
+$$;
+
+create or replace function public.investor_game_admin_event(p_event_id text, p_starts_at timestamptz, p_ends_at timestamptz)
+returns void language plpgsql security definer set search_path = public as $$
+declare e public.investor_game_events%rowtype;
+begin
+  if coalesce(auth.jwt() ->> 'email', '') <> 'rxyan2@wm.edu'
+  then raise exception 'Instructor only.' using errcode = '42501'; end if;
+  select * into e from public.investor_game_events where id = p_event_id;
+  if not found then raise exception 'Session not found.' using errcode = '22023'; end if;
+  perform public.investor_game_prepare(e.game_id);
+  if e.ends_at <= now() or p_starts_at is null or p_ends_at is null or p_ends_at <= p_starts_at or p_ends_at <= now()
+    or (p_starts_at at time zone 'America/New_York')::date <> (e.starts_at at time zone 'America/New_York')::date
+    or (p_ends_at at time zone 'America/New_York')::date <> (e.starts_at at time zone 'America/New_York')::date
+  then raise exception 'Use a valid window on this session date. Completed sessions stay archived.' using errcode = '22023'; end if;
+  if exists(select 1 from public.investor_game_events other where other.game_id = e.game_id
+    and other.id <> e.id and other.starts_at < p_ends_at and other.ends_at > p_starts_at)
+  then raise exception 'Session windows cannot overlap.' using errcode = '22023'; end if;
+  update public.investor_game_events set starts_at = p_starts_at, ends_at = p_ends_at where id = e.id;
+end;
+$$;
+
+create or replace function public.investor_game_admin_archive_player(p_player_id uuid)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if coalesce(auth.jwt() ->> 'email', '') <> 'rxyan2@wm.edu'
+  then raise exception 'Instructor only.' using errcode = '42501'; end if;
+  perform public.investor_game_prepare((select game_id from public.investor_game_players where id = p_player_id));
+  update public.investor_game_players set is_active = false, session_token = gen_random_uuid() where id = p_player_id;
+end;
+$$;
+
+revoke all on function public.investor_game_feedback(text, uuid) from public;
+revoke all on function public.investor_game_save_comment(text, uuid, text, text, text) from public;
+revoke all on function public.investor_game_events_list(text) from public;
+revoke all on function public.investor_game_my_results(text, uuid) from public;
+grant execute on function public.investor_game_feedback(text, uuid) to anon, authenticated;
+grant execute on function public.investor_game_save_comment(text, uuid, text, text, text) to anon, authenticated;
+grant execute on function public.investor_game_events_list(text) to anon, authenticated;
+grant execute on function public.investor_game_my_results(text, uuid) to anon, authenticated;
+revoke all on function public.investor_game_admin_event(text, timestamptz, timestamptz) from public, anon;
+revoke all on function public.investor_game_admin_archive_player(uuid) from public, anon;
+grant execute on function public.investor_game_admin_event(text, timestamptz, timestamptz) to authenticated;
+grant execute on function public.investor_game_admin_archive_player(uuid) to authenticated;
+
+commit;

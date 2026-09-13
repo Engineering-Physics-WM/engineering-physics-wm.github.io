@@ -7,6 +7,14 @@ import { EP_DATA, resolveCohortData } from "./data.js";
 import { isSupabaseConfigured } from "./supabaseClient.js";
 import { INSTRUCTOR_EMAIL } from "./config.js";
 import {
+  courseDay,
+  groupActivity,
+  fetchEvents,
+  fetchFeedback,
+  fetchMyResults,
+  fetchAdminArchive,
+  saveComment,
+  updateEventWindow,
   GAME_COHORT_YEAR,
   GAME_PROJECT_IDS,
   INVESTMENT_BUDGET,
@@ -17,7 +25,6 @@ import {
   adminUpdatePlayer,
   cleanPlayerName,
   deletePlayer,
-  describeChanges,
   emptyAllocations,
   fetchActivity,
   fetchGameStatus,
@@ -94,20 +101,13 @@ const clearStoredToken = () => {
 const formatStamp = (value) =>
   value
     ? new Date(value).toLocaleString([], {
+        timeZone: "America/New_York",
         month: "short",
         day: "numeric",
         hour: "numeric",
         minute: "2-digit",
       })
     : "—";
-
-const changeText = (changes) =>
-  changes
-    .map(
-      (change) =>
-        `${change.delta > 0 ? "+" : "−"}${formatCompactDollars(Math.abs(change.delta))} ${teamName(change.projectId)}`
-    )
-    .join(" · ");
 
 const describeError = (error) =>
   isMissingSetupError(error)
@@ -137,7 +137,12 @@ const useGameStatus = (pollMs) => {
       row
         ? {
             state: "ready",
-            isOpen: row.is_open,
+            isOpen: row.accepting === true,
+            enabled: row.is_open,
+            eventId: row.event_id,
+            startsAt: row.starts_at,
+            endsAt: row.ends_at,
+            clockOffset: Date.parse(row.server_now) - Date.now(),
             totalsVisible: row.totals_visible,
             currentEvent: row.current_event || "",
           }
@@ -154,7 +159,18 @@ const useGameStatus = (pollMs) => {
     return () => window.clearInterval(timer);
   }, [pollMs, refresh]);
 
-  return [game, refresh, setGame];
+  const [tick, setTick] = React.useState(Date.now());
+  React.useEffect(() => {
+    const timer = window.setInterval(() => setTick(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+  const current = tick + (game.clockOffset || 0);
+  const isOpen =
+    game.state === "ready" &&
+    game.enabled &&
+    current >= Date.parse(game.startsAt) &&
+    current < Date.parse(game.endsAt);
+  return [{ ...game, isOpen }, refresh, setGame];
 };
 
 // ── Shared pieces ─────────────────────────────────────────────────────────────
@@ -163,17 +179,29 @@ const GameRules = ({ budget = INVESTMENT_BUDGET }) => (
   <section className="invest-rules" aria-label="Game rules">
     <p className="assignment-eyebrow mono">Rules</p>
     <ol className="assignment-numbered-list">
-      <li>You start with {formatDollars(budget)} in play money.</li>
+      <li>Your current budget is {formatDollars(budget)} in play money.</li>
       <li>Invest in steps of $10,000, in any team except your own.</li>
       <li>
         Your total can&apos;t go over {formatCompactDollars(budget)}. Money you don&apos;t invest
         stays in your wallet.
       </li>
       <li>
-        After each pitch or progress report, you can move money: pull it out of one team and put it
-        into another.
+        During every class taught only by Prof. Yang, you can move money: pull it out of one team
+        and put it into another.
       </li>
-      <li>Every change saves instantly. There is no submit button.</li>
+      <li>
+        Investment changes save instantly. Each session’s closing results are saved permanently.
+      </li>
+      <li>Wear business casual or formal attire at every investment session.</li>
+      <li>
+        Investments and comments are accepted from 1–2 p.m. Eastern on session days, unless a
+        different window is listed. You can log in and view anytime.
+      </li>
+      <li>
+        Leave a short private comment for each other team and press Save comment. You can see your
+        team’s received comments and the comments you left. Received feedback is anonymous. Only the
+        instructor dashboard shows who said what.
+      </li>
       <li>The class sees each team&apos;s total. Only Prof. Yang sees who invested what.</li>
     </ol>
   </section>
@@ -216,7 +244,14 @@ const GameDisclaimer = () => (
       <h3>Who sees what</h3>
       <ul>
         <li>The public totals page shows only the total raised by each team.</li>
-        <li>Only the instructor sees individual investments and the history of changes.</li>
+        <li>
+          Only the instructor sees all individual investments and change history. You can view your
+          own archived portfolios.
+        </li>
+        <li>
+          Comments are private to their author, the receiving team, and the instructor. Receiving
+          teams never see commenter names; only the instructor dashboard identifies authors.
+        </li>
       </ul>
       <p className="privacy-questions">
         Questions: <a href={`mailto:${INSTRUCTOR_EMAIL}`}>{INSTRUCTOR_EMAIL}</a>
@@ -224,6 +259,268 @@ const GameDisclaimer = () => (
     </div>
   </details>
 );
+
+const formatWindow = (event) =>
+  `${courseDay(event.starts_at)} · ${new Date(event.starts_at).toLocaleTimeString("en-US", { timeZone: "America/New_York", hour: "numeric", minute: "2-digit" })}–${new Date(event.ends_at).toLocaleTimeString("en-US", { timeZone: "America/New_York", hour: "numeric", minute: "2-digit" })} Eastern`;
+
+const SessionTimer = ({ game }) => {
+  const [now, setNow] = React.useState(Date.now());
+  React.useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+  if (!game.startsAt || !game.endsAt) return null;
+  const serverNow = now + (game.clockOffset || 0);
+  const opening = serverNow < Date.parse(game.startsAt);
+  const seconds = Math.max(
+    0,
+    Math.ceil((Date.parse(opening ? game.startsAt : game.endsAt) - serverNow) / 1000)
+  );
+  const countdown = `${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}m ${seconds % 60}s`;
+  return (
+    <div className="invest-banner">
+      <strong>{formatWindow({ starts_at: game.startsAt, ends_at: game.endsAt })}</strong>
+      <p>
+        {!game.enabled
+          ? "Submissions paused by the instructor."
+          : opening
+            ? `Opens in ${countdown}`
+            : seconds > 0
+              ? `Investments and comments close in ${countdown}`
+              : "Submissions closed. You can still log in and view."}
+      </p>
+    </div>
+  );
+};
+
+const CommentEditor = ({ token, eventId, project, savedBody, disabled, onSaved }) => {
+  const [draft, setDraft] = React.useState(null);
+  const [busy, setBusy] = React.useState(false);
+  const [status, setStatus] = React.useState("");
+  const body = draft ?? savedBody ?? "";
+  const submit = async (event) => {
+    event.preventDefault();
+    setBusy(true);
+    const result = await saveComment(token, eventId, project.id, body);
+    setBusy(false);
+    if (result.error) {
+      setStatus(describeError(result.error));
+      return;
+    }
+    setStatus("Comment saved privately.");
+    await onSaved();
+    setDraft(null);
+  };
+  return (
+    <form className="invest-comment-editor" onSubmit={submit}>
+      <label htmlFor={`comment-${project.id}`}>Private comment for {project.shortName}</label>
+      <textarea
+        id={`comment-${project.id}`}
+        maxLength={500}
+        rows={3}
+        value={body}
+        placeholder="What works well? What should the team improve?"
+        disabled={disabled || busy}
+        onChange={(event) => {
+          setDraft(event.target.value);
+          setStatus("");
+        }}
+      />
+      <div>
+        <span className="mono">{body.length}/500</span>{" "}
+        <button
+          className="invest-chip"
+          disabled={disabled || busy || !body.trim() || body === savedBody}
+        >
+          {busy ? "Saving…" : "Save comment"}
+        </button>
+      </div>
+      <p className="invest-note" role="status">
+        {status ||
+          "The receiving team sees an anonymous quotation. Only the instructor dashboard shows your name."}
+      </p>
+    </form>
+  );
+};
+
+const FeedbackList = ({ title, comments, showAuthors = false }) => (
+  <section className="invest-feedback">
+    <h3>{title}</h3>
+    {comments.length === 0 ? (
+      <p>No comments yet.</p>
+    ) : (
+      comments.map((comment) => (
+        <article key={comment.id}>
+          <strong>
+            {teamName(comment.project_id)}
+            {showAuthors ? ` · ${comment.player_name}` : ""}
+          </strong>
+          <small>
+            {comment.event_label} · {formatStamp(comment.updated_at)}
+          </small>
+          <blockquote>“{comment.body}”</blockquote>
+        </article>
+      ))
+    )}
+  </section>
+);
+
+const SessionArchive = ({ events, results = [], instructor = false }) => (
+  <section className="invest-archive">
+    <h3>{instructor ? "Permanent session results" : "Session results"}</h3>
+    <p>Closing portfolios are preserved for each session, including unchanged investments.</p>
+    {events
+      .filter((event) => event.finalized_at)
+      .map((event) => (
+        <details key={event.id}>
+          <summary>
+            {courseDay(event.starts_at)} · {event.label}
+          </summary>
+          {event.totals && (
+            <div className="invest-table-wrap">
+              <table className="invest-table">
+                <thead>
+                  <tr>
+                    <th>Team</th>
+                    <th>Raised at close</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Object.entries(event.totals).map(([id, total]) => (
+                    <tr key={id}>
+                      <td>{teamName(id)}</td>
+                      <td>{formatDollars(total)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          {results
+            .filter((r) => r.event_id === event.id)
+            .map((result) => (
+              <details key={result.player_id}>
+                <summary>
+                  {instructor ? result.player_name : "Your closing portfolio"} ·{" "}
+                  {formatDollars(result.total_invested)}
+                </summary>
+                <ul>
+                  {Object.entries(result.allocations).map(([id, amount]) => (
+                    <li key={id}>
+                      {teamName(id)}: {formatDollars(amount)}
+                    </li>
+                  ))}
+                </ul>
+                <p>
+                  Wallet: {formatDollars(result.budget - result.total_invested)}
+                  {result.is_practice ? " · Practice (excluded from totals)" : ""}
+                </p>
+              </details>
+            ))}
+        </details>
+      ))}
+    {!events.some((event) => event.finalized_at) && <p>No completed session results yet.</p>}
+  </section>
+);
+
+const EventWindowEditor = ({ events, onUpdated, disabled }) => {
+  const [selected, setSelected] = React.useState("");
+  const [start, setStart] = React.useState("");
+  const [end, setEnd] = React.useState("");
+  const [status, setStatus] = React.useState("");
+  const [saving, setSaving] = React.useState(false);
+  const upcoming = events.filter(
+    (event) => !event.finalized_at && Date.parse(event.ends_at) > Date.now()
+  );
+  const event = upcoming.find((e) => e.id === selected) || upcoming[0];
+  const time = (stamp) =>
+    new Date(stamp).toLocaleTimeString("en-GB", {
+      timeZone: "America/New_York",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  const submit = async (e) => {
+    e.preventDefault();
+    // The SQL function accepts timezone-qualified local timestamps, so ET is correct on DST dates.
+    const day = courseDay(event.starts_at);
+    setSaving(true);
+    const result = await updateEventWindow(
+      event.id,
+      `${day} ${start || time(event.starts_at)} America/New_York`,
+      `${day} ${end || time(event.ends_at)} America/New_York`
+    );
+    setSaving(false);
+    setStatus(result.error ? describeError(result.error) : "Session window saved.");
+    if (!result.error) {
+      setStart("");
+      setEnd("");
+      onUpdated();
+    }
+  };
+  return (
+    <section className="invest-window-editor">
+      <h3>Session schedule and time overrides</h3>
+      <p>
+        All Yang-only classes · default 1–2 p.m. Eastern. Completed sessions cannot be reopened.
+      </p>
+      {event && (
+        <form onSubmit={submit}>
+          <label>
+            Session
+            <select
+              value={event.id}
+              onChange={(e) => {
+                setSelected(e.target.value);
+                setStart("");
+                setEnd("");
+                setStatus("");
+              }}
+            >
+              {upcoming.map((e) => (
+                <option key={e.id} value={e.id}>
+                  {courseDay(e.starts_at)} · {e.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Opens (Eastern)
+            <input
+              type="time"
+              required
+              value={start || time(event.starts_at)}
+              onChange={(e) => setStart(e.target.value)}
+            />
+          </label>
+          <label>
+            Closes (Eastern)
+            <input
+              type="time"
+              required
+              value={end || time(event.ends_at)}
+              onChange={(e) => setEnd(e.target.value)}
+            />
+          </label>
+          <button className="btn btn-ghost" disabled={disabled || saving}>
+            Save window
+          </button>
+        </form>
+      )}
+      <p role="status">{status}</p>
+      <details>
+        <summary>Full investment calendar</summary>
+        <ul>
+          {events.map((e) => (
+            <li key={e.id}>
+              {e.label} · {formatWindow(e)}
+              {e.finalized_at ? " · Archived" : ""}
+            </li>
+          ))}
+        </ul>
+      </details>
+    </section>
+  );
+};
 
 // ── Student page ──────────────────────────────────────────────────────────────
 
@@ -240,6 +537,7 @@ const InvestmentCard = ({
   disabled,
   onSet,
   budget = INVESTMENT_BUDGET,
+  commentEditor,
 }) => {
   const isOwnTeam = project.id === ownTeamId;
   const amount = allocations[project.id] || 0;
@@ -265,6 +563,10 @@ const InvestmentCard = ({
 
   const commitText = () => {
     if (text === null) return;
+    if (disabled) {
+      setText(null);
+      return;
+    }
     const parsed = parseDollarInput(text);
     setText(null);
     if (parsed === null) {
@@ -374,12 +676,17 @@ const InvestmentCard = ({
           )}
         </div>
       )}
+      {!isOwnTeam && commentEditor}
     </li>
   );
 };
 
 export const InvestorGamePage = ({ onNavigate }) => {
   const [session, setSession] = React.useState(null);
+  const [comments, setComments] = React.useState([]);
+  const [events, setEvents] = React.useState([]);
+  const [results, setResults] = React.useState([]);
+  const [feedbackError, setFeedbackError] = React.useState("");
   const [restoring, setRestoring] = React.useState(
     () => isSupabaseConfigured && Boolean(readStoredToken())
   );
@@ -402,7 +709,7 @@ export const InvestorGamePage = ({ onNavigate }) => {
   const wallet = budget - total;
   const snapshot = JSON.stringify(allocations);
   const pending = Boolean(session && saved) && snapshot !== JSON.stringify(saved);
-  const closed = game.state === "ready" && !game.isOpen;
+  const closed = game.state !== "ready" || !game.isOpen;
   const canEdit = Boolean(session) && !closed;
 
   const applySession = React.useCallback((player) => {
@@ -427,6 +734,9 @@ export const InvestorGamePage = ({ onNavigate }) => {
     clearStoredToken();
     savedRef.current = null;
     setSession(null);
+    setComments([]);
+    setResults([]);
+    setFeedbackError("");
     setSaved(null);
     setSavedAt(null);
     setSaveError("");
@@ -434,6 +744,37 @@ export const InvestorGamePage = ({ onNavigate }) => {
     setShowLogin(Boolean(message));
     setLoginStatus(message);
   }, []);
+
+  const refreshFeedback = React.useCallback(async () => {
+    if (!session?.token) return;
+    const [feedback, archive, calendar, restored] = await Promise.all([
+      fetchFeedback(session.token),
+      fetchMyResults(session.token),
+      fetchEvents(),
+      fetchSession(INVESTOR_GAME_ID, session.token),
+    ]);
+    if (readStoredToken() !== session.token) return;
+    if (isSessionEndedError(restored.error) || (!restored.error && !restored.player)) {
+      endSession("Your session ended. Log in again.");
+      return;
+    }
+    if (restored.player && restored.player.teamProjectId !== session.teamProjectId)
+      applySession(restored.player);
+    else if (restored.player && restored.player.budget !== session.budget)
+      setSession(restored.player);
+    const error = feedback.error || archive.error || calendar.error || restored.error;
+    setFeedbackError(error ? describeError(error) : "");
+    if (!error) {
+      setComments(feedback.data || []);
+      setResults(archive.data || []);
+      setEvents(calendar.data || []);
+    }
+  }, [session?.token, session?.teamProjectId, session?.budget, applySession, endSession]);
+  React.useEffect(() => {
+    refreshFeedback();
+    const timer = window.setInterval(refreshFeedback, 15000);
+    return () => window.clearInterval(timer);
+  }, [refreshFeedback]);
 
   // Stay logged in across reloads on the same device.
   React.useEffect(() => {
@@ -498,6 +839,15 @@ export const InvestorGamePage = ({ onNavigate }) => {
     const timer = window.setTimeout(() => persist(next), 450);
     return () => window.clearTimeout(timer);
   }, [pending, closed, saving, saveError, snapshot, persist]);
+
+  React.useEffect(() => {
+    if (game.state === "ready" && !game.isOpen && pending && !saving && savedRef.current) {
+      setAllocations(savedRef.current);
+      setSaveError(
+        "The window closed before your last adjustment saved. Your saved portfolio is shown."
+      );
+    }
+  }, [game.state, game.isOpen, pending, saving]);
 
   React.useEffect(() => {
     if (!pending && !saving) return undefined;
@@ -566,7 +916,11 @@ export const InvestorGamePage = ({ onNavigate }) => {
 
   const canRetry = Boolean(saveError) && pending && !closed;
   const saveLine = closed
-    ? { tone: "info", text: "Investing is closed right now. Your portfolio stays as it is." }
+    ? {
+        tone: saveError ? "error" : "info",
+        text:
+          saveError || "Submissions are closed. You can view your saved portfolio and feedback.",
+      }
     : saveError
       ? { tone: "error", text: saveError }
       : saving || pending
@@ -605,7 +959,7 @@ export const InvestorGamePage = ({ onNavigate }) => {
             <dd>
               {session?.isInstructor
                 ? `${formatDollars(budget)} instructor budget`
-                : `${formatDollars(INVESTMENT_BUDGET)} per student`}
+                : `${formatDollars(budget)} per student`}
             </dd>
           </div>
           <div>
@@ -619,10 +973,11 @@ export const InvestorGamePage = ({ onNavigate }) => {
         </Reveal>
       </section>
 
+      <SessionTimer game={game} />
       {closed && (
         <p className="invest-banner">
           <strong>Investing is closed right now.</strong> You can still log in to see your
-          portfolio.
+          portfolio, archived results, and private feedback.
         </p>
       )}
       {game.state === "missing" && (
@@ -771,9 +1126,45 @@ export const InvestorGamePage = ({ onNavigate }) => {
                 budget={budget}
                 disabled={!canEdit}
                 onSet={setAmount}
+                commentEditor={
+                  session && (
+                    <CommentEditor
+                      key={`${session.token}-${game.eventId}-${project.id}`}
+                      token={session.token}
+                      eventId={game.eventId}
+                      project={project}
+                      disabled={!canEdit}
+                      savedBody={
+                        comments.find(
+                          (c) =>
+                            c.is_mine && c.event_id === game.eventId && c.project_id === project.id
+                        )?.body
+                      }
+                      onSaved={refreshFeedback}
+                    />
+                  )
+                }
               />
             ))}
           </ul>
+          {session && (
+            <>
+              {feedbackError && (
+                <p role="alert" className="invest-banner">
+                  Could not load feedback or session results: {feedbackError}
+                </p>
+              )}
+              <FeedbackList
+                title="Anonymous feedback received by your team"
+                comments={comments.filter((c) => c.project_id === ownTeamId)}
+              />
+              <FeedbackList
+                title="Comments you left for other teams"
+                comments={comments.filter((c) => c.is_mine)}
+              />
+              <SessionArchive events={events} results={results} />
+            </>
+          )}
         </section>
       </div>
 
@@ -806,6 +1197,16 @@ export const InvestorGamePage = ({ onNavigate }) => {
 // ── Public totals page ────────────────────────────────────────────────────────
 
 export const InvestorTotalsPage = ({ onNavigate }) => {
+  const [events, setEvents] = React.useState([]);
+  React.useEffect(() => {
+    const load = async () => {
+      const result = await fetchEvents();
+      if (!result.error) setEvents(result.data || []);
+    };
+    load();
+    const timer = window.setInterval(load, 15000);
+    return () => window.clearInterval(timer);
+  }, []);
   const [totals, setTotals] = React.useState([]);
   const [loadState, setLoadState] = React.useState(
     isSupabaseConfigured ? "loading" : "unconfigured"
@@ -936,6 +1337,7 @@ export const InvestorTotalsPage = ({ onNavigate }) => {
           ))}
         </ol>
       )}
+      <SessionArchive events={hidden ? events.map((e) => ({ ...e, totals: null })) : events} />
       <p className="invest-totals-note">
         This page shows team totals only. Individual investments stay private.
       </p>
@@ -948,6 +1350,8 @@ export const InvestorTotalsPage = ({ onNavigate }) => {
 export const InvestorGameDashboardView = ({ onNavigate }) => {
   const [players, setPlayers] = React.useState([]);
   const [activity, setActivity] = React.useState([]);
+  const [events, setEvents] = React.useState([]);
+  const [archive, setArchive] = React.useState({ comments: [], results: [] });
   const [loadState, setLoadState] = React.useState({
     state: isSupabaseConfigured ? "loading" : "unconfigured",
     message: "",
@@ -956,16 +1360,19 @@ export const InvestorGameDashboardView = ({ onNavigate }) => {
   const [game, refreshGame, setGame] = useGameStatus(0);
   const [busy, setBusy] = React.useState("");
   const [actionStatus, setActionStatus] = React.useState(null);
-  const [eventDraft, setEventDraft] = React.useState(null);
+
   const [activityFilter, setActivityFilter] = React.useState("all");
 
   const load = React.useCallback(async () => {
     if (!isSupabaseConfigured) return;
-    const [playerResult, activityResult] = await Promise.all([
+    const [playerResult, activityResult, calendar, archiveResult] = await Promise.all([
       fetchPlayers(INVESTOR_GAME_ID),
       fetchActivity(INVESTOR_GAME_ID),
+      fetchEvents(),
+      fetchAdminArchive(),
     ]);
-    const failure = playerResult.error || activityResult.error;
+    const failure =
+      playerResult.error || activityResult.error || calendar.error || archiveResult.error;
     if (failure) {
       setLoadState({
         state: isMissingSetupError(failure) ? "missing" : "error",
@@ -973,6 +1380,8 @@ export const InvestorGameDashboardView = ({ onNavigate }) => {
       });
       return;
     }
+    setEvents(calendar.data || []);
+    setArchive(archiveResult);
     setPlayers(playerResult.rows);
     setActivity(activityResult.rows);
     setLoadState({ state: "ready", message: "" });
@@ -1000,22 +1409,11 @@ export const InvestorGameDashboardView = ({ onNavigate }) => {
     setGame((current) => ({
       ...current,
       state: "ready",
-      isOpen: settings.is_open ?? current.isOpen,
+      enabled: settings.is_open ?? current.enabled,
       totalsVisible: settings.totals_visible ?? current.totalsVisible,
       currentEvent: settings.current_event ?? current.currentEvent,
     }));
     setActionStatus({ tone: "success", text: successText });
-  };
-
-  const saveEvent = async (event) => {
-    event.preventDefault();
-    const label = (eventDraft ?? game.currentEvent).trim();
-    if (!label) {
-      setActionStatus({ tone: "error", text: "Name the class session, like Progress Report I." });
-      return;
-    }
-    await updateGame({ current_event: label }, `New saves are now logged under "${label}".`);
-    setEventDraft(null);
   };
 
   const resetPassword = async (player) => {
@@ -1060,7 +1458,7 @@ export const InvestorGameDashboardView = ({ onNavigate }) => {
   const removePlayer = async (player) => {
     if (
       !window.confirm(
-        `Remove ${player.display_name}? This deletes their login, portfolio, and history.`
+        `Archive ${player.display_name}? Their login will be disabled. Permanent results, feedback, and history will be kept.`
       )
     ) {
       return;
@@ -1082,7 +1480,7 @@ export const InvestorGameDashboardView = ({ onNavigate }) => {
   const summary = summarizeInvestments(counted, GAME_PROJECT_IDS);
   const rankedTeams = [...summary.projects].sort((a, b) => b.total - a.total);
   const invested = students.filter((player) => player.last_saved_at).length;
-  const namesById = Object.fromEntries(players.map((player) => [player.id, player.display_name]));
+
   const visibleActivity =
     activityFilter === "all"
       ? activity
@@ -1119,17 +1517,17 @@ export const InvestorGameDashboardView = ({ onNavigate }) => {
 
       <div className="invest-results-toolbar">
         <button
-          className={game.isOpen ? "btn btn-ghost" : "btn btn-primary"}
+          className={game.enabled ? "btn btn-ghost" : "btn btn-primary"}
           type="button"
           disabled={Boolean(busy) || game.state !== "ready"}
           onClick={() =>
             updateGame(
-              { is_open: !game.isOpen },
-              game.isOpen ? "Investing is closed." : "Investing is open."
+              { is_open: !game.enabled },
+              game.enabled ? "Submissions paused." : "Scheduled submission windows enabled."
             )
           }
         >
-          {game.isOpen ? "Close investing" : "Open investing"}
+          {game.enabled ? "Pause submissions" : "Enable scheduled submissions"}
         </button>
         <button
           className="btn btn-ghost"
@@ -1144,24 +1542,6 @@ export const InvestorGameDashboardView = ({ onNavigate }) => {
         >
           {game.totalsVisible ? "Hide public totals" : "Show public totals"}
         </button>
-        <form className="pitch-admin-event" onSubmit={saveEvent}>
-          <label>
-            <span className="mono">Class session </span>
-            <input
-              value={eventDraft ?? game.currentEvent}
-              onChange={(event) => setEventDraft(event.target.value)}
-              placeholder="e.g. Progress Report I"
-              maxLength={60}
-            />
-          </label>
-          <button
-            className="btn btn-ghost"
-            type="submit"
-            disabled={Boolean(busy) || eventDraft === null}
-          >
-            Set session
-          </button>
-        </form>
         <button className="btn btn-ghost" type="button" onClick={load}>
           Refresh
         </button>
@@ -1170,6 +1550,19 @@ export const InvestorGameDashboardView = ({ onNavigate }) => {
         </span>
       </div>
 
+      <SessionTimer game={game} />
+      <EventWindowEditor
+        events={events}
+        disabled={Boolean(busy)}
+        onUpdated={() => {
+          load();
+          refreshGame();
+        }}
+      />
+      <p className="invest-banner">
+        <strong>Instructor reminder:</strong> Send a follow-up email to each team after every
+        investment event, using its saved results and private feedback.
+      </p>
       {actionStatus && (
         <p className={`invest-panel-status is-${actionStatus.tone}`} aria-live="polite">
           {actionStatus.text}
@@ -1326,7 +1719,7 @@ export const InvestorGameDashboardView = ({ onNavigate }) => {
                           disabled={busy === player.id}
                           onClick={() => removePlayer(player)}
                         >
-                          Remove
+                          Archive
                         </button>
                       </div>
                     </td>
@@ -1356,39 +1749,53 @@ export const InvestorGameDashboardView = ({ onNavigate }) => {
       {visibleActivity.length === 0 ? (
         <p className="invest-locked-note">No changes recorded yet.</p>
       ) : (
-        <div className="invest-table-wrap">
-          <table className="invest-table">
-            <thead>
-              <tr>
-                <th>When</th>
-                <th>Session</th>
-                <th>Student</th>
-                <th>What changed</th>
-                <th>Invested after</th>
-              </tr>
-            </thead>
-            <tbody>
-              {visibleActivity.map((entry) => (
-                <tr key={entry.id}>
-                  <td>{formatStamp(entry.created_at)}</td>
-                  <td>{entry.event_label}</td>
-                  <td>{namesById[entry.player_id] || "Removed student"}</td>
-                  <td className="invest-activity-changes">
-                    {changeText(
-                      describeChanges(
-                        entry.allocations_before,
-                        entry.allocations_after,
-                        GAME_PROJECT_IDS
-                      )
-                    ) || "No change"}
-                  </td>
-                  <td>{formatCompactDollars(entry.total_after)}</td>
-                </tr>
+        <div className="invest-history">
+          {groupActivity(visibleActivity, GAME_PROJECT_IDS).map(({ day, teams }) => (
+            <details key={day}>
+              <summary>
+                {day} · {teams.length} teams
+              </summary>
+              {teams.map(({ projectId, people }) => (
+                <details key={projectId}>
+                  <summary>
+                    {teamName(projectId)} · {people.length} angels
+                  </summary>
+                  {people.map(({ id, name, entries }) => (
+                    <details key={id}>
+                      <summary>
+                        {name} · {entries.length} changes · net{" "}
+                        {formatDollars(entries.reduce((sum, e) => sum + e.delta, 0))}
+                      </summary>
+                      <ul>
+                        {entries.map((entry) => (
+                          <li key={entry.id}>
+                            {formatStamp(entry.created_at)} · {entry.event_label} ·{" "}
+                            {entry.delta > 0 ? "+" : ""}
+                            {formatDollars(entry.delta)} · balance{" "}
+                            {formatDollars(entry.allocations_after[projectId] || 0)}
+                          </li>
+                        ))}
+                      </ul>
+                    </details>
+                  ))}
+                </details>
               ))}
-            </tbody>
-          </table>
+            </details>
+          ))}
         </div>
       )}
+      <SessionArchive events={events} results={archive.results} instructor />
+      <details className="invest-feedback">
+        <summary>All private team comments · {archive.comments.length}</summary>
+        <FeedbackList
+          title="Team feedback"
+          showAuthors
+          comments={archive.comments.map((c) => ({
+            ...c,
+            event_label: events.find((e) => e.id === c.event_id)?.label || c.event_id,
+          }))}
+        />
+      </details>
     </section>
   );
 };

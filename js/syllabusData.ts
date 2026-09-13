@@ -30,6 +30,9 @@ export interface ScheduleRow {
   topic: string;
   location: string;
   notes: string;
+  /** Yang is the only instructor for this session. */
+  yangOnly?: boolean;
+  investmentWindow?: { start: string; end: string };
   guestSpeakers?: string[];
   guestSpeakerJoiner?: "and" | "or";
   kind?: "break" | "milestone" | "cancelled" | "tbd";
@@ -125,6 +128,7 @@ export const OVERVIEW = [
 ];
 
 export const EXPECTATIONS: string[] = [
+  "Wear business casual or formal attire for every Yang Ran Angels investment session (all sessions taught only by Prof. Yang).",
   "Attend all Monday class sessions (1:00–1:50 p.m.) and actively participate in guest lectures and discussions.",
   "Meet with their faculty team advisor at least one hour per week.",
   "Commit at least 10 hours per week to their project. Since this is a three-credit course per semester, that workload expectation reflects both in-class and out-of-class time.",
@@ -276,6 +280,7 @@ export const TERMS: Term[] = [
         isoDate: "2026-08-31",
         location: "Small 235",
         topic: "Pitch Perfect I",
+        yangOnly: true,
         notes: "Prof. Yang",
       },
       {
@@ -293,6 +298,7 @@ export const TERMS: Term[] = [
         isoDate: "2026-09-14",
         location: "Small 235",
         topic: "Pitch Perfect II",
+        yangOnly: true,
         notes: "Prof. Yang",
       },
       {
@@ -333,6 +339,7 @@ export const TERMS: Term[] = [
         isoDate: "2026-10-19",
         location: "Small 235",
         topic: "Progress Report I",
+        yangOnly: true,
         notes: "Prof. Yang",
         kind: "milestone",
       },
@@ -366,6 +373,7 @@ export const TERMS: Term[] = [
         isoDate: "2026-11-16",
         location: "Small 235",
         topic: "Pitch Perfect III",
+        yangOnly: true,
         notes: "Prof. Yang",
       },
       {
@@ -374,6 +382,7 @@ export const TERMS: Term[] = [
         isoDate: "2026-11-23",
         location: "Remote",
         topic: "Team Preparation Day",
+        yangOnly: true,
         notes: "Prof. Yang — remote instruction day",
       },
       {
@@ -382,6 +391,7 @@ export const TERMS: Term[] = [
         isoDate: "2026-11-30",
         location: "Small 235",
         topic: "Progress Report II",
+        yangOnly: true,
         notes: "Prof. Yang — Dec 4 is the last day of classes",
         kind: "milestone",
       },
@@ -391,6 +401,8 @@ export const TERMS: Term[] = [
         isoDate: "2026-12-09",
         location: "Small 235",
         topic: "Mid-Year Presentations",
+        yangOnly: true,
+        investmentWindow: { start: "14:00", end: "17:00" },
         notes: "2:00–5:00 p.m., final exam period — team presentations & paper due",
         kind: "milestone",
       },
@@ -416,6 +428,7 @@ export const TERMS: Term[] = [
         isoDate: "2027-02-01",
         location: "Small 235",
         topic: "Progress Report III",
+        yangOnly: true,
         notes: "Prof. Yang",
         kind: "milestone",
       },
@@ -433,6 +446,7 @@ export const TERMS: Term[] = [
         isoDate: "2027-02-15",
         location: "Small 235",
         topic: "Writing Thesis I",
+        yangOnly: true,
         notes: "Prof. Yang",
       },
       {
@@ -449,6 +463,7 @@ export const TERMS: Term[] = [
         isoDate: "2027-03-01",
         location: "Small 235",
         topic: "Progress Report IV",
+        yangOnly: true,
         notes: "Prof. Yang",
         kind: "milestone",
       },
@@ -476,6 +491,7 @@ export const TERMS: Term[] = [
         isoDate: "2027-03-22",
         location: "Small 235",
         topic: "Writing Thesis II",
+        yangOnly: true,
         notes: "Prof. Yang",
       },
       {
@@ -492,6 +508,7 @@ export const TERMS: Term[] = [
         isoDate: "2027-04-05",
         location: "Small 235",
         topic: "Writing Thesis III",
+        yangOnly: true,
         notes: "Prof. Yang",
       },
       {
@@ -500,6 +517,7 @@ export const TERMS: Term[] = [
         isoDate: "2027-04-12",
         location: "Small 235",
         topic: "Final Presentation I",
+        yangOnly: true,
         notes: "Prof. Yang",
         kind: "milestone",
       },
@@ -509,6 +527,7 @@ export const TERMS: Term[] = [
         isoDate: "2027-04-19",
         location: "Small 235",
         topic: "Final Presentation II",
+        yangOnly: true,
         notes: "Prof. Yang",
         kind: "milestone",
       },

@@ -259,6 +259,7 @@ export type InvestorGamePlayerRow = {
   allocations: Json;
   total_invested: number;
   last_saved_at: string | null;
+  is_active: boolean;
 };
 
 export type InvestorGameActivityRow = {
@@ -267,10 +268,42 @@ export type InvestorGameActivityRow = {
   game_id: string;
   player_id: string;
   event_label: string;
+  player_name: string | null;
+  team_project_id: string | null;
   allocations_before: Json;
   allocations_after: Json;
   total_before: number;
   total_after: number;
+};
+
+export type InvestorEvent = {
+  id: string;
+  label: string;
+  starts_at: string;
+  ends_at: string;
+  finalized_at: string | null;
+  totals: Record<string, number> | null;
+};
+export type InvestorResult = {
+  event_id: string;
+  player_id: string;
+  player_name: string;
+  team_project_id: string | null;
+  is_practice: boolean;
+  is_instructor: boolean;
+  budget: number;
+  allocations: Json;
+  total_invested: number;
+};
+export type InvestorComment = {
+  id: number;
+  event_id: string;
+  event_label: string;
+  player_name: string;
+  project_id: string;
+  body: string;
+  updated_at: string;
+  is_mine: boolean;
 };
 
 type TableDefinition<Row, Insert = Partial<Row>, Update = Partial<Row>> = {
@@ -292,6 +325,11 @@ export type AppDatabase = {
       ranking_poll_settings: TableDefinition<PollSettingsRow>;
       cohort_announcements: TableDefinition<AnnouncementRow>;
       cohort_team_members: TableDefinition<TeamRosterRow, TeamRosterRow, Partial<TeamRosterRow>>;
+      investor_game_events: TableDefinition<InvestorEvent & { game_id: string }>;
+      investor_game_results: TableDefinition<InvestorResult>;
+      investor_game_comments: TableDefinition<
+        Omit<InvestorComment, "is_mine" | "event_label"> & { player_id: string }
+      >;
       investor_games: TableDefinition<InvestorGameRow>;
       investor_game_players: TableDefinition<InvestorGamePlayerRow>;
       investor_game_activity: TableDefinition<InvestorGameActivityRow>;
@@ -326,8 +364,40 @@ export type AppDatabase = {
       };
       investor_game_status: {
         Args: { p_game_id: string };
-        Returns: Array<Omit<InvestorGameRow, "created_at" | "updated_at">>;
+        Returns: Array<
+          Omit<InvestorGameRow, "created_at" | "updated_at"> & {
+            accepting: boolean;
+            event_id: string | null;
+            starts_at: string | null;
+            ends_at: string | null;
+            server_now: string;
+          }
+        >;
       };
+      investor_game_events_list: { Args: { p_game_id: string }; Returns: InvestorEvent[] };
+      investor_game_feedback: {
+        Args: { p_game_id: string; p_session_token: string };
+        Returns: Omit<InvestorComment, "player_name">[];
+      };
+      investor_game_my_results: {
+        Args: { p_game_id: string; p_session_token: string };
+        Returns: InvestorResult[];
+      };
+      investor_game_save_comment: {
+        Args: {
+          p_game_id: string;
+          p_session_token: string;
+          p_event_id: string;
+          p_project_id: string;
+          p_body: string;
+        };
+        Returns: undefined;
+      };
+      investor_game_admin_event: {
+        Args: { p_event_id: string; p_starts_at: string; p_ends_at: string };
+        Returns: undefined;
+      };
+      investor_game_admin_archive_player: { Args: { p_player_id: string }; Returns: undefined };
       investor_game_login: {
         Args: { p_game_id: string; p_name: string; p_password: string };
         Returns: Array<{

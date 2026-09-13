@@ -33,7 +33,8 @@ const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 type OnNavigate = (page: string) => void;
 
 /** Class sessions where students can invest or rebalance in Yang Ran Angels. */
-const INVESTOR_GAME_TOPIC = /^(Pitch Perfect III?$|Progress Report\b)/;
+const isInvestmentSession = (row: ScheduleRow) =>
+  row.yangOnly === true && !["break", "cancelled", "tbd"].includes(row.kind || "");
 
 const rowClass = (row: ScheduleRow) => {
   switch (row.kind) {
@@ -60,22 +61,25 @@ const SeasonBadge = ({ season }: { season: Season }) => (
 const LectureMaterials = ({ row, onNavigate }: { row: ScheduleRow; onNavigate: OnNavigate }) => {
   if (row.topic === "Pitch Perfect I") {
     return (
-      <button
-        type="button"
-        className="lecture-resource-card"
-        onClick={() => onNavigate("pitchPerfectAssignment")}
-      >
-        <span className="lecture-resource-type mono">Assignment · Homework 1</span>
-        <strong>Assignment for Pitch Perfect I</strong>
-        <span>Craft a 15-second business thesis pitch in fewer than 30 words.</span>
-        <span className="lecture-resource-action" aria-hidden="true">
-          Open assignment <span>↗</span>
-        </span>
-      </button>
+      <>
+        <button
+          type="button"
+          className="lecture-resource-card"
+          onClick={() => onNavigate("pitchPerfectAssignment")}
+        >
+          <span className="lecture-resource-type mono">Assignment · Homework 1</span>
+          <strong>Assignment for Pitch Perfect I</strong>
+          <span>Craft a 15-second business thesis pitch in fewer than 30 words.</span>
+          <span className="lecture-resource-action" aria-hidden="true">
+            Open assignment <span>↗</span>
+          </span>
+        </button>
+        <LectureMaterials row={{ ...row, topic: "Yang Ran Angels" }} onNavigate={onNavigate} />
+      </>
     );
   }
 
-  if (INVESTOR_GAME_TOPIC.test(row.topic)) {
+  if (isInvestmentSession(row)) {
     return (
       <div className="lecture-resource-grid">
         <button
@@ -84,10 +88,13 @@ const LectureMaterials = ({ row, onNavigate }: { row: ScheduleRow; onNavigate: O
           onClick={() => onNavigate("investorGame")}
         >
           <span className="lecture-resource-type mono">In-class game · Yang Ran Angels</span>
-          <strong>Angel Login: manage your $1M</strong>
+          <strong>Angel Login: manage your portfolio</strong>
           <span>
-            Log in with your first name to invest, or move money between teams after today&apos;s
-            pitches.
+            Invest and leave private team feedback during today&apos;s window:{" "}
+            {row.investmentWindow
+              ? `${row.investmentWindow.start}–${row.investmentWindow.end}`
+              : "1:00–2:00 p.m."}{" "}
+            Eastern. Business casual or formal attire required.
           </span>
           <span className="lecture-resource-action" aria-hidden="true">
             Enter the game <span>↗</span>
