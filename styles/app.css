@@ -2657,6 +2657,7 @@ main a:hover {
   background: var(--paper);
   color: var(--ink);
   text-align: left;
+  text-decoration: none;
   cursor: pointer;
   box-shadow: var(--shadow-1);
   transition:

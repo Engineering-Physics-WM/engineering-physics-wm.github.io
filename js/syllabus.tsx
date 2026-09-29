@@ -136,18 +136,36 @@ const LectureMaterials = ({ row, onNavigate }: { row: ScheduleRow; onNavigate: O
 
   if (row.topic === "Career Success I with AI") {
     return (
-      <button
-        type="button"
-        className="lecture-resource-card"
-        onClick={() => onNavigate("careerSuccessAssignment")}
-      >
-        <span className="lecture-resource-type mono">Assignment · Assignment 2</span>
-        <strong>Assignment for Career Success I</strong>
-        <span>Complete your headshot, one-page resume, LinkedIn profile, and QR code.</span>
-        <span className="lecture-resource-action" aria-hidden="true">
-          Open assignment <span>↗</span>
-        </span>
-      </button>
+      <div className="lecture-resource-grid">
+        <a
+          className="lecture-resource-card"
+          href="/slides/2026-2027/career-success-i-skills-career-paths-resumes-networking.pdf"
+          target="_blank"
+          rel="noopener"
+        >
+          <span className="lecture-resource-type mono">Slides · Career Center</span>
+          <strong>Skills, Career Paths, Resumes &amp; Networking</strong>
+          <span>
+            Engineering physics skills, career paths, resume writing, and networking from the
+            Office of Career Development &amp; Professional Engagement.
+          </span>
+          <span className="lecture-resource-action" aria-hidden="true">
+            Open slides (PDF) <span>↗</span>
+          </span>
+        </a>
+        <button
+          type="button"
+          className="lecture-resource-card"
+          onClick={() => onNavigate("careerSuccessAssignment")}
+        >
+          <span className="lecture-resource-type mono">Assignment · Assignment 2</span>
+          <strong>Assignment for Career Success I</strong>
+          <span>Complete your headshot, one-page resume, LinkedIn profile, and QR code.</span>
+          <span className="lecture-resource-action" aria-hidden="true">
+            Open assignment <span>↗</span>
+          </span>
+        </button>
+      </div>
     );
   }
 
