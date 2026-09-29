@@ -134,6 +134,22 @@ const LectureMaterials = ({ row, onNavigate }: { row: ScheduleRow; onNavigate: O
     );
   }
 
+  if (row.topic === "Public Speaking") {
+    return (
+      <div className="lecture-resource-card lecture-resource-static">
+        <span className="lecture-resource-type mono">Assignment · Team coaching</span>
+        <strong>1:1 pitch &amp; public speaking coaching with Prof. Raymond</strong>
+        <span>
+          Each team schedules a one-on-one pitch and public speaking coaching session with Prof.
+          Raymond before Pitch Perfect III on Monday, November 16.
+        </span>
+        <span className="lecture-resource-action">
+          Due before Pitch Perfect III <span>Mon · Nov 16</span>
+        </span>
+      </div>
+    );
+  }
+
   if (row.topic === "Career Success I with AI") {
     return (
       <div className="lecture-resource-grid">

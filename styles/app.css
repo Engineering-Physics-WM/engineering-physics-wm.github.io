@@ -3186,10 +3186,12 @@ main a:hover {
 .lecture-resource-grid .lecture-resource-card {
   width: 100%;
 }
-.lecture-schedule-card {
+.lecture-schedule-card,
+.lecture-resource-static {
   cursor: default;
 }
-.lecture-schedule-card:hover {
+.lecture-schedule-card:hover,
+.lecture-resource-static:hover {
   transform: none;
 }
 .lecture-schedule {
