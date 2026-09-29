@@ -454,7 +454,7 @@ export const TERMS: Term[] = [
         isoDate: "2026-10-12",
         location: "TBD",
         topic: "Public Speaking",
-        notes: "Prof. Raymond (TBD) & Yang",
+        notes: "Profs. Raymond & Yang",
       },
       {
         week: "9",
