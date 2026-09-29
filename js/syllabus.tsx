@@ -141,7 +141,8 @@ const LectureMaterials = ({ row, onNavigate }: { row: ScheduleRow; onNavigate: O
         <strong>1:1 pitch &amp; public speaking coaching with Prof. Raymond</strong>
         <span>
           Each team schedules a one-on-one pitch and public speaking coaching session with Prof.
-          Raymond before Pitch Perfect III on Monday, November 16.
+          Raymond before Pitch Perfect III on Monday, November 16. Email{" "}
+          <a href="mailto:wraymond@wm.edu">wraymond@wm.edu</a> to book a time.
         </span>
         <span className="lecture-resource-action">
           Due before Pitch Perfect III <span>Mon · Nov 16</span>
